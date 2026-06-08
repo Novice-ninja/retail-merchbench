@@ -72,17 +72,37 @@ These are automated routing priors, not final human-validated production recomme
 
 ## Visual Preview
 
+These previews are generated from the current Atlas data. Open the full interactive-style report at [reports/atlas/index.html](reports/atlas/index.html), or inspect the source SVGs directly in [reports/atlas/](reports/atlas/).
+
 ### Cost-Quality Frontier
 
-![Retail MerchBench model frontier](reports/atlas/model_frontier.svg)
+<a href="reports/atlas/model_frontier.svg">
+  <img src="reports/atlas/model_frontier.svg?v=20260607-visual-fix" alt="Retail MerchBench quality-cost frontier showing model quality versus estimated cost burden" width="100%">
+</a>
 
 ### Segment Heatmap
 
-![Retail MerchBench segment heatmap](reports/atlas/segment_heatmap.svg)
+<a href="reports/atlas/segment_heatmap.svg">
+  <img src="reports/atlas/segment_heatmap.svg?v=20260607-visual-fix" alt="Retail MerchBench OpenAI ladder heatmap by retail decision segment" width="100%">
+</a>
 
-### Routing Quadrants
+### Segment Routing Quadrants
 
-![Retail MerchBench segment routing quadrants](reports/atlas/segment_quadrants.svg)
+<a href="reports/atlas/segment_quadrants.svg">
+  <img src="reports/atlas/segment_quadrants.svg?v=20260607-visual-fix" alt="Retail MerchBench segment routing quadrants comparing quality and economic burden" width="100%">
+</a>
+
+### Workflow Routing Ladder
+
+<a href="reports/atlas/routing_ladder.svg">
+  <img src="reports/atlas/routing_ladder.svg?v=20260607-visual-fix" alt="Retail MerchBench workflow routing ladder by retail segment" width="100%">
+</a>
+
+### Economic Regret
+
+<a href="reports/atlas/economic_regret.svg">
+  <img src="reports/atlas/economic_regret.svg?v=20260607-visual-fix" alt="Retail MerchBench economic regret chart showing quality gap between segment leader and economic pick" width="100%">
+</a>
 
 ## Decision Segments
 
