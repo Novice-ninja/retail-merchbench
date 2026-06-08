@@ -6,7 +6,7 @@
 [![Benchmark items](https://img.shields.io/badge/eval%20items-100-orange.svg)](eval_packs/)
 [![Model panel](https://img.shields.io/badge/scored%20models-14-purple.svg)](reports/eval_packs/)
 
-**Stop asking which LLM is best. Ask which model is economically right for each retail decision.**
+**An eval framework to identify which model is economically right for each retail decision.**
 
 Retail MerchBench is a retail AI benchmark and model-routing toolkit for merchandise-planning workflows. It evaluates whether a model is **economically sufficient** for a task once quality, latency, inference cost, downside risk, reversibility, deterministic controls, and human review are considered.
 
@@ -22,8 +22,6 @@ This repo is built for teams deploying LLMs into retail planning, merchandising,
 - **Reproducibility:** [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)
 
 If this project helps your evals, model-routing strategy, or AI roadmap, star the repo so more retail AI teams can find it.
-
-## The One-Line Claim
 
 For retail AI, the winning model is not always the strongest model. It is the cheapest safe workflow that clears the quality floor, escalates the right cases, and preserves human judgment where automation remains risky.
 
