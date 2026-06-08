@@ -1,68 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="560" viewBox="0 0 1280 560" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="600" viewBox="0 0 1280 600" role="img" aria-labelledby="title desc">
 <title>MerchBench economic regret by segment</title>
 <desc>Bar chart showing quality gap between quality leader and economic pick by retail segment.</desc>
-<rect width="1280" height="560" fill="#f7f4ee"/>
+<rect width="1280" height="600" fill="#f7f4ee"/>
 <text x="34" y="42" font-size="24" font-weight="800" fill="#17211b">Economic regret by segment</text>
 <text x="34" y="66" font-size="13" fill="#5e675f">Regret is the quality gap between the segment leader and the recommended economic pick. Lower is better.</text>
-<line x1="250.0" y1="66" x2="250.0" y2="464" stroke="#d8ddd5"/>
-<text x="250.0" y="58" text-anchor="middle" font-size="10" fill="#5e675f">0</text>
-<line x1="378.6" y1="66" x2="378.6" y2="464" stroke="#d8ddd5"/>
-<text x="378.6" y="58" text-anchor="middle" font-size="10" fill="#5e675f">0.25</text>
-<line x1="507.1" y1="66" x2="507.1" y2="464" stroke="#d8ddd5"/>
-<text x="507.1" y="58" text-anchor="middle" font-size="10" fill="#5e675f">0.5</text>
-<line x1="635.7" y1="66" x2="635.7" y2="464" stroke="#d8ddd5"/>
-<text x="635.7" y="58" text-anchor="middle" font-size="10" fill="#5e675f">0.75</text>
-<line x1="764.3" y1="66" x2="764.3" y2="464" stroke="#d8ddd5"/>
-<text x="764.3" y="58" text-anchor="middle" font-size="10" fill="#5e675f">1</text>
-<line x1="892.9" y1="66" x2="892.9" y2="464" stroke="#d8ddd5"/>
-<text x="892.9" y="58" text-anchor="middle" font-size="10" fill="#5e675f">1.25</text>
-<text x="34" y="101" font-size="13" font-weight="800" fill="#17211b">Summarization</text>
-<rect x="250" y="82" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
-<rect x="250" y="82" width="0.0" height="28" rx="5" fill="#277c78"/>
-<text x="258.0" y="101" font-size="12" font-weight="800" fill="#17211b">0.000</text>
-<text x="1044" y="94" font-size="10" fill="#5e675f">Leader: GPT-5 Mini (8.0696)</text>
-<text x="1044" y="109" font-size="10" fill="#5e675f">Pick: GPT-5 Mini (8.0696)</text>
-<text x="34" y="149" font-size="13" font-weight="800" fill="#17211b">Extraction</text>
-<rect x="250" y="130" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
-<rect x="250" y="130" width="0.0" height="28" rx="5" fill="#277c78"/>
-<text x="258.0" y="149" font-size="12" font-weight="800" fill="#17211b">0.000</text>
-<text x="1044" y="142" font-size="10" fill="#5e675f">Leader: GPT-5 Mini (8.57)</text>
-<text x="1044" y="157" font-size="10" fill="#5e675f">Pick: GPT-5 Mini (8.57)</text>
-<text x="34" y="197" font-size="13" font-weight="800" fill="#17211b">Constraint checks</text>
-<rect x="250" y="178" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
-<rect x="250" y="178" width="261.6" height="28" rx="5" fill="#c8912f"/>
-<text x="519.6" y="197" font-size="12" font-weight="800" fill="#17211b">0.509</text>
-<text x="1044" y="190" font-size="10" fill="#5e675f">Leader: GPT-5.4 (8.2879)</text>
-<text x="1044" y="205" font-size="10" fill="#5e675f">Pick: GPT-5 Mini (7.7792)</text>
-<text x="34" y="245" font-size="13" font-weight="800" fill="#17211b">Routine planning</text>
-<rect x="250" y="226" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
-<rect x="250" y="226" width="137.1" height="28" rx="5" fill="#c8912f"/>
-<text x="395.1" y="245" font-size="12" font-weight="800" fill="#17211b">0.267</text>
-<text x="1044" y="238" font-size="10" fill="#5e675f">Leader: GPT-5.4 (6.9939)</text>
-<text x="1044" y="253" font-size="10" fill="#5e675f">Pick: GPT-5.4 Mini (6.7273)</text>
-<text x="34" y="293" font-size="13" font-weight="800" fill="#17211b">Pricing &amp; promo</text>
-<rect x="250" y="274" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
-<rect x="250" y="274" width="162.1" height="28" rx="5" fill="#c8912f"/>
-<text x="420.1" y="293" font-size="12" font-weight="800" fill="#17211b">0.315</text>
-<text x="1044" y="286" font-size="10" fill="#5e675f">Leader: GPT-5.5 (6.778)</text>
-<text x="1044" y="301" font-size="10" fill="#5e675f">Pick: GPT-5.4 (6.4629)</text>
-<text x="34" y="341" font-size="13" font-weight="800" fill="#17211b">Ambiguous judgment</text>
-<rect x="250" y="322" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
-<rect x="250" y="322" width="629.2" height="28" rx="5" fill="#b85f42"/>
-<text x="887.2" y="341" font-size="12" font-weight="800" fill="#17211b">1.224</text>
-<text x="1044" y="334" font-size="10" fill="#5e675f">Leader: GPT-5.4 (8.5311)</text>
-<text x="1044" y="349" font-size="10" fill="#5e675f">Pick: GPT-5.4 Mini (7.3076)</text>
-<text x="34" y="389" font-size="13" font-weight="800" fill="#17211b">Portfolio tradeoff</text>
-<rect x="250" y="370" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
-<rect x="250" y="370" width="39.4" height="28" rx="5" fill="#277c78"/>
-<text x="297.4" y="389" font-size="12" font-weight="800" fill="#17211b">0.077</text>
-<text x="1044" y="382" font-size="10" fill="#5e675f">Leader: GPT-5 Mini (8.0774)</text>
-<text x="1044" y="397" font-size="10" fill="#5e675f">Pick: GPT-5.4 Mini (8.0008)</text>
-<text x="34" y="437" font-size="13" font-weight="800" fill="#17211b">Ops triage</text>
-<rect x="250" y="418" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
-<rect x="250" y="418" width="358.7" height="28" rx="5" fill="#b85f42"/>
-<text x="616.7" y="437" font-size="12" font-weight="800" fill="#17211b">0.697</text>
-<text x="1044" y="430" font-size="10" fill="#5e675f">Leader: GPT-5.5 (7.5235)</text>
-<text x="1044" y="445" font-size="10" fill="#5e675f">Pick: GPT-5.4 Mini (6.8261)</text>
-<text x="250" y="532" font-size="12" fill="#5e675f">Green: near-zero tradeoff. Orange/red: the cheaper default gives up material quality.</text>
+<line x1="250.0" y1="102" x2="250.0" y2="500" stroke="#d8ddd5"/>
+<text x="250.0" y="94" text-anchor="middle" font-size="10" fill="#5e675f">0</text>
+<line x1="378.6" y1="102" x2="378.6" y2="500" stroke="#d8ddd5"/>
+<text x="378.6" y="94" text-anchor="middle" font-size="10" fill="#5e675f">0.25</text>
+<line x1="507.1" y1="102" x2="507.1" y2="500" stroke="#d8ddd5"/>
+<text x="507.1" y="94" text-anchor="middle" font-size="10" fill="#5e675f">0.5</text>
+<line x1="635.7" y1="102" x2="635.7" y2="500" stroke="#d8ddd5"/>
+<text x="635.7" y="94" text-anchor="middle" font-size="10" fill="#5e675f">0.75</text>
+<line x1="764.3" y1="102" x2="764.3" y2="500" stroke="#d8ddd5"/>
+<text x="764.3" y="94" text-anchor="middle" font-size="10" fill="#5e675f">1</text>
+<line x1="892.9" y1="102" x2="892.9" y2="500" stroke="#d8ddd5"/>
+<text x="892.9" y="94" text-anchor="middle" font-size="10" fill="#5e675f">1.25</text>
+<text x="34" y="137" font-size="13" font-weight="800" fill="#17211b">Summarization</text>
+<rect x="250" y="118" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
+<rect x="250" y="118" width="0.0" height="28" rx="5" fill="#277c78"/>
+<text x="258.0" y="137" font-size="12" font-weight="800" fill="#17211b">0.000</text>
+<text x="1044" y="130" font-size="10" fill="#5e675f">Leader: GPT-5 Mini (8.0696)</text>
+<text x="1044" y="145" font-size="10" fill="#5e675f">Pick: GPT-5 Mini (8.0696)</text>
+<text x="34" y="185" font-size="13" font-weight="800" fill="#17211b">Extraction</text>
+<rect x="250" y="166" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
+<rect x="250" y="166" width="0.0" height="28" rx="5" fill="#277c78"/>
+<text x="258.0" y="185" font-size="12" font-weight="800" fill="#17211b">0.000</text>
+<text x="1044" y="178" font-size="10" fill="#5e675f">Leader: GPT-5 Mini (8.57)</text>
+<text x="1044" y="193" font-size="10" fill="#5e675f">Pick: GPT-5 Mini (8.57)</text>
+<text x="34" y="233" font-size="13" font-weight="800" fill="#17211b">Constraint checks</text>
+<rect x="250" y="214" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
+<rect x="250" y="214" width="261.6" height="28" rx="5" fill="#c8912f"/>
+<text x="519.6" y="233" font-size="12" font-weight="800" fill="#17211b">0.509</text>
+<text x="1044" y="226" font-size="10" fill="#5e675f">Leader: GPT-5.4 (8.2879)</text>
+<text x="1044" y="241" font-size="10" fill="#5e675f">Pick: GPT-5 Mini (7.7792)</text>
+<text x="34" y="281" font-size="13" font-weight="800" fill="#17211b">Routine planning</text>
+<rect x="250" y="262" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
+<rect x="250" y="262" width="137.1" height="28" rx="5" fill="#c8912f"/>
+<text x="395.1" y="281" font-size="12" font-weight="800" fill="#17211b">0.267</text>
+<text x="1044" y="274" font-size="10" fill="#5e675f">Leader: GPT-5.4 (6.9939)</text>
+<text x="1044" y="289" font-size="10" fill="#5e675f">Pick: GPT-5.4 Mini (6.7273)</text>
+<text x="34" y="329" font-size="13" font-weight="800" fill="#17211b">Pricing &amp; promo</text>
+<rect x="250" y="310" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
+<rect x="250" y="310" width="162.1" height="28" rx="5" fill="#c8912f"/>
+<text x="420.1" y="329" font-size="12" font-weight="800" fill="#17211b">0.315</text>
+<text x="1044" y="322" font-size="10" fill="#5e675f">Leader: GPT-5.5 (6.778)</text>
+<text x="1044" y="337" font-size="10" fill="#5e675f">Pick: GPT-5.4 (6.4629)</text>
+<text x="34" y="377" font-size="13" font-weight="800" fill="#17211b">Ambiguous judgment</text>
+<rect x="250" y="358" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
+<rect x="250" y="358" width="629.2" height="28" rx="5" fill="#b85f42"/>
+<text x="887.2" y="377" font-size="12" font-weight="800" fill="#17211b">1.224</text>
+<text x="1044" y="370" font-size="10" fill="#5e675f">Leader: GPT-5.4 (8.5311)</text>
+<text x="1044" y="385" font-size="10" fill="#5e675f">Pick: GPT-5.4 Mini (7.3076)</text>
+<text x="34" y="425" font-size="13" font-weight="800" fill="#17211b">Portfolio tradeoff</text>
+<rect x="250" y="406" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
+<rect x="250" y="406" width="39.4" height="28" rx="5" fill="#277c78"/>
+<text x="297.4" y="425" font-size="12" font-weight="800" fill="#17211b">0.077</text>
+<text x="1044" y="418" font-size="10" fill="#5e675f">Leader: GPT-5 Mini (8.0774)</text>
+<text x="1044" y="433" font-size="10" fill="#5e675f">Pick: GPT-5.4 Mini (8.0008)</text>
+<text x="34" y="473" font-size="13" font-weight="800" fill="#17211b">Ops triage</text>
+<rect x="250" y="454" width="720" height="28" rx="5" fill="#fffdf8" stroke="#d8ddd5"/>
+<rect x="250" y="454" width="358.7" height="28" rx="5" fill="#b85f42"/>
+<text x="616.7" y="473" font-size="12" font-weight="800" fill="#17211b">0.697</text>
+<text x="1044" y="466" font-size="10" fill="#5e675f">Leader: GPT-5.5 (7.5235)</text>
+<text x="1044" y="481" font-size="10" fill="#5e675f">Pick: GPT-5.4 Mini (6.8261)</text>
+<text x="250" y="572" font-size="12" fill="#5e675f">Green: near-zero tradeoff. Orange/red: the cheaper default gives up material quality.</text>
 </svg>

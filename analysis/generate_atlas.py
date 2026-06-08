@@ -490,56 +490,73 @@ def color_for_score(score: float) -> str:
 
 
 def render_frontier_svg(records: list[dict[str, Any]]) -> str:
-    width, height = 980, 560
-    plot_x, plot_y, plot_w, plot_h = 84, 56, 800, 410
+    width, height = 1160, 700
+    plot_x, plot_y, plot_w, plot_h = 150, 82, 850, 450
     max_cost_index = 10
-    min_score, max_score = 3.5, 8.2
+    min_score, max_score = 2.0, 8.2
 
     def px(row: dict[str, Any]) -> float:
-        return plot_x + (float(row["cost_index"]) / max_cost_index) * plot_w
+        bounded = min(max(float(row["cost_index"]), 0), max_cost_index)
+        return plot_x + (bounded / max_cost_index) * plot_w
 
     def py(row: dict[str, Any]) -> float:
-        score = float(row["overall_average"])
+        score = min(max(float(row["overall_average"]), min_score), max_score)
         return plot_y + (max_score - score) / (max_score - min_score) * plot_h
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">',
         "<title>MerchBench model frontier</title>",
         "<desc>Scatter plot of model quality by estimated cost burden.</desc>",
-        '<rect width="980" height="560" fill="#f7f4ee"/>',
+        f'<rect width="{width}" height="{height}" fill="#f7f4ee"/>',
         f'<rect x="{plot_x}" y="{plot_y}" width="{plot_w}" height="{plot_h}" rx="8" fill="#fffdf8" stroke="#d8ddd5"/>',
     ]
     for step in range(0, 11, 2):
         x = plot_x + (step / 10) * plot_w
         parts.append(f'<line x1="{x:.1f}" y1="{plot_y}" x2="{x:.1f}" y2="{plot_y + plot_h}" stroke="#e5e1d8"/>')
         parts.append(f'<text x="{x:.1f}" y="{plot_y + plot_h + 28}" text-anchor="middle" font-size="12" fill="#5e675f">{step}</text>')
-    for score in [4, 5, 6, 7, 8]:
+    for score in [2, 3, 4, 5, 6, 7, 8]:
         y = plot_y + (max_score - score) / (max_score - min_score) * plot_h
         parts.append(f'<line x1="{plot_x}" y1="{y:.1f}" x2="{plot_x + plot_w}" y2="{y:.1f}" stroke="#e5e1d8"/>')
         parts.append(f'<text x="{plot_x - 16}" y="{y + 4:.1f}" text-anchor="end" font-size="12" fill="#5e675f">{score}</text>')
-    parts.append(f'<text x="{plot_x + plot_w / 2}" y="530" text-anchor="middle" font-size="14" fill="#17211b">Estimated cost burden index</text>')
-    parts.append(f'<text x="24" y="{plot_y + plot_h / 2}" transform="rotate(-90 24 {plot_y + plot_h / 2})" text-anchor="middle" font-size="14" fill="#17211b">Retail judgment quality score</text>')
+    parts.append(f'<text x="{plot_x + plot_w / 2}" y="{plot_y + plot_h + 72}" text-anchor="middle" font-size="14" fill="#17211b">Estimated cost burden index</text>')
+    parts.append(f'<text x="{plot_x}" y="{plot_y - 20}" font-size="14" fill="#17211b">Retail judgment quality score</text>')
 
+    label_overrides = {
+        "ollama/gemma4:e2b": (-18, -18, "end"),
+        "ollama/llama3.2:3b": (18, 17, "start"),
+        "ollama/lfm2.5-thinking:1.2b": (18, -8, "start"),
+        "cerebras/zai-glm-4.7": (26, 4, "start"),
+        "cerebras/gpt-oss-120b": (22, 4, "start"),
+        "groq/qwen/qwen3-32b": (22, 4, "start"),
+        "groq/meta-llama/llama-4-scout-17b-16e-instruct": (18, 4, "start"),
+        "groq/llama-3.3-70b-versatile": (18, 4, "start"),
+    }
     for row in sorted(records, key=lambda item: float(item["overall_average"])):
         if row["failed_items"] != 0:
             continue
-        x, y = px(row), py(row)
         radius = 7 + float(row["experience_burden_index"]) * 0.9
+        x = min(max(px(row), plot_x + radius + 2), plot_x + plot_w - radius - 2)
+        y = min(max(py(row), plot_y + radius + 2), plot_y + plot_h - radius - 2)
         stroke = "#17211b" if row["pareto_frontier"] else "#fffdf8"
         opacity = "1" if row["pareto_frontier"] or row["provider"] == "openai" else ".72"
         parts.append(
             f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{radius:.1f}" fill="{color_for_score(float(row["overall_average"]))}" '
             f'stroke="{stroke}" stroke-width="2" opacity="{opacity}"/>'
         )
-        label_dx = 12
+        label_dx = radius + 8
+        label_dy = 4
         label_anchor = "start"
         if x > plot_x + plot_w - 160:
-            label_dx = -12
+            label_dx = -(radius + 8)
             label_anchor = "end"
+        if y > plot_y + plot_h - 34:
+            label_dy = -(radius + 4)
+        if row["model_id"] in label_overrides:
+            label_dx, label_dy, label_anchor = label_overrides[row["model_id"]]
         label = esc(row["display_name"])
-        parts.append(f'<text x="{x + label_dx:.1f}" y="{y + 4:.1f}" text-anchor="{label_anchor}" font-size="12" fill="#17211b">{label}</text>')
+        parts.append(f'<text x="{x + label_dx:.1f}" y="{y + label_dy:.1f}" text-anchor="{label_anchor}" font-size="12" fill="#17211b">{label}</text>')
     parts.append('<text x="84" y="32" font-size="20" font-weight="700" fill="#17211b">Quality-cost frontier</text>')
-    parts.append('<text x="84" y="492" font-size="12" fill="#5e675f">Outlined marks are on the measured Pareto frontier. Bubble size reflects response-token burden, not p95 production latency.</text>')
+    parts.append(f'<text x="{plot_x}" y="{height - 28}" font-size="12" fill="#5e675f">Outlined marks are on the measured Pareto frontier. Bubble size reflects response-token burden, not p95 production latency.</text>')
     parts.append("</svg>")
     return "\n".join(parts)
 
@@ -547,21 +564,36 @@ def render_frontier_svg(records: list[dict[str, Any]]) -> str:
 def render_heatmap_svg(data: dict[str, Any]) -> str:
     records = [row for row in data["model_records"] if row["model_id"].startswith("openai/gpt-5")]
     records = sorted(records, key=lambda row: -float(row["overall_average"]))
-    cell_w, cell_h = 98, 46
-    left, top = 172, 86
+    cell_w, cell_h = 116, 46
+    left, top = 174, 142
     width = left + cell_w * len(SEGMENT_ORDER) + 34
     height = top + cell_h * len(records) + 42
+    header_lines = {
+        "low_risk_summarization": ("Summary",),
+        "structured_extraction": ("Structured", "extract"),
+        "constraint_checking": ("Constraint", "check"),
+        "routine_planning_recommendation": ("Routine", "plan"),
+        "pricing_promotion": ("Pricing", "promo"),
+        "ambiguous_planning_judgment": ("Ambiguous", "judgment"),
+        "portfolio_tradeoff": ("Portfolio", "tradeoff"),
+        "operational_triage": ("Ops", "triage"),
+    }
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">',
         "<title>OpenAI segment heatmap</title>",
         "<desc>Heatmap of OpenAI GPT-5 model scores by retail decision segment.</desc>",
         f'<rect width="{width}" height="{height}" fill="#f7f4ee"/>',
         '<text x="24" y="34" font-size="20" font-weight="700" fill="#17211b">OpenAI ladder by retail segment</text>',
+        f'<rect x="{left - 8}" y="54" width="{cell_w * len(SEGMENT_ORDER) + 8}" height="70" rx="6" fill="#f7f4ee"/>',
     ]
     for idx, segment in enumerate(SEGMENT_ORDER):
         x = left + idx * cell_w + cell_w / 2
-        label = SEGMENT_LABELS[segment]
-        parts.append(f'<text x="{x:.1f}" y="72" transform="rotate(-35 {x:.1f} 72)" text-anchor="end" font-size="11" fill="#5e675f">{esc(label)}</text>')
+        lines = header_lines[segment]
+        parts.append(f'<text x="{x:.1f}" y="76" text-anchor="middle" font-size="11" font-weight="700" fill="#17211b">')
+        for line_idx, line in enumerate(lines):
+            dy = 0 if line_idx == 0 else 13
+            parts.append(f'<tspan x="{x:.1f}" dy="{dy}">{esc(line)}</tspan>')
+        parts.append("</text>")
     for r_idx, row in enumerate(records):
         y = top + r_idx * cell_h
         parts.append(f'<text x="24" y="{y + 29}" font-size="13" font-weight="700" fill="#17211b">{esc(row["display_name"])}</text>')

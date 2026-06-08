@@ -269,8 +269,11 @@ def render_segment_quadrants_svg(data: dict[str, Any]) -> str:
             if record["model_id"] in {leader_id, economic_id}:
                 anchor = "start" if x < plot_x + plot_w * 0.56 else "end"
                 dx = 8 if anchor == "start" else -8
+                dy = 3
+                if leader_id != economic_id:
+                    dy = -12 if record["model_id"] == leader_id else 16
                 label = short_model_label(record["model_id"])
-                parts.append(f'<text x="{x + dx:.1f}" y="{y + 3:.1f}" text-anchor="{anchor}" font-size="10" font-weight="700" fill="{COLOR_INK}">{esc(label)}</text>')
+                parts.append(f'<text x="{x + dx:.1f}" y="{y + dy:.1f}" text-anchor="{anchor}" font-size="10" font-weight="700" fill="{COLOR_INK}">{esc(label)}</text>')
 
         parts.append(
             f'<text x="{x0 + 14}" y="{y0 + panel_h - 14}" font-size="10" fill="{COLOR_MUTED}">Pick: {esc(segment["economic_pick"].get("display_name", "n/a"))} | Leader: {esc(segment["quality_leader"].get("display_name", "n/a"))}</text>'
@@ -344,6 +347,9 @@ def render_routing_ladder_svg(data: dict[str, Any]) -> str:
 
         ex = stage_x[econ_stage]
         lx = stage_x[leader_stage]
+        if leader_id and leader_id != economic_id and leader_stage == econ_stage:
+            ex -= 15
+            lx += 15
         parts.append(f'<circle cx="{ex}" cy="{cy}" r="12" fill="{COLOR_TEAL}" stroke="{COLOR_INK}" stroke-width="2.5"/>')
         parts.append(f'<text x="{ex}" y="{cy + 4}" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">E</text>')
         if leader_id and leader_id != economic_id:
@@ -380,8 +386,8 @@ def render_routing_ladder_svg(data: dict[str, Any]) -> str:
 
 
 def render_economic_regret_svg(data: dict[str, Any]) -> str:
-    width, height = 1280, 560
-    left, top = 250, 82
+    width, height = 1280, 600
+    left, top = 250, 118
     bar_h, gap = 28, 20
     max_regret = 1.4
     chart_w = 720

@@ -7,7 +7,7 @@
     "evidence": "100 segment eval-pack items, 14 real models with full scored coverage in the curated panel, deterministic anti-echo baselines, and token-derived artifact cost estimates where pricing is encoded.",
     "non_claim": "Retail MerchBench is not a human-validated public ranking, not a production latency study, and not a retailer-specific cost model."
   },
-  "generated_at_utc": "2026-06-08T00:14:21+00:00",
+  "generated_at_utc": "2026-06-08T03:19:27+00:00",
   "key_findings": [
     "Retail MerchBench contains 100 segment eval items, and the curated provider panel has 100/100 scored coverage for 14 real models plus deterministic baselines.",
     "GPT-5.5 is the overall leader at 7.4614/10, followed by GPT-5.4 at 7.3907/10 and GPT-5.4 Mini at 7.3693/10.",
