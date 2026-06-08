@@ -8,7 +8,7 @@
 
 **An eval framework to identify which model is economically right for each retail decision.**
 
-> **Launch CTA:** Fork it, run your favorite model, open a PR, or challenge the scorer.
+> Fork it, run your favorite model, open a PR, or challenge the scorer.
 
 Retail MerchBench is a retail AI benchmark and model-routing toolkit for merchandise-planning workflows. It evaluates whether a model is **economically sufficient** for a task once quality, latency, inference cost, downside risk, reversibility, deterministic controls, and human review are considered.
 
