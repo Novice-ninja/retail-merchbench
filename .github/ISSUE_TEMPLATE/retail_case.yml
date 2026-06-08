@@ -1,0 +1,42 @@
+name: Propose a retail eval case
+description: Suggest a new retail-native task or segment item.
+title: "[Eval case]: "
+labels: ["eval-case", "benchmark"]
+body:
+  - type: dropdown
+    id: segment
+    attributes:
+      label: Segment
+      options:
+        - Low-risk summarization
+        - Structured extraction
+        - Constraint checking
+        - Routine planning recommendation
+        - Pricing and promotion
+        - Ambiguous planning judgment
+        - Portfolio tradeoff
+        - Operational triage
+        - New segment
+    validations:
+      required: true
+  - type: textarea
+    id: task
+    attributes:
+      label: Retail task
+      description: Describe the workflow, input facts, decision question, and user role.
+    validations:
+      required: true
+  - type: textarea
+    id: failure_mode
+    attributes:
+      label: Failure mode
+      description: What would a weak model likely miss?
+    validations:
+      required: true
+  - type: textarea
+    id: ideal_response
+    attributes:
+      label: Ideal response criteria
+      description: What should a strong answer include or avoid?
+    validations:
+      required: true

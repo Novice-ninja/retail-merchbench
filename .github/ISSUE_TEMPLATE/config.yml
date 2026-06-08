@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Read the paper
+    url: https://github.com/Novice-ninja/retail-merchbench/blob/main/paper/retail_merchbench.pdf
+    about: Start with the PDF for the benchmark thesis and results.

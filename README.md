@@ -1,40 +1,63 @@
 # Retail MerchBench
 
-Retail MerchBench is a research benchmark and model-routing toolkit for retail merchandise-planning workflows. It evaluates whether language models are economically sufficient for specific classes of retail decisions, not just whether they top a generic leaderboard.
+[![Validate](https://github.com/Novice-ninja/retail-merchbench/actions/workflows/validate.yml/badge.svg)](https://github.com/Novice-ninja/retail-merchbench/actions/workflows/validate.yml)
+[![License: MIT](https://img.shields.io/badge/code-MIT-green.svg)](LICENSE.md)
+[![Data: CC BY 4.0](https://img.shields.io/badge/data%20%2F%20paper-CC%20BY%204.0-blue.svg)](LICENSE.md)
+[![Benchmark items](https://img.shields.io/badge/eval%20items-100-orange.svg)](eval_packs/)
+[![Model panel](https://img.shields.io/badge/scored%20models-14-purple.svg)](reports/eval_packs/)
 
-The benchmark focuses on merchant and planner judgment: noisy demand reads, contaminated signals, operational constraints, open-to-buy pressure, vendor commitments, pricing and promotion risk, portfolio tradeoffs, and operational exception triage.
+**Stop asking which LLM is best. Ask which model is economically right for each retail decision.**
 
-## What This Repository Contains
+Retail MerchBench is a retail AI benchmark and model-routing toolkit for merchandise-planning workflows. It evaluates whether a model is **economically sufficient** for a task once quality, latency, inference cost, downside risk, reversibility, deterministic controls, and human review are considered.
 
-- A 100-item segment eval-pack corpus across eight retail decision segments.
-- Stored full-suite results for a 14-model curated panel across local, hosted, and paid providers.
-- Deterministic adversarial baselines that audit scorer robustness.
-- A provider-agnostic runner for new model evaluations.
-- A visual Atlas with cost-quality frontiers, segment heatmaps, routing quadrants, and workflow ladders.
-- A LaTeX research paper describing the benchmark, methodology, results, limitations, and reproducibility protocol.
-- Human-rater protocol scaffolding for retail-practitioner calibration.
+This repo is built for teams deploying LLMs into retail planning, merchandising, pricing, allocation, replenishment, and exception-management workflows.
 
-## Core Question
+## Read This First
 
-For a given retail workflow, which model or workflow tier is economically sufficient once quality, latency, inference cost, downside risk, reversibility, deterministic controls, and human review are considered?
+- **Paper PDF:** [paper/retail_merchbench.pdf](paper/retail_merchbench.pdf)
+- **Paper source:** [paper/retail_merchbench.tex](paper/retail_merchbench.tex)
+- **Visual Atlas:** [reports/atlas/index.html](reports/atlas/index.html)
+- **Written Atlas:** [reports/atlas/report.md](reports/atlas/report.md)
+- **Methodology:** [docs/METHODOLOGY.md](docs/METHODOLOGY.md)
+- **Reproducibility:** [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)
+
+If this project helps your evals, model-routing strategy, or AI roadmap, star the repo so more retail AI teams can find it.
+
+## The One-Line Claim
+
+For retail AI, the winning model is not always the strongest model. It is the cheapest safe workflow that clears the quality floor, escalates the right cases, and preserves human judgment where automation remains risky.
+
+## Why This Exists
+
+Retail teams are about to put LLM calls inside every planning workflow:
+
+- vendor note summaries;
+- cost and receipt extraction;
+- OTB, MOQ, pack, margin, and capacity checks;
+- replenishment and allocation recommendations;
+- price-match and promotion decisions;
+- ambiguous chase-order calls;
+- cross-category portfolio tradeoffs;
+- store and customer-trust triage.
+
+Most evals tell you whether a model can answer a prompt. Retail operators need a harder answer:
+
+> Should this workflow use rules, a small model, a mid-tier model, a frontier model, a cascade, or human review?
+
+Retail MerchBench is designed around that economic routing question.
 
 ## Current Evidence Package
 
-The release includes:
-
-- 100 segment eval-pack items.
-- Eight decision segments:
-  - Low-risk summarization
-  - Structured extraction
-  - Constraint checking
-  - Routine planning recommendation
-  - Pricing and promotion
-  - Ambiguous planning judgment
-  - Portfolio tradeoff
-  - Operational triage
-- 14 real models with full scored coverage in the curated panel.
-- Stored response and score artifacts for reproducibility.
-- Publication metrics, routing recommendations, and visual artifacts.
+| Asset | What is included |
+| :--- | :--- |
+| Eval corpus | 100 retail-native segment eval items across eight workflow classes |
+| Model panel | 14 real models with full scored coverage in the curated artifact set |
+| Providers | OpenAI, Cerebras, Groq, and local Ollama artifacts |
+| Baselines | Deterministic adversarial baselines for scorer sanity checks |
+| Atlas | Cost-quality frontier, segment heatmap, 2x2 routing quadrants, routing ladder, economic-regret chart |
+| Paper | Full LaTeX paper plus committed PDF |
+| Runner | Provider-agnostic runner and stored-response scorer |
+| Human calibration | Blind subset, rating form, and protocol scaffolding |
 
 ## Headline Findings
 
@@ -46,29 +69,40 @@ The release includes:
 
 These are automated routing priors, not final human-validated production recommendations.
 
-## Repository Map
+## Visual Preview
 
-| Path | Purpose |
-| :--- | :--- |
-| `eval_packs/` | Source 100-item retail eval corpus. |
-| `merchbench/` | Scoring, provider runner, routing, and I/O library code. |
-| `analysis/` | Artifact generation, rescoring, routing reports, and publication metrics. |
-| `reports/atlas/` | Public visual Atlas and written report. |
-| `reports/eval_packs/` | Stored model responses, scores, summaries, and scorer robustness report. |
-| `reports/publication_metrics/` | Risk-weighted and cost-normalized metrics. |
-| `reports/routing/` | Segment-level routing recommendations. |
-| `paper/retail_merchbench.tex` | LaTeX research paper. |
-| `docs/` | Methodology, data card, reproducibility, provider runner, and human-rater protocol. |
-| `human_validation/` | Blind subset and rating-form scaffolding. |
-| `routing/` | Segment policies, model profiles, and provider registry. |
-| `schema/` | Eval-pack JSON schema. |
-| `tests/` | Unit tests for scoring behavior. |
+### Cost-Quality Frontier
+
+![Retail MerchBench model frontier](reports/atlas/model_frontier.svg)
+
+### Segment Heatmap
+
+![Retail MerchBench segment heatmap](reports/atlas/segment_heatmap.svg)
+
+### Routing Quadrants
+
+![Retail MerchBench segment routing quadrants](reports/atlas/segment_quadrants.svg)
+
+## Decision Segments
+
+| Segment | What it tests | Routing implication |
+| :--- | :--- | :--- |
+| Low-risk summarization | Source fidelity, numeric preservation, caveats | Cheap models can work if they do not invent decisions |
+| Structured extraction | Exact fields, missing values, schema compliance | Rules first; model fallback for messy text |
+| Constraint checking | OTB, MOQ, pack, margin, capacity, policy | Deterministic gates should remain authoritative |
+| Routine planning recommendation | Bounded replenishment, markdown, allocation actions | Mid-tier model plus controls |
+| Pricing and promotion | Margin, funding, supply, competitor response, pull-forward | Human review for material price moves |
+| Ambiguous planning judgment | Contaminated evidence, causal reframing, uncertainty | Stronger model plus escalation |
+| Portfolio tradeoff | Cross-category OTB, opportunity cost, leadership pressure | Human review even when model score is high |
+| Operational triage | Safety, customer promise, capacity, owner routing | Cascade with safety and legal gates |
 
 ## Quickstart
 
 Use Python 3.11 or newer.
 
 ```bash
+git clone https://github.com/Novice-ninja/retail-merchbench.git
+cd retail-merchbench
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -85,9 +119,9 @@ make reproduce
 
 Open:
 
-- `reports/atlas/index.html`
-- `reports/atlas/report.md`
-- `paper/retail_merchbench.tex`
+- [reports/atlas/index.html](reports/atlas/index.html)
+- [reports/atlas/report.md](reports/atlas/report.md)
+- [paper/retail_merchbench.pdf](paper/retail_merchbench.pdf)
 
 ## Run a New Model
 
@@ -126,13 +160,35 @@ python3 -m merchbench.cli eval-pack-score \
   --output-summary reports/eval_packs/model_summary.md
 ```
 
-## Validation
+## Repository Map
 
-```bash
-make validate
-```
+| Path | Purpose |
+| :--- | :--- |
+| `eval_packs/` | Source 100-item retail eval corpus. |
+| `merchbench/` | Scoring, provider runner, routing, and I/O library code. |
+| `analysis/` | Artifact generation, rescoring, routing reports, and publication metrics. |
+| `reports/atlas/` | Public visual Atlas and written report. |
+| `reports/eval_packs/` | Stored model responses, scores, summaries, and scorer robustness report. |
+| `reports/publication_metrics/` | Risk-weighted and cost-normalized metrics. |
+| `reports/routing/` | Segment-level routing recommendations. |
+| `paper/` | PDF and LaTeX research paper. |
+| `docs/` | Methodology, data card, reproducibility, provider runner, launch kit, and human-rater protocol. |
+| `human_validation/` | Blind subset and rating-form scaffolding. |
+| `routing/` | Segment policies, model profiles, and provider registry. |
+| `schema/` | Eval-pack JSON schema. |
+| `tests/` | Unit tests for scoring behavior. |
 
-The validator checks required release files, JSON syntax, markdown links, eval-pack schema compliance, routing artifacts, stored score artifacts, Python compilation, and unit tests.
+## Help Make This Better
+
+Useful contributions:
+
+- run a new model and open a PR with stored response and score artifacts;
+- add retail-native eval items from grocery, apparel, marketplace, beauty, hardlines, pharmacy, or specialty retail;
+- improve scorer calibration against human retail practitioners;
+- contribute latency and retry measurements;
+- challenge the methodology with a concrete failure case.
+
+Open an issue with a retail workflow you want covered, or submit a model run using the stored-response format.
 
 ## Interpretation Boundary
 
@@ -147,6 +203,10 @@ It should not be treated as:
 - a universal model leaderboard;
 - a retailer-specific cost model;
 - proof of autonomous readiness for pricing, portfolio, safety, legal, or executive override decisions.
+
+## Keywords
+
+Retail AI, LLM evals, model routing, AI agents, merchandise planning, retail analytics, pricing AI, replenishment AI, allocation AI, LLMOps, benchmark, evaluation harness, OpenAI evals, Ollama evals, Groq evals, Cerebras evals, human-in-the-loop AI.
 
 ## License
 
