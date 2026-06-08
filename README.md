@@ -8,6 +8,8 @@
 
 **An eval framework to identify which model is economically right for each retail decision.**
 
+> **Launch CTA:** Fork it, run your favorite model, open a PR, or challenge the scorer.
+
 Retail MerchBench is a retail AI benchmark and model-routing toolkit for merchandise-planning workflows. It evaluates whether a model is **economically sufficient** for a task once quality, latency, inference cost, downside risk, reversibility, deterministic controls, and human review are considered.
 
 This repo is built for teams deploying LLMs into retail planning, merchandising, pricing, allocation, replenishment, and exception-management workflows.
@@ -18,6 +20,7 @@ This repo is built for teams deploying LLMs into retail planning, merchandising,
 - **Paper source:** [paper/retail_merchbench.tex](paper/retail_merchbench.tex)
 - **Visual Atlas:** [reports/atlas/index.html](reports/atlas/index.html)
 - **Written Atlas:** [reports/atlas/report.md](reports/atlas/report.md)
+- **Launch guide:** [docs/LAUNCH.md](docs/LAUNCH.md)
 - **Methodology:** [docs/METHODOLOGY.md](docs/METHODOLOGY.md)
 - **Reproducibility:** [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)
 
@@ -187,6 +190,8 @@ Useful contributions:
 - challenge the methodology with a concrete failure case.
 
 Open an issue with a retail workflow you want covered, or submit a model run using the stored-response format.
+
+**Start here:** Fork it, run your favorite model, open a PR, or challenge the scorer.
 
 ## Interpretation Boundary
 
