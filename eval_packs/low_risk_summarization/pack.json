@@ -1,0 +1,1460 @@
+{
+  "id": "low_risk_summarization_v0",
+  "version": "0.1",
+  "task_segment": "low_risk_summarization",
+  "purpose": "Evaluate whether a low-cost model can produce faithful, concise retail summaries without turning weak or conflicting source material into recommendations. The pack targets high-volume internal workflow summaries where the economic risk is usually low, but numeric drift, omitted caveats, or accidental recommendations can create downstream planning errors.",
+  "recommended_strategy_under_test": "small_model",
+  "quality_floor": {
+    "minimum_average_score": 8.4,
+    "minimum_item_score": 7,
+    "must_pass_items": 8,
+    "dimension_floor": {
+      "source_fidelity": 0.8,
+      "numeric_fidelity": 0.85,
+      "escalation_boundary": 0.8
+    }
+  },
+  "design_principles": [
+    "Reward faithful compression over persuasive business advice.",
+    "Require exact preservation of dates, quantities, dollars, percentages, and conflicting figures.",
+    "Include realistic retail ambiguity such as weather, vendor delays, stockouts, pull-forward, returns, and executive pressure.",
+    "Force a boundary between summary and decision recommendation.",
+    "Surface escalation triggers when a low-risk summary reveals a higher-risk decision."
+  ],
+  "coverage": {
+    "retail_functions": [
+      "vendor_supply",
+      "pricing_promotion",
+      "store_operations_constraints",
+      "external_shock_response",
+      "assortment_planning",
+      "channel_inventory"
+    ],
+    "categories": [
+      "beauty",
+      "grocery",
+      "home",
+      "apparel",
+      "electronics",
+      "seasonal_outdoor"
+    ],
+    "ambiguity_sources": [
+      "conflicting source numbers",
+      "stockout-censored demand",
+      "weather-driven demand reversal",
+      "vendor date uncertainty",
+      "social signal without conversion",
+      "pull-forward versus incremental sales"
+    ],
+    "externalities": [
+      "weather forecast changes",
+      "competitor promotion",
+      "port delay",
+      "viral social trend",
+      "regional storm preparation"
+    ],
+    "escalation_patterns": [
+      "recommendation requested inside a summary task",
+      "material financial or date conflict",
+      "safety or compliance implication",
+      "inventory commitment or promotion decision implied"
+    ]
+  },
+  "output_contract": {
+    "response_format": "json",
+    "required_fields": [
+      "summary",
+      "key_points",
+      "numbers_preserved",
+      "risks_or_caveats",
+      "escalation_needed",
+      "escalation_reason"
+    ],
+    "forbidden_behaviors": [
+      "make a buy, markdown, allocation, or price recommendation unless explicitly asked",
+      "average conflicting source values without flagging the conflict",
+      "drop dates, units, dollars, or percentages that materially affect the summary",
+      "invent causal explanations not present in the source"
+    ],
+    "json_schema_hint": {
+      "summary": "one sentence",
+      "key_points": "three to five bullets",
+      "numbers_preserved": "array of exact source values",
+      "risks_or_caveats": "array",
+      "escalation_needed": "boolean",
+      "escalation_reason": "string or null"
+    }
+  },
+  "scoring": {
+    "total_points_per_item": 10,
+    "dimensions": {
+      "source_fidelity": {
+        "points": 3,
+        "criteria": [
+          "Captures the core business situation without adding unsupported claims.",
+          "Preserves the difference between facts, caveats, and stakeholder opinions.",
+          "Uses only source-supported causal language."
+        ]
+      },
+      "numeric_fidelity": {
+        "points": 2,
+        "criteria": [
+          "Preserves all material values exactly, including dates, units, dollars, and percentages.",
+          "Flags conflicting values instead of silently reconciling them."
+        ]
+      },
+      "omission_control": {
+        "points": 2,
+        "criteria": [
+          "Includes the caveat or risk that would change downstream interpretation.",
+          "Does not over-focus on the loudest or most recent source when earlier evidence matters."
+        ]
+      },
+      "escalation_boundary": {
+        "points": 2,
+        "criteria": [
+          "Does not turn a summary task into an unrequested decision recommendation.",
+          "Marks escalation when the summary reveals a material decision, safety, compliance, or financial conflict."
+        ]
+      },
+      "format_concision": {
+        "points": 1,
+        "criteria": [
+          "Returns the requested JSON fields with concise, scannable content."
+        ]
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "sum_001",
+      "title": "Beauty Vendor Receipt Delay Recap",
+      "difficulty": "medium",
+      "retail_function": "vendor_supply",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_material": [
+          {
+            "source_id": "vendor_email",
+            "text": "GlowLab says the shampoo POs now leave port on May 3 and should arrive DC May 10. Original DC date was Apr 26. Impacted units: 1,800 of shampoo, 900 of conditioner."
+          },
+          {
+            "source_id": "carrier_update",
+            "text": "Carrier ETA shows vessel discharge May 6 and DC appointment May 13, subject to customs exam release."
+          },
+          {
+            "source_id": "merchant_note",
+            "text": "Mother's Day set build needs 1,200 shampoo units by May 8. Do not recommend a substitute yet; just summarize the risk for the Monday supply huddle."
+          }
+        ]
+      },
+      "question": "Summarize the receipt issue for a supply huddle. Do not recommend an action.",
+      "expected_output": {
+        "summary": "GlowLab shampoo and conditioner receipts are delayed past the original Apr 26 date, with the shampoo delay creating Mother's Day set-build risk.",
+        "key_points": [
+          "Vendor says DC arrival May 10; carrier shows DC appointment May 13 subject to customs release.",
+          "Impacted units are 1,800 shampoo and 900 conditioner.",
+          "Mother's Day set build needs 1,200 shampoo units by May 8."
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "The May 10 or May 13 receipt timing misses the May 8 set-build need and source dates conflict."
+      },
+      "must_include": [
+        "Apr 26 original DC date",
+        "May 10 vendor date and May 13 carrier date",
+        "1,800 shampoo units and 900 conditioner units",
+        "1,200 shampoo units needed by May 8"
+      ],
+      "must_not_include": [
+        "recommend substitute product",
+        "choose May 10 as certain",
+        "ignore the carrier/vendor date conflict"
+      ],
+      "deterministic_checks": [
+        "date consistency check",
+        "unit preservation check",
+        "conflict flag check"
+      ],
+      "escalation_triggers": [
+        "receipt date conflict",
+        "event build need missed"
+      ],
+      "scoring_focus": [
+        "date conflict fidelity",
+        "no recommendation boundary",
+        "event risk caveat"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "date consistency check",
+        "unit preservation check",
+        "conflict flag check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_002",
+      "title": "Patio Demand Weather Reversal Summary",
+      "difficulty": "medium",
+      "retail_function": "external_shock_response",
+      "category": "seasonal_outdoor",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_material": [
+          {
+            "source_id": "weekly_sales",
+            "text": "Patio dining sets sold 640 units last week, up 38 percent to plan. Two warm weekends drove stores in the Southeast."
+          },
+          {
+            "source_id": "inventory_note",
+            "text": "Four Atlanta stores were stocked out of the $499 wood set by Saturday, so reported demand is censored for that item."
+          },
+          {
+            "source_id": "weather_note",
+            "text": "Next 10 days shift to colder rain in Atlanta, Charlotte, and Nashville. Outdoor traffic forecasts are down 18-25 percent."
+          }
+        ]
+      },
+      "question": "Create a short business summary for the weekly merchant recap. Do not make a chase recommendation.",
+      "expected_output": {
+        "summary": "Patio dining beat plan last week, but the read is contaminated by warm weather, stockouts, and a colder rainy forecast.",
+        "key_points": [
+          "Sales were 640 units, up 38 percent to plan.",
+          "Southeast stores benefited from two warm weekends.",
+          "Four Atlanta stores stocked out of the $499 wood set by Saturday.",
+          "Forecasted outdoor traffic is down 18-25 percent for Atlanta, Charlotte, and Nashville."
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Any chase or allocation decision would need a weather-adjusted and stockout-adjusted read."
+      },
+      "must_include": [
+        "640 units",
+        "up 38 percent to plan",
+        "four Atlanta stockouts",
+        "traffic down 18-25 percent"
+      ],
+      "must_not_include": [
+        "recommend a chase",
+        "treat the sales beat as clean demand",
+        "omit weather reversal"
+      ],
+      "deterministic_checks": [
+        "percentage preservation check",
+        "stockout caveat check",
+        "recommendation boundary check"
+      ],
+      "escalation_triggers": [
+        "weather reversal changes interpretation",
+        "stockout-censored demand"
+      ],
+      "scoring_focus": [
+        "externality handling",
+        "censored demand caveat",
+        "concise weekly recap"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "percentage preservation check",
+        "stockout caveat check",
+        "recommendation boundary check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_003",
+      "title": "Grocery Promo Recap Without Price Advice",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_material": [
+          {
+            "source_id": "promo_read",
+            "text": "12-count coffee units rose 24 percent during the 2-week loyalty promo. Gross margin rate was 31 percent versus 38 percent goal."
+          },
+          {
+            "source_id": "post_promo",
+            "text": "The two weeks after promo were down 11 percent to baseline, suggesting some pull-forward. The 24-count bag held flat units but had vendor funding of $1.20 per unit."
+          },
+          {
+            "source_id": "merchant_request",
+            "text": "Need a recap for the vendor call, not a recommendation on whether to repeat the promo."
+          }
+        ]
+      },
+      "question": "Summarize the promo read for a vendor call. Do not recommend whether to repeat the promotion.",
+      "expected_output": {
+        "summary": "The 12-count coffee promo lifted units but missed margin goal and likely pulled some demand forward, while the 24-count had vendor-funded stability.",
+        "key_points": [
+          "12-count units rose 24 percent during the 2-week loyalty promo.",
+          "Gross margin was 31 percent versus a 38 percent goal.",
+          "Post-promo sales were down 11 percent to baseline.",
+          "24-count units held flat with $1.20 per unit vendor funding."
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Repeat-promo or price-match decisions require margin and pull-forward analysis beyond this summary."
+      },
+      "must_include": [
+        "24 percent unit lift",
+        "31 percent margin versus 38 percent goal",
+        "11 percent post-promo decline",
+        "$1.20 per unit vendor funding"
+      ],
+      "must_not_include": [
+        "recommend repeat promotion",
+        "call the lift purely incremental",
+        "omit margin miss"
+      ],
+      "deterministic_checks": [
+        "margin preservation check",
+        "post-promo decline check",
+        "decision boundary check"
+      ],
+      "escalation_triggers": [
+        "promotion repeat decision implied",
+        "margin below goal"
+      ],
+      "scoring_focus": [
+        "pull-forward caveat",
+        "margin caveat",
+        "vendor funding preservation"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "margin preservation check",
+        "post-promo decline check",
+        "decision boundary check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_004",
+      "title": "Storm Water Store Operations Digest",
+      "difficulty": "hard",
+      "retail_function": "store_operations_constraints",
+      "category": "grocery",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "high",
+      "latency_sla": "seconds",
+      "call_volume_band": "medium",
+      "input": {
+        "source_material": [
+          {
+            "source_id": "regional_ops",
+            "text": "Storm prep request: send 22 pallets of water to Coastal District by Friday. Stores can receive 14 pallets before blocking fire lanes."
+          },
+          {
+            "source_id": "merchant_note",
+            "text": "Supplier can ship 28 pallets but asks for an answer by 3 p.m. today. Unit margin is low but community demand is high."
+          },
+          {
+            "source_id": "store_manager_thread",
+            "text": "Two stores already have backroom overflow. One store reports emergency aisle clearance issue from last storm push."
+          }
+        ]
+      },
+      "question": "Write an operations summary for the district standup. Do not decide the final pallet quantity.",
+      "expected_output": {
+        "summary": "The storm water push has demand and supplier availability, but receiving capacity and safety constraints are binding.",
+        "key_points": [
+          "Requested shipment is 22 pallets by Friday.",
+          "Stores can receive 14 pallets before blocking fire lanes.",
+          "Supplier can ship 28 pallets and needs an answer by 3 p.m.",
+          "Two stores have backroom overflow and one has a past emergency aisle clearance issue."
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Fire-lane and emergency aisle constraints make this a safety and operations escalation, not a routine summary."
+      },
+      "must_include": [
+        "22 pallets requested",
+        "14 pallet receiving capacity before fire-lane issue",
+        "28 pallet supplier availability",
+        "3 p.m. decision deadline",
+        "emergency aisle clearance issue"
+      ],
+      "must_not_include": [
+        "approve 22 pallets",
+        "ignore safety constraints",
+        "frame the issue only as low margin"
+      ],
+      "deterministic_checks": [
+        "capacity threshold check",
+        "safety phrase check",
+        "deadline preservation check"
+      ],
+      "escalation_triggers": [
+        "fire lane or emergency aisle risk",
+        "same-day supplier commitment deadline"
+      ],
+      "scoring_focus": [
+        "safety escalation",
+        "capacity numbers",
+        "no quantity decision"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "capacity threshold check",
+        "safety phrase check",
+        "deadline preservation check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_005",
+      "title": "Viral Fleece Trend Recap",
+      "difficulty": "medium",
+      "retail_function": "assortment_planning",
+      "category": "apparel",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_material": [
+          {
+            "source_id": "social",
+            "text": "Kids sherpa fleece video generated 2.4M views and 41k saves in 48 hours. Comments ask for more colors."
+          },
+          {
+            "source_id": "returns",
+            "text": "Current fleece return rate is 18 percent versus 9 percent category norm, mostly fit too small in sizes 7/8 and 10/12."
+          },
+          {
+            "source_id": "inventory",
+            "text": "Stores are 82 percent sold through in pink, but navy is 39 percent sold through. No read yet on repeat purchase."
+          }
+        ]
+      },
+      "question": "Summarize the trend read for the weekly kids apparel note. Do not recommend a chase buy.",
+      "expected_output": {
+        "summary": "The fleece has strong social attention and selective sell-through, but the read is mixed because returns and color differences complicate demand.",
+        "key_points": [
+          "Social signal is 2.4M views and 41k saves in 48 hours.",
+          "Pink is 82 percent sold through while navy is 39 percent sold through.",
+          "Return rate is 18 percent versus 9 percent category norm.",
+          "Fit-too-small complaints concentrate in sizes 7/8 and 10/12."
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "A chase decision would need size-fit and color-level demand analysis."
+      },
+      "must_include": [
+        "2.4M views",
+        "41k saves",
+        "82 percent pink sell-through",
+        "39 percent navy sell-through",
+        "18 percent return rate versus 9 percent norm"
+      ],
+      "must_not_include": [
+        "recommend chase buy",
+        "treat comments as committed demand",
+        "omit fit-return caveat"
+      ],
+      "deterministic_checks": [
+        "social metric preservation check",
+        "return-rate comparison check",
+        "color-level contrast check"
+      ],
+      "escalation_triggers": [
+        "trend-to-buy decision requested",
+        "return rate double category norm"
+      ],
+      "scoring_focus": [
+        "social evidence caveat",
+        "color-level contrast",
+        "returns risk"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "social metric preservation check",
+        "return-rate comparison check",
+        "color-level contrast check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_006",
+      "title": "Candle Cost Increase Meeting Summary",
+      "difficulty": "medium",
+      "retail_function": "vendor_supply",
+      "category": "home",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_material": [
+          {
+            "source_id": "meeting_note",
+            "text": "Vendor will raise unit cost on 14 oz seasonal candles from $4.80 to $5.35 starting July 1. Existing June POs stay at $4.80."
+          },
+          {
+            "source_id": "merchant_note",
+            "text": "Current retail is $12.99. Merchant says price change may be needed but asks only for a summary before finance review."
+          },
+          {
+            "source_id": "vendor_terms",
+            "text": "MOQ remains 1,200 units per scent, carton pack 12, lead time 9 weeks. Vendor offered 2 percent off if order placed by May 15."
+          }
+        ]
+      },
+      "question": "Summarize the candle vendor meeting for finance review. Do not recommend a retail price.",
+      "expected_output": {
+        "summary": "The vendor is increasing July 1 candle unit cost while keeping June POs unchanged, with MOQ, pack, lead time, and early-order discount terms still relevant for finance review.",
+        "key_points": [
+          "Unit cost rises from $4.80 to $5.35 on July 1.",
+          "Existing June POs remain at $4.80.",
+          "Current retail is $12.99.",
+          "MOQ is 1,200 units per scent, carton pack is 12, and lead time is 9 weeks.",
+          "Vendor offers 2 percent off if ordered by May 15."
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Any retail price or order timing decision needs finance review."
+      },
+      "must_include": [
+        "$4.80 old cost",
+        "$5.35 new cost",
+        "July 1 effective date",
+        "$12.99 current retail",
+        "1,200 MOQ per scent",
+        "2 percent May 15 discount"
+      ],
+      "must_not_include": [
+        "recommend retail price",
+        "apply new cost to June POs",
+        "drop MOQ or lead time"
+      ],
+      "deterministic_checks": [
+        "cost change check",
+        "effective date check",
+        "term preservation check"
+      ],
+      "escalation_triggers": [
+        "price decision implied",
+        "finance margin review required"
+      ],
+      "scoring_focus": [
+        "cost/date fidelity",
+        "terms fidelity",
+        "price recommendation boundary"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "cost change check",
+        "effective date check",
+        "term preservation check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_007",
+      "title": "Competitive Coffee Price Watch",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_material": [
+          {
+            "source_id": "price_scrape",
+            "text": "Competitor A dropped 12-count premium coffee to $7.99 for 5 days. Our price is $9.49. Competitor B stayed at $9.29."
+          },
+          {
+            "source_id": "inventory",
+            "text": "Our 12-count inventory cover is 1.4 weeks in top 80 stores. Replenishment cannot arrive for 12 days."
+          },
+          {
+            "source_id": "finance",
+            "text": "Matching $7.99 would reduce gross margin rate from 37 percent to 24 percent. Weekly price watch asks for summary only."
+          }
+        ]
+      },
+      "question": "Summarize the competitive price watch for the merchant. Do not recommend a price match.",
+      "expected_output": {
+        "summary": "Competitor A has a short 12-count coffee price drop, but our inventory and margin constraints make this a flagged watch item rather than a summary-only clean read.",
+        "key_points": [
+          "Competitor A price is $7.99 for 5 days.",
+          "Our price is $9.49 and Competitor B is $9.29.",
+          "Top 80 stores have 1.4 weeks of cover.",
+          "Replenishment cannot arrive for 12 days.",
+          "A $7.99 match would reduce margin from 37 percent to 24 percent."
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Price-match consideration has margin and supply constraints and is outside a summary-only task."
+      },
+      "must_include": [
+        "$7.99 competitor price",
+        "5 days",
+        "$9.49 our price",
+        "$9.29 Competitor B price",
+        "1.4 weeks cover",
+        "37 percent to 24 percent margin change"
+      ],
+      "must_not_include": [
+        "recommend price match",
+        "ignore supply cover",
+        "describe all competitors as matching"
+      ],
+      "deterministic_checks": [
+        "price value preservation check",
+        "margin delta check",
+        "inventory cover check"
+      ],
+      "escalation_triggers": [
+        "price-match decision implied",
+        "margin rate material decline",
+        "replenishment after promo window"
+      ],
+      "scoring_focus": [
+        "competitor distinction",
+        "supply caveat",
+        "margin caveat"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "price value preservation check",
+        "margin delta check",
+        "inventory cover check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_008",
+      "title": "Home Storage Return Feedback Rollup",
+      "difficulty": "medium",
+      "retail_function": "assortment_planning",
+      "category": "home",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "medium",
+      "input": {
+        "source_material": [
+          {
+            "source_id": "returns_dashboard",
+            "text": "Clear 64 qt storage bin return rate is 12.6 percent versus 5.2 percent category norm. Top reasons: lid crack 41 percent, wrong dimensions 22 percent, changed mind 14 percent."
+          },
+          {
+            "source_id": "reviews",
+            "text": "Average review fell from 4.3 to 3.6 stars after a supplier resin change in week 18."
+          },
+          {
+            "source_id": "merchant_request",
+            "text": "Need a customer feedback summary only. Quality team already has samples from lot R18."
+          }
+        ]
+      },
+      "question": "Summarize the customer feedback and return read for the quality team. Do not recommend a vendor action.",
+      "expected_output": {
+        "summary": "The 64 qt clear storage bin has elevated returns and weaker reviews after the week 18 resin change, with lid cracks the leading issue.",
+        "key_points": [
+          "Return rate is 12.6 percent versus 5.2 percent category norm.",
+          "Lid crack is 41 percent of return reasons.",
+          "Wrong dimensions is 22 percent and changed mind is 14 percent.",
+          "Reviews declined from 4.3 to 3.6 stars after the week 18 resin change.",
+          "Quality already has samples from lot R18."
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Quality issue and lot R18 sample review should remain with the quality team."
+      },
+      "must_include": [
+        "12.6 percent return rate",
+        "5.2 percent category norm",
+        "41 percent lid crack",
+        "4.3 to 3.6 star decline",
+        "week 18 resin change",
+        "lot R18"
+      ],
+      "must_not_include": [
+        "recommend vendor chargeback",
+        "state resin change as proven root cause",
+        "omit category norm"
+      ],
+      "deterministic_checks": [
+        "return reason percentage check",
+        "review change check",
+        "causal language check"
+      ],
+      "escalation_triggers": [
+        "quality defect signal",
+        "lot-specific sample review"
+      ],
+      "scoring_focus": [
+        "return reason fidelity",
+        "causal caution",
+        "quality escalation"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "return reason percentage check",
+        "review change check",
+        "causal language check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_009",
+      "title": "Executive Meeting Notes With Conflicting Figures",
+      "difficulty": "hard",
+      "retail_function": "portfolio_otb",
+      "category": "multi_category",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_material": [
+          {
+            "source_id": "finance_slide",
+            "text": "Holiday OTB remaining is $2.4M after committed receipts. Beauty gift sets request $650k incremental cost."
+          },
+          {
+            "source_id": "meeting_transcript",
+            "text": "VP stated remaining OTB is about $2.1M and asked if toys can get another $900k because the viral plush read is strong."
+          },
+          {
+            "source_id": "planning_note",
+            "text": "Outerwear receipt acceleration needs $500k by next Friday to avoid November stockouts in cold-weather stores."
+          }
+        ]
+      },
+      "question": "Summarize the meeting notes and flag conflicts. Do not recommend how to allocate OTB.",
+      "expected_output": {
+        "summary": "Holiday OTB discussion has competing beauty, toy, and outerwear asks, but the remaining OTB figure conflicts between sources.",
+        "key_points": [
+          "Finance slide says remaining OTB is $2.4M.",
+          "VP stated remaining OTB is about $2.1M.",
+          "Beauty gift sets request $650k incremental cost.",
+          "Toys requested another $900k for viral plush.",
+          "Outerwear needs $500k by next Friday to avoid November stockouts."
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Conflicting OTB figures and multi-category funding requests require planner or finance review."
+      },
+      "must_include": [
+        "$2.4M finance OTB",
+        "$2.1M VP-stated OTB",
+        "$650k beauty request",
+        "$900k toys request",
+        "$500k outerwear need"
+      ],
+      "must_not_include": [
+        "allocate OTB",
+        "merge $2.4M and $2.1M into one value",
+        "ignore outerwear timing"
+      ],
+      "deterministic_checks": [
+        "conflicting dollar value check",
+        "category ask preservation check",
+        "recommendation boundary check"
+      ],
+      "escalation_triggers": [
+        "conflicting OTB source values",
+        "500k plus portfolio allocation decision"
+      ],
+      "scoring_focus": [
+        "conflict flagging",
+        "portfolio summary",
+        "no allocation recommendation"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "conflicting dollar value check",
+        "category ask preservation check",
+        "recommendation boundary check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_010",
+      "title": "Daily Exception Digest Routing Summary",
+      "difficulty": "hard",
+      "retail_function": "channel_inventory",
+      "category": "multi_category",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_material": [
+          {
+            "source_id": "exception_1",
+            "text": "Electronics: charger SKU C-188 has 2,400 ecommerce backorders. Substitute C-188B is available but compliance certificate is still pending."
+          },
+          {
+            "source_id": "exception_2",
+            "text": "Beauty: toner SKU T-44 sold 160 percent to plan after influencer post; stores have 3.2 weeks cover, ecommerce has 0.8 weeks cover."
+          },
+          {
+            "source_id": "exception_3",
+            "text": "Home: storage bin SKU H-12 return reason 'lid crack' rose to 39 percent of returns in Midwest lot M22."
+          }
+        ]
+      },
+      "question": "Create a daily exception digest summary and identify which items need escalation. Do not resolve the exceptions.",
+      "expected_output": {
+        "summary": "The digest includes one compliance-sensitive electronics backorder, one channel inventory imbalance in beauty, and one lot-specific home quality issue.",
+        "key_points": [
+          "C-188 has 2,400 ecommerce backorders and substitute C-188B has a pending compliance certificate.",
+          "T-44 sold 160 percent to plan; stores have 3.2 weeks cover and ecommerce has 0.8 weeks cover.",
+          "H-12 lid cracks are 39 percent of returns in Midwest lot M22."
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "C-188B needs compliance escalation and H-12 needs quality escalation; T-44 needs channel inventory review before action."
+      },
+      "must_include": [
+        "2,400 ecommerce backorders",
+        "pending compliance certificate",
+        "160 percent to plan",
+        "3.2 weeks store cover",
+        "0.8 weeks ecommerce cover",
+        "39 percent lid crack returns",
+        "lot M22"
+      ],
+      "must_not_include": [
+        "approve substitute C-188B",
+        "resolve the allocation imbalance",
+        "ignore compliance or quality escalation"
+      ],
+      "deterministic_checks": [
+        "sku/value preservation check",
+        "compliance keyword check",
+        "channel cover contrast check"
+      ],
+      "escalation_triggers": [
+        "pending compliance certificate",
+        "quality defect signal",
+        "channel inventory imbalance"
+      ],
+      "scoring_focus": [
+        "multi-exception compression",
+        "escalation routing",
+        "numeric fidelity"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "sku/value preservation check",
+        "compliance keyword check",
+        "channel cover contrast check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_011",
+      "title": "Berry Weather Spike With DC Capacity",
+      "difficulty": "hard",
+      "retail_function": "replenishment_and_allocation",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "Heatwave forecast adds 18 percent berry demand in the Southwest for 6 days. The DC has 92 percent cold-chain capacity already committed, inbound raspberries are 2 days late, and last year's comp was stockout-censored in 38 percent of stores.",
+        "retail_context": {
+          "category": "grocery",
+          "retail_function": "replenishment_and_allocation",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "case_key": "grocery_weather"
+      },
+      "question": "Summarize the note faithfully. Preserve the numeric facts and caveats, and do not make a recommendation.",
+      "expected_output": {
+        "summary": "Berry Weather Spike With DC Capacity requires preserving operational caveats rather than making a buy or price recommendation.",
+        "key_points": [
+          "18 percent berry demand",
+          "92 percent cold-chain capacity",
+          "2 days late"
+        ],
+        "numbers_preserved": [
+          "18 percent berry demand",
+          "92 percent cold-chain capacity",
+          "2 days late",
+          "38 percent stockout-censored"
+        ],
+        "risks_or_caveats": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Escalate if this summary is used as an approval decision."
+      },
+      "must_include": [
+        "18 percent berry demand",
+        "92 percent cold-chain capacity",
+        "2 days late",
+        "38 percent stockout-censored"
+      ],
+      "must_not_include": [
+        "treat last year's comp as clean demand",
+        "ignore cold-chain capacity",
+        "blanket chase all stores"
+      ],
+      "deterministic_checks": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "escalation_triggers": [
+        "cold-chain capacity exceeds safe receiving limit",
+        "late inbound creates service risk"
+      ],
+      "scoring_focus": [
+        "summary",
+        "key_points",
+        "numbers_preserved"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_012",
+      "title": "Beauty Trend Spike With Vendor Funding Window",
+      "difficulty": "medium",
+      "retail_function": "assortment_and_promotion",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A serum shade is trending on social channels with a 41 percent search spike. Vendor co-op funding expires in 9 days, the promo margin floor is 44 percent, and two top stores report tester theft and low attachment to the regimen kit.",
+        "retail_context": {
+          "category": "beauty",
+          "retail_function": "assortment_and_promotion",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "case_key": "beauty_trend"
+      },
+      "question": "Summarize the note faithfully. Preserve the numeric facts and caveats, and do not make a recommendation.",
+      "expected_output": {
+        "summary": "Beauty Trend Spike With Vendor Funding Window requires preserving operational caveats rather than making a buy or price recommendation.",
+        "key_points": [
+          "41 percent search spike",
+          "9 days",
+          "44 percent margin floor"
+        ],
+        "numbers_preserved": [
+          "41 percent search spike",
+          "9 days",
+          "44 percent margin floor",
+          "low attachment"
+        ],
+        "risks_or_caveats": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "escalation_needed": false,
+        "escalation_reason": null
+      },
+      "must_include": [
+        "41 percent search spike",
+        "9 days",
+        "44 percent margin floor",
+        "low attachment"
+      ],
+      "must_not_include": [
+        "assume the social trend proves sell-through",
+        "ignore tester theft",
+        "promote below margin floor"
+      ],
+      "deterministic_checks": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "escalation_triggers": [
+        "funding expires before execution",
+        "promotion breaks margin floor"
+      ],
+      "scoring_focus": [
+        "summary",
+        "key_points",
+        "numbers_preserved"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_013",
+      "title": "Tool Set Chase With Vendor Reliability Drop",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "hard_goods",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A 120-piece tool set is up 26 percent in DIY channels after a competitor recall. The vendor fill rate fell from 94 percent to 71 percent over 4 weeks, MOQ is 480 units, and the item has a 13 percent bulky-item return rate.",
+        "retail_context": {
+          "category": "hard_goods",
+          "retail_function": "vendor_supply",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "case_key": "hardgoods_vendor"
+      },
+      "question": "Summarize the note faithfully. Preserve the numeric facts and caveats, and do not make a recommendation.",
+      "expected_output": {
+        "summary": "Tool Set Chase With Vendor Reliability Drop requires preserving operational caveats rather than making a buy or price recommendation.",
+        "key_points": [
+          "26 percent",
+          "71 percent fill rate",
+          "MOQ 480"
+        ],
+        "numbers_preserved": [
+          "26 percent",
+          "71 percent fill rate",
+          "MOQ 480",
+          "13 percent return rate"
+        ],
+        "risks_or_caveats": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Escalate if this summary is used as an approval decision."
+      },
+      "must_include": [
+        "26 percent",
+        "71 percent fill rate",
+        "MOQ 480",
+        "13 percent return rate"
+      ],
+      "must_not_include": [
+        "chase full demand without vendor risk",
+        "ignore MOQ",
+        "ignore bulky-item returns"
+      ],
+      "deterministic_checks": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "fill rate stays below 80 percent",
+        "bulky returns exceed plan"
+      ],
+      "scoring_focus": [
+        "summary",
+        "key_points",
+        "numbers_preserved"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_014",
+      "title": "Headphone Price Match With MAP Risk",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A marketplace seller lists the premium headphone at $149.99 while our price is $179.99. Vendor MAP is $169.99, unit cost is $118.00, attachment on warranty is 22 percent, and 31 percent of recent returns cite counterfeit concern in competitor reviews.",
+        "retail_context": {
+          "category": "electronics",
+          "retail_function": "pricing_promotion",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "case_key": "electronics_map"
+      },
+      "question": "Summarize the note faithfully. Preserve the numeric facts and caveats, and do not make a recommendation.",
+      "expected_output": {
+        "summary": "Headphone Price Match With MAP Risk requires preserving operational caveats rather than making a buy or price recommendation.",
+        "key_points": [
+          "$149.99",
+          "$169.99 MAP",
+          "$118.00 unit cost"
+        ],
+        "numbers_preserved": [
+          "$149.99",
+          "$169.99 MAP",
+          "$118.00 unit cost",
+          "31 percent"
+        ],
+        "risks_or_caveats": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Escalate if this summary is used as an approval decision."
+      },
+      "must_include": [
+        "$149.99",
+        "$169.99 MAP",
+        "$118.00 unit cost",
+        "31 percent"
+      ],
+      "must_not_include": [
+        "match below MAP",
+        "treat marketplace seller as clean competitor",
+        "ignore warranty attachment"
+      ],
+      "deterministic_checks": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "escalation_triggers": [
+        "MAP breach requested",
+        "counterfeit or price-image risk is unresolved"
+      ],
+      "scoring_focus": [
+        "summary",
+        "key_points",
+        "numbers_preserved"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_015",
+      "title": "Patio Set Buy With Return And DC Constraint",
+      "difficulty": "hard",
+      "retail_function": "initial_buy",
+      "category": "home",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A patio dining set has a 33 percent pre-season intent lift, but the DC furniture floor is capped at 84 trailers. The vendor lead time slipped from 28 to 43 days, assembly complaints are 18 percent above benchmark, and holding the buy protects $420k OTB for late-spring umbrellas.",
+        "retail_context": {
+          "category": "home",
+          "retail_function": "initial_buy",
+          "decision_value_band": "500k_plus"
+        },
+        "known_controls": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "case_key": "home_capacity"
+      },
+      "question": "Summarize the note faithfully. Preserve the numeric facts and caveats, and do not make a recommendation.",
+      "expected_output": {
+        "summary": "Patio Set Buy With Return And DC Constraint requires preserving operational caveats rather than making a buy or price recommendation.",
+        "key_points": [
+          "33 percent intent lift",
+          "84 trailers",
+          "43 days"
+        ],
+        "numbers_preserved": [
+          "33 percent intent lift",
+          "84 trailers",
+          "43 days",
+          "$420k OTB"
+        ],
+        "risks_or_caveats": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Escalate if this summary is used as an approval decision."
+      },
+      "must_include": [
+        "33 percent intent lift",
+        "84 trailers",
+        "43 days",
+        "$420k OTB"
+      ],
+      "must_not_include": [
+        "ignore umbrella opportunity cost",
+        "ignore DC capacity",
+        "assume intent lift equals demand"
+      ],
+      "deterministic_checks": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "escalation_triggers": [
+        "DC floor capacity is exceeded",
+        "lead time misses seasonal selling window"
+      ],
+      "scoring_focus": [
+        "summary",
+        "key_points",
+        "numbers_preserved"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_016",
+      "title": "Trail Shoe Allocation With Size-Curve Noise",
+      "difficulty": "medium",
+      "retail_function": "allocation_size_fit",
+      "category": "footwear",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "minutes",
+      "call_volume_band": "high",
+      "input": {
+        "source_note": "Trail shoe conversion is up 19 percent in mountain stores after rain, but sizes 10-12 stocked out for 5 days. E-commerce returns are 16 percent for fit, store labor can process only 320 transfer pairs this week, and the next vendor cut is 6 weeks away.",
+        "retail_context": {
+          "category": "footwear",
+          "retail_function": "allocation_size_fit",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "case_key": "footwear_size"
+      },
+      "question": "Summarize the note faithfully. Preserve the numeric facts and caveats, and do not make a recommendation.",
+      "expected_output": {
+        "summary": "Trail Shoe Allocation With Size-Curve Noise requires preserving operational caveats rather than making a buy or price recommendation.",
+        "key_points": [
+          "19 percent",
+          "sizes 10-12",
+          "320 transfer pairs"
+        ],
+        "numbers_preserved": [
+          "19 percent",
+          "sizes 10-12",
+          "320 transfer pairs",
+          "6 weeks"
+        ],
+        "risks_or_caveats": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "escalation_needed": false,
+        "escalation_reason": null
+      },
+      "must_include": [
+        "19 percent",
+        "sizes 10-12",
+        "320 transfer pairs",
+        "6 weeks"
+      ],
+      "must_not_include": [
+        "read total conversion as clean",
+        "ignore transfer labor",
+        "over-allocate fit-risk sizes"
+      ],
+      "deterministic_checks": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "labor cap blocks transfer plan",
+        "size-level read remains censored"
+      ],
+      "scoring_focus": [
+        "summary",
+        "key_points",
+        "numbers_preserved"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    },
+    {
+      "id": "sum_017",
+      "title": "Holiday Marketplace Seller With Customer Trust Risk",
+      "difficulty": "hard",
+      "retail_function": "marketplace_and_seasonal",
+      "category": "marketplace",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A third-party seller offers 8,000 units of a holiday decor item with 37 percent lower cost. The seller has 91 percent on-time delivery, packaging defect claims are 4.8 percent, and the item is used in a public holiday promise landing page that launches in 72 hours.",
+        "retail_context": {
+          "category": "marketplace",
+          "retail_function": "marketplace_and_seasonal",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "case_key": "seasonal_marketplace"
+      },
+      "question": "Summarize the note faithfully. Preserve the numeric facts and caveats, and do not make a recommendation.",
+      "expected_output": {
+        "summary": "Holiday Marketplace Seller With Customer Trust Risk requires preserving operational caveats rather than making a buy or price recommendation.",
+        "key_points": [
+          "8,000 units",
+          "37 percent lower cost",
+          "91 percent on-time delivery"
+        ],
+        "numbers_preserved": [
+          "8,000 units",
+          "37 percent lower cost",
+          "91 percent on-time delivery",
+          "72 hours"
+        ],
+        "risks_or_caveats": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "Escalate if this summary is used as an approval decision."
+      },
+      "must_include": [
+        "8,000 units",
+        "37 percent lower cost",
+        "91 percent on-time delivery",
+        "72 hours"
+      ],
+      "must_not_include": [
+        "approve solely because cost is lower",
+        "ignore packaging defects",
+        "ignore public promise risk"
+      ],
+      "deterministic_checks": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "escalation_triggers": [
+        "public promise is at risk",
+        "seller reliability below launch threshold"
+      ],
+      "scoring_focus": [
+        "summary",
+        "key_points",
+        "numbers_preserved"
+      ],
+      "ambiguity_type": "source compression with caveat retention",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "expected_failure_mode": "The answer over-compresses caveats, drops numeric facts, or turns a recap into a recommendation.",
+      "scoring_rationale": "Score should reward source-faithful compression, numeric preservation, caveat retention, and no-decision discipline."
+    }
+  ]
+}

@@ -1,0 +1,868 @@
+{
+  "id": "routine_planning_recommendation_v0",
+  "version": "0.1",
+  "task_segment": "routine_planning_recommendation",
+  "purpose": "Evaluate mid-tier model suitability for routine retail recommendations where the decision is reversible or bounded, deterministic checks catch hard constraints, and the model must produce a concise action with guardrails rather than a full strategic judgment memo.",
+  "recommended_strategy_under_test": "mid_model",
+  "quality_floor": {
+    "minimum_average_score": 8.2,
+    "minimum_item_score": 7,
+    "must_pass_items": 3,
+    "dimension_floor": {
+      "recommendation_quality": 0.8,
+      "constraint_awareness": 0.85,
+      "actionability": 0.8
+    }
+  },
+  "design_principles": [
+    "Use medium-risk decisions where a mid model should beat rules but not require frontier reasoning.",
+    "Include enough numeric structure to punish generic recommendations.",
+    "Require a specific bounded action, not a vague watch item.",
+    "Reward escalation only when the routine case stops being routine.",
+    "Keep decisions reversible or limited in business downside."
+  ],
+  "coverage": {
+    "retail_functions": [
+      "replenishment_chase",
+      "markdown_exit",
+      "allocation",
+      "channel_inventory"
+    ],
+    "categories": [
+      "beauty",
+      "home",
+      "apparel",
+      "grocery"
+    ],
+    "ambiguity_sources": [
+      "localized demand versus broad trend",
+      "minor channel imbalance",
+      "low-risk markdown timing",
+      "vendor lead-time tradeoff",
+      "store-level inventory noise"
+    ],
+    "externalities": [
+      "weather normalization",
+      "vendor fill rate",
+      "minor competitor event"
+    ],
+    "escalation_patterns": [
+      "inventory value exceeds routine threshold",
+      "constraint check fails",
+      "confidence too low for automation",
+      "action becomes irreversible"
+    ]
+  },
+  "output_contract": {
+    "response_format": "json",
+    "required_fields": [
+      "recommended_action",
+      "quantity_or_depth",
+      "rationale",
+      "constraints_checked",
+      "confidence",
+      "escalation_needed",
+      "next_read"
+    ],
+    "forbidden_behaviors": [
+      "give an unconstrained recommendation",
+      "ignore deterministic checks already supplied",
+      "escalate every routine case by default",
+      "invent demand data"
+    ]
+  },
+  "scoring": {
+    "total_points_per_item": 10,
+    "dimensions": {
+      "recommendation_quality": {
+        "points": 3,
+        "criteria": [
+          "Selects the expected bounded action.",
+          "Avoids overreaction to noisy signals.",
+          "Matches action scale to decision value and downside."
+        ]
+      },
+      "constraint_awareness": {
+        "points": 2,
+        "criteria": [
+          "Uses supplied capacity, OTB, pack, or margin checks.",
+          "Does not recommend an action that violates a hard guardrail."
+        ]
+      },
+      "evidence_use": {
+        "points": 2,
+        "criteria": [
+          "Uses the most relevant sales, inventory, margin, and timing signals.",
+          "Discounts contaminated or weak evidence."
+        ]
+      },
+      "actionability": {
+        "points": 2,
+        "criteria": [
+          "Provides an executable quantity, depth, segment, or timing.",
+          "States the next read or rollback condition."
+        ]
+      },
+      "calibration": {
+        "points": 1,
+        "criteria": [
+          "Uses appropriate confidence and escalation stance."
+        ]
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "rou_001",
+      "title": "Low-Risk Toner Ecommerce Rebalance",
+      "difficulty": "medium",
+      "retail_function": "channel_inventory",
+      "category": "beauty",
+      "decision_value_band": "1k_25k",
+      "error_downside_band": "low",
+      "latency_sla": "minutes",
+      "call_volume_band": "high",
+      "input": {
+        "facts": "Toner T-44 is 160 percent to plan ecommerce, 98 percent to plan stores. Ecommerce cover is 0.8 weeks; stores have 3.2 weeks. Transfer cost is low. Minimum store cover after transfer is 2.4 weeks. Suggested transfer pool is 420 units."
+      },
+      "question": "Recommend a routine channel rebalance quantity and next read.",
+      "expected_output": {
+        "recommended_action": "transfer 300-420 units from stores to ecommerce",
+        "constraints_checked": [
+          "store cover remains at or above 2.4 weeks",
+          "low transfer cost"
+        ],
+        "confidence": "medium_high",
+        "next_read": "review ecommerce cover and store sell-through after 7 days"
+      },
+      "must_include": [
+        "transfer from stores to ecommerce",
+        "300-420 unit band",
+        "store cover floor 2.4 weeks",
+        "7 day read"
+      ],
+      "must_not_include": [
+        "new purchase order",
+        "transfer below store cover floor",
+        "escalate as high risk"
+      ],
+      "deterministic_checks": [
+        "store cover floor check",
+        "transfer quantity band check"
+      ],
+      "escalation_triggers": [
+        "store cover would fall below 2.4 weeks"
+      ],
+      "scoring_focus": [
+        "bounded action",
+        "channel inventory evidence",
+        "routine confidence"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "low",
+      "reversibility": "high",
+      "deterministic_controls": [
+        "store cover floor check",
+        "transfer quantity band check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    },
+    {
+      "id": "rou_002",
+      "title": "Standard Candle Markdown Step",
+      "difficulty": "hard",
+      "retail_function": "markdown_exit",
+      "category": "home",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "Fall candle C-14 has 9.5 weeks of supply with 5 selling weeks left. Sell-through is 58 percent versus 70 percent plan. Current margin allows up to 20 percent off while staying above markdown budget. Last 15 percent event lifted units 1.3x but not enough to clear. No quality issue."
+      },
+      "question": "Recommend a routine markdown action and guardrail.",
+      "expected_output": {
+        "recommended_action": "take a 20 percent markdown or targeted 20 percent event",
+        "quantity_or_depth": "20 percent",
+        "constraints_checked": [
+          "markdown budget permits up to 20 percent",
+          "no quality issue"
+        ],
+        "next_read": "sell-through after one week; escalate if clearance trajectory still misses exit"
+      },
+      "must_include": [
+        "20 percent markdown depth",
+        "9.5 weeks supply versus 5 weeks left",
+        "58 percent versus 70 percent plan",
+        "one week read"
+      ],
+      "must_not_include": [
+        "recommend over 20 percent",
+        "blame quality issue",
+        "hold price without addressing exit risk"
+      ],
+      "deterministic_checks": [
+        "markdown budget cap check",
+        "weeks-of-supply check",
+        "sell-through gap check"
+      ],
+      "escalation_triggers": [
+        "clearance trajectory still misses exit after one week",
+        "requested markdown exceeds budget"
+      ],
+      "scoring_focus": [
+        "markdown action",
+        "budget constraint",
+        "exit timing"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "markdown budget cap check",
+        "weeks-of-supply check",
+        "sell-through gap check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    },
+    {
+      "id": "rou_003",
+      "title": "Girls Fleece Size Allocation Tune",
+      "difficulty": "hard",
+      "retail_function": "allocation",
+      "category": "apparel",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "Girls fleece GF-77 has 1,200 units arriving. Cluster A is selling 130 percent to plan and short sizes M/L. Cluster B is 84 percent to plan and heavy in XL. Pack multiple is 6 by size. Proposed tune shifts 180 M/L units from Cluster B allocation to Cluster A while leaving B above 6 weeks cover."
+      },
+      "question": "Recommend whether to apply the routine allocation tune.",
+      "expected_output": {
+        "recommended_action": "apply the 180 unit M/L shift to Cluster A if pack multiples by size are preserved",
+        "constraints_checked": [
+          "Cluster B remains above 6 weeks cover",
+          "pack multiple 6 by size"
+        ],
+        "confidence": "medium",
+        "next_read": "size-level sell-through after first weekend"
+      },
+      "must_include": [
+        "180 M/L unit shift",
+        "Cluster A 130 percent to plan",
+        "Cluster B 84 percent to plan",
+        "pack multiple 6 by size"
+      ],
+      "must_not_include": [
+        "shift XL toward Cluster A",
+        "ignore Cluster B cover",
+        "treat as national chase buy"
+      ],
+      "deterministic_checks": [
+        "pack multiple check",
+        "Cluster B cover floor check",
+        "size specificity check"
+      ],
+      "escalation_triggers": [
+        "pack multiple cannot be preserved",
+        "Cluster B falls below cover floor"
+      ],
+      "scoring_focus": [
+        "localized allocation",
+        "size-specific action",
+        "guardrail use"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "pack multiple check",
+        "Cluster B cover floor check",
+        "size specificity check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    },
+    {
+      "id": "rou_004",
+      "title": "Routine Salsa Replenishment Under Minor Competitor Event",
+      "difficulty": "medium",
+      "retail_function": "replenishment_chase",
+      "category": "grocery",
+      "decision_value_band": "1k_25k",
+      "error_downside_band": "low",
+      "latency_sla": "minutes",
+      "call_volume_band": "high",
+      "input": {
+        "facts": "Private-label salsa sold 112 percent to plan for 3 weeks. Competitor had a mild 10 percent promo last week. Current cover is 1.6 weeks, target is 3.0, vendor lead time is 5 days, MOQ is 240 cases, and open OTB can fund one MOQ."
+      },
+      "question": "Recommend a routine replenishment action.",
+      "expected_output": {
+        "recommended_action": "place one MOQ replenishment order",
+        "quantity_or_depth": "240 cases",
+        "constraints_checked": [
+          "OTB can fund one MOQ",
+          "lead time 5 days",
+          "cover below target"
+        ],
+        "confidence": "medium"
+      },
+      "must_include": [
+        "240 cases",
+        "1.6 weeks cover versus 3.0 target",
+        "5 day lead time",
+        "competitor promo caveat"
+      ],
+      "must_not_include": [
+        "order multiple MOQs",
+        "ignore OTB limit",
+        "attribute all demand to competitor promo"
+      ],
+      "deterministic_checks": [
+        "MOQ check",
+        "OTB one-MOQ limit check",
+        "cover gap check"
+      ],
+      "escalation_triggers": [
+        "request exceeds one MOQ",
+        "OTB unavailable"
+      ],
+      "scoring_focus": [
+        "routine reorder",
+        "promo caveat",
+        "MOQ discipline"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "low",
+      "reversibility": "high",
+      "deterministic_controls": [
+        "MOQ check",
+        "OTB one-MOQ limit check",
+        "cover gap check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    },
+    {
+      "id": "rou_005",
+      "title": "Berry Weather Spike With DC Capacity",
+      "difficulty": "hard",
+      "retail_function": "replenishment_and_allocation",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "Heatwave forecast adds 18 percent berry demand in the Southwest for 6 days. The DC has 92 percent cold-chain capacity already committed, inbound raspberries are 2 days late, and last year's comp was stockout-censored in 38 percent of stores.",
+        "retail_context": {
+          "category": "grocery",
+          "retail_function": "replenishment_and_allocation",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "case_key": "grocery_weather"
+      },
+      "question": "Recommend the bounded next planning action and state the guardrails that must be checked.",
+      "expected_output": {
+        "recommended_action": "take a bounded, controlled action rather than a blanket move",
+        "quantity_or_depth": "cap action to stores or units passing the deterministic controls",
+        "rationale": "Berry Weather Spike With DC Capacity has upside, but the action is constrained by cold-chain capacity check, late inbound check.",
+        "constraints_checked": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "confidence": "medium",
+        "escalation_needed": true,
+        "next_read": "re-check controls after the next receipt, demand read, or risk signal."
+      },
+      "must_include": [
+        "18 percent berry demand",
+        "92 percent cold-chain capacity",
+        "2 days late",
+        "38 percent stockout-censored"
+      ],
+      "must_not_include": [
+        "treat last year's comp as clean demand",
+        "ignore cold-chain capacity",
+        "blanket chase all stores"
+      ],
+      "deterministic_checks": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "escalation_triggers": [
+        "cold-chain capacity exceeds safe receiving limit",
+        "late inbound creates service risk"
+      ],
+      "scoring_focus": [
+        "recommended_action",
+        "quantity_or_depth",
+        "rationale"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    },
+    {
+      "id": "rou_006",
+      "title": "Beauty Trend Spike With Vendor Funding Window",
+      "difficulty": "medium",
+      "retail_function": "assortment_and_promotion",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A serum shade is trending on social channels with a 41 percent search spike. Vendor co-op funding expires in 9 days, the promo margin floor is 44 percent, and two top stores report tester theft and low attachment to the regimen kit.",
+        "retail_context": {
+          "category": "beauty",
+          "retail_function": "assortment_and_promotion",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "case_key": "beauty_trend"
+      },
+      "question": "Recommend the bounded next planning action and state the guardrails that must be checked.",
+      "expected_output": {
+        "recommended_action": "take a bounded, controlled action rather than a blanket move",
+        "quantity_or_depth": "cap action to stores or units passing the deterministic controls",
+        "rationale": "Beauty Trend Spike With Vendor Funding Window has upside, but the action is constrained by vendor funding window check, margin floor check.",
+        "constraints_checked": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "confidence": "medium",
+        "escalation_needed": false,
+        "next_read": "re-check controls after the next receipt, demand read, or risk signal."
+      },
+      "must_include": [
+        "41 percent search spike",
+        "9 days",
+        "44 percent margin floor",
+        "low attachment"
+      ],
+      "must_not_include": [
+        "assume the social trend proves sell-through",
+        "ignore tester theft",
+        "promote below margin floor"
+      ],
+      "deterministic_checks": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "escalation_triggers": [
+        "funding expires before execution",
+        "promotion breaks margin floor"
+      ],
+      "scoring_focus": [
+        "recommended_action",
+        "quantity_or_depth",
+        "rationale"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    },
+    {
+      "id": "rou_007",
+      "title": "Tool Set Chase With Vendor Reliability Drop",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "hard_goods",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A 120-piece tool set is up 26 percent in DIY channels after a competitor recall. The vendor fill rate fell from 94 percent to 71 percent over 4 weeks, MOQ is 480 units, and the item has a 13 percent bulky-item return rate.",
+        "retail_context": {
+          "category": "hard_goods",
+          "retail_function": "vendor_supply",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "case_key": "hardgoods_vendor"
+      },
+      "question": "Recommend the bounded next planning action and state the guardrails that must be checked.",
+      "expected_output": {
+        "recommended_action": "take a bounded, controlled action rather than a blanket move",
+        "quantity_or_depth": "cap action to stores or units passing the deterministic controls",
+        "rationale": "Tool Set Chase With Vendor Reliability Drop has upside, but the action is constrained by vendor fill-rate check, MOQ check.",
+        "constraints_checked": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "confidence": "medium",
+        "escalation_needed": true,
+        "next_read": "re-check controls after the next receipt, demand read, or risk signal."
+      },
+      "must_include": [
+        "26 percent",
+        "71 percent fill rate",
+        "MOQ 480",
+        "13 percent return rate"
+      ],
+      "must_not_include": [
+        "chase full demand without vendor risk",
+        "ignore MOQ",
+        "ignore bulky-item returns"
+      ],
+      "deterministic_checks": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "fill rate stays below 80 percent",
+        "bulky returns exceed plan"
+      ],
+      "scoring_focus": [
+        "recommended_action",
+        "quantity_or_depth",
+        "rationale"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    },
+    {
+      "id": "rou_008",
+      "title": "Headphone Price Match With MAP Risk",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A marketplace seller lists the premium headphone at $149.99 while our price is $179.99. Vendor MAP is $169.99, unit cost is $118.00, attachment on warranty is 22 percent, and 31 percent of recent returns cite counterfeit concern in competitor reviews.",
+        "retail_context": {
+          "category": "electronics",
+          "retail_function": "pricing_promotion",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "case_key": "electronics_map"
+      },
+      "question": "Recommend the bounded next planning action and state the guardrails that must be checked.",
+      "expected_output": {
+        "recommended_action": "take a bounded, controlled action rather than a blanket move",
+        "quantity_or_depth": "cap action to stores or units passing the deterministic controls",
+        "rationale": "Headphone Price Match With MAP Risk has upside, but the action is constrained by MAP floor check, unit-margin check.",
+        "constraints_checked": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "confidence": "medium",
+        "escalation_needed": true,
+        "next_read": "re-check controls after the next receipt, demand read, or risk signal."
+      },
+      "must_include": [
+        "$149.99",
+        "$169.99 MAP",
+        "$118.00 unit cost",
+        "31 percent"
+      ],
+      "must_not_include": [
+        "match below MAP",
+        "treat marketplace seller as clean competitor",
+        "ignore warranty attachment"
+      ],
+      "deterministic_checks": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "escalation_triggers": [
+        "MAP breach requested",
+        "counterfeit or price-image risk is unresolved"
+      ],
+      "scoring_focus": [
+        "recommended_action",
+        "quantity_or_depth",
+        "rationale"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    },
+    {
+      "id": "rou_009",
+      "title": "Patio Set Buy With Return And DC Constraint",
+      "difficulty": "hard",
+      "retail_function": "initial_buy",
+      "category": "home",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A patio dining set has a 33 percent pre-season intent lift, but the DC furniture floor is capped at 84 trailers. The vendor lead time slipped from 28 to 43 days, assembly complaints are 18 percent above benchmark, and holding the buy protects $420k OTB for late-spring umbrellas.",
+        "retail_context": {
+          "category": "home",
+          "retail_function": "initial_buy",
+          "decision_value_band": "500k_plus"
+        },
+        "known_controls": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "case_key": "home_capacity"
+      },
+      "question": "Recommend the bounded next planning action and state the guardrails that must be checked.",
+      "expected_output": {
+        "recommended_action": "take a bounded, controlled action rather than a blanket move",
+        "quantity_or_depth": "cap action to stores or units passing the deterministic controls",
+        "rationale": "Patio Set Buy With Return And DC Constraint has upside, but the action is constrained by DC trailer capacity check, lead-time slippage check.",
+        "constraints_checked": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "confidence": "medium",
+        "escalation_needed": true,
+        "next_read": "re-check controls after the next receipt, demand read, or risk signal."
+      },
+      "must_include": [
+        "33 percent intent lift",
+        "84 trailers",
+        "43 days",
+        "$420k OTB"
+      ],
+      "must_not_include": [
+        "ignore umbrella opportunity cost",
+        "ignore DC capacity",
+        "assume intent lift equals demand"
+      ],
+      "deterministic_checks": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "escalation_triggers": [
+        "DC floor capacity is exceeded",
+        "lead time misses seasonal selling window"
+      ],
+      "scoring_focus": [
+        "recommended_action",
+        "quantity_or_depth",
+        "rationale"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    },
+    {
+      "id": "rou_010",
+      "title": "Trail Shoe Allocation With Size-Curve Noise",
+      "difficulty": "medium",
+      "retail_function": "allocation_size_fit",
+      "category": "footwear",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "minutes",
+      "call_volume_band": "high",
+      "input": {
+        "source_note": "Trail shoe conversion is up 19 percent in mountain stores after rain, but sizes 10-12 stocked out for 5 days. E-commerce returns are 16 percent for fit, store labor can process only 320 transfer pairs this week, and the next vendor cut is 6 weeks away.",
+        "retail_context": {
+          "category": "footwear",
+          "retail_function": "allocation_size_fit",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "case_key": "footwear_size"
+      },
+      "question": "Recommend the bounded next planning action and state the guardrails that must be checked.",
+      "expected_output": {
+        "recommended_action": "take a bounded, controlled action rather than a blanket move",
+        "quantity_or_depth": "cap action to stores or units passing the deterministic controls",
+        "rationale": "Trail Shoe Allocation With Size-Curve Noise has upside, but the action is constrained by size-level stockout check, store labor transfer cap check.",
+        "constraints_checked": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "confidence": "medium",
+        "escalation_needed": false,
+        "next_read": "re-check controls after the next receipt, demand read, or risk signal."
+      },
+      "must_include": [
+        "19 percent",
+        "sizes 10-12",
+        "320 transfer pairs",
+        "6 weeks"
+      ],
+      "must_not_include": [
+        "read total conversion as clean",
+        "ignore transfer labor",
+        "over-allocate fit-risk sizes"
+      ],
+      "deterministic_checks": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "labor cap blocks transfer plan",
+        "size-level read remains censored"
+      ],
+      "scoring_focus": [
+        "recommended_action",
+        "quantity_or_depth",
+        "rationale"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    },
+    {
+      "id": "rou_011",
+      "title": "Holiday Marketplace Seller With Customer Trust Risk",
+      "difficulty": "hard",
+      "retail_function": "marketplace_and_seasonal",
+      "category": "marketplace",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A third-party seller offers 8,000 units of a holiday decor item with 37 percent lower cost. The seller has 91 percent on-time delivery, packaging defect claims are 4.8 percent, and the item is used in a public holiday promise landing page that launches in 72 hours.",
+        "retail_context": {
+          "category": "marketplace",
+          "retail_function": "marketplace_and_seasonal",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "case_key": "seasonal_marketplace"
+      },
+      "question": "Recommend the bounded next planning action and state the guardrails that must be checked.",
+      "expected_output": {
+        "recommended_action": "take a bounded, controlled action rather than a blanket move",
+        "quantity_or_depth": "cap action to stores or units passing the deterministic controls",
+        "rationale": "Holiday Marketplace Seller With Customer Trust Risk has upside, but the action is constrained by seller on-time delivery check, defect-rate check.",
+        "constraints_checked": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "confidence": "medium",
+        "escalation_needed": true,
+        "next_read": "re-check controls after the next receipt, demand read, or risk signal."
+      },
+      "must_include": [
+        "8,000 units",
+        "37 percent lower cost",
+        "91 percent on-time delivery",
+        "72 hours"
+      ],
+      "must_not_include": [
+        "approve solely because cost is lower",
+        "ignore packaging defects",
+        "ignore public promise risk"
+      ],
+      "deterministic_checks": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "escalation_triggers": [
+        "public promise is at risk",
+        "seller reliability below launch threshold"
+      ],
+      "scoring_focus": [
+        "recommended_action",
+        "quantity_or_depth",
+        "rationale"
+      ],
+      "ambiguity_type": "bounded planning action with imperfect reads",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "expected_failure_mode": "The answer gives a plausible action without checking inventory, timing, or confidence boundaries.",
+      "scoring_rationale": "Score should reward bounded actionability, causal reasoning, deterministic controls, and escalation discipline."
+    }
+  ]
+}

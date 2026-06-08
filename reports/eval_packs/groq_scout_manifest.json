@@ -1,0 +1,17 @@
+{
+  "provider": "groq",
+  "started_at_utc": "2026-06-07T02:28:39.112950+00:00",
+  "completed_at_utc": "2026-06-07T16:23:39.977775+00:00",
+  "stop_reason": null,
+  "total": 100,
+  "ok": 100,
+  "failed": 0,
+  "by_model": {
+    "groq/meta-llama/llama-4-scout-17b-16e-instruct": {
+      "provider_model_id": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "total": 100,
+      "ok": 100,
+      "failed": 0
+    }
+  }
+}

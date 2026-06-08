@@ -1,0 +1,110 @@
+{
+  "version": "0.1",
+  "description": "Provider registry for quota-federated MerchBench eval-pack runs. Secrets live in .env.local, not in this file.",
+  "providers": {
+    "ollama": {
+      "transport": "openai_compatible",
+      "status": "enabled",
+      "base_url_env": "OLLAMA_BASE_URL",
+      "default_base_url": "http://localhost:11434/v1",
+      "api_key_env": "OLLAMA_API_KEY",
+      "auth_required": false,
+      "default_models": [
+        "llama3.2:3b"
+      ],
+      "notes": "Local baseline provider. No daily quota; limited by local RAM and runtime."
+    },
+    "openrouter": {
+      "transport": "openai_compatible",
+      "status": "enabled",
+      "base_url_env": "OPENROUTER_BASE_URL",
+      "default_base_url": "https://openrouter.ai/api/v1",
+      "api_key_env": "OPENROUTER_API_KEY",
+      "auth_required": true,
+      "default_models": [
+        "liquid/lfm-2.5-1.2b-instruct:free",
+        "nvidia/nemotron-nano-9b-v2:free",
+        "poolside/laguna-xs.2:free"
+      ],
+      "quota_stop_signals": [
+        "free-models-per-day"
+      ],
+      "notes": "Use for free-model probes or paid OpenRouter frontier comparisons. Free-model quota can be exhausted quickly."
+    },
+    "openai": {
+      "transport": "openai_compatible",
+      "status": "enabled",
+      "base_url_env": "OPENAI_BASE_URL",
+      "default_base_url": "https://api.openai.com/v1",
+      "api_key_env": "OPENAI_API_KEY",
+      "auth_required": true,
+      "default_models": [
+        "gpt-4.1-nano",
+        "gpt-4o-mini"
+      ],
+      "notes": "Use for direct OpenAI API comparisons when account credits are available. Start with low-cost models and smoke-test before a full run."
+    },
+    "groq": {
+      "transport": "openai_compatible",
+      "status": "enabled",
+      "base_url_env": "GROQ_BASE_URL",
+      "default_base_url": "https://api.groq.com/openai/v1",
+      "api_key_env": "GROQ_API_KEY",
+      "auth_required": true,
+      "default_models": [
+        "llama-3.1-8b-instant",
+        "llama-3.3-70b-versatile",
+        "openai/gpt-oss-20b"
+      ],
+      "notes": "Primary cloud quota-expansion target because Groq publishes high daily request/token free tiers for several open models."
+    },
+    "cerebras": {
+      "transport": "openai_compatible",
+      "status": "enabled",
+      "base_url_env": "CEREBRAS_BASE_URL",
+      "default_base_url": "https://api.cerebras.ai/v1",
+      "api_key_env": "CEREBRAS_API_KEY",
+      "auth_required": true,
+      "default_models": [
+        "gpt-oss-120b",
+        "zai-glm-4.7"
+      ],
+      "notes": "Fast OpenAI-compatible provider for gpt-oss and GLM-style frontier-open comparisons."
+    },
+    "xai": {
+      "transport": "openai_compatible",
+      "status": "enabled",
+      "base_url_env": "XAI_BASE_URL",
+      "default_base_url": "https://api.x.ai/v1",
+      "api_key_env": "XAI_API_KEY",
+      "auth_required": true,
+      "default_models": [
+        "grok-3-mini",
+        "grok-3"
+      ],
+      "notes": "Use if you meant Grok/xAI directly rather than Groq. Confirm current model IDs in the xAI console before running."
+    },
+    "github_models": {
+      "transport": "github_models_rest_adapter_stub",
+      "status": "adapter_stub",
+      "base_url_env": "GITHUB_MODELS_BASE_URL",
+      "default_base_url": "https://models.github.ai/inference",
+      "api_key_env": "GITHUB_MODELS_API_KEY",
+      "auth_required": true,
+      "default_models": [],
+      "notes": "Requires a GitHub PAT with models:read. Adapter is not wired yet because GitHub Models uses its own inference REST/Azure AI Inference shape."
+    },
+    "cloudflare_workers_ai": {
+      "transport": "cloudflare_workers_ai_adapter_stub",
+      "status": "adapter_stub",
+      "base_url_env": "CLOUDFLARE_WORKERS_AI_BASE_URL",
+      "default_base_url": "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/run",
+      "api_key_env": "CLOUDFLARE_API_TOKEN",
+      "auth_required": true,
+      "default_models": [
+        "@cf/meta/llama-3.1-8b-instruct"
+      ],
+      "notes": "Native Workers AI adapter still needed. Requires CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN."
+    }
+  }
+}

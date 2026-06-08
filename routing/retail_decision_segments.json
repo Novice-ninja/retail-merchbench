@@ -1,0 +1,82 @@
+{
+  "version": "0.1",
+  "purpose": "Initial retail decision segmentation for MerchBench economic model routing.",
+  "model_strategy_tiers": [
+    "rules_only",
+    "small_model",
+    "mid_model",
+    "frontier_model",
+    "cascade",
+    "frontier_plus_human_review"
+  ],
+  "segments": [
+    {
+      "id": "low_risk_summarization",
+      "name": "Low-risk retail summarization",
+      "examples": ["vendor note recap", "weekly business summary", "meeting notes"],
+      "default_strategy": "small_model",
+      "deterministic_controls": ["source citation check", "number consistency check"],
+      "escalation_triggers": ["recommendation requested", "conflicting financial figures", "missing source context"]
+    },
+    {
+      "id": "structured_extraction",
+      "name": "Structured retail extraction",
+      "examples": ["MOQ extraction", "receipt-date extraction", "cost-change extraction"],
+      "default_strategy": "rules_only",
+      "fallback_strategy": "small_model",
+      "deterministic_controls": ["schema validation", "required field check", "range validation"],
+      "escalation_triggers": ["field conflict", "low parser confidence", "material value missing"]
+    },
+    {
+      "id": "constraint_checking",
+      "name": "Planning constraint checking",
+      "examples": ["OTB feasibility", "MOQ feasibility", "pack multiple check", "margin floor check"],
+      "default_strategy": "rules_only",
+      "fallback_strategy": "small_model",
+      "deterministic_controls": ["OTB check", "margin threshold check", "capacity check"],
+      "escalation_triggers": ["exception requested", "constraint violation", "human-readable tradeoff explanation needed"]
+    },
+    {
+      "id": "routine_planning_recommendation",
+      "name": "Routine planning recommendation",
+      "examples": ["low-risk replenishment", "standard markdown explanation", "low-value allocation adjustment"],
+      "default_strategy": "mid_model",
+      "deterministic_controls": ["constraint checks", "known bad pattern checks"],
+      "escalation_triggers": ["high inventory value", "low confidence", "conflicting signals", "irreversible action"]
+    },
+    {
+      "id": "pricing_promotion",
+      "name": "Pricing and promotion decision",
+      "examples": ["price match decision", "vendor-funded promo", "markdown depth recommendation", "promo cannibalization review"],
+      "default_strategy": "mid_model",
+      "fallback_strategy": "frontier_model",
+      "deterministic_controls": ["margin floor check", "vendor funding check", "inventory cover check"],
+      "escalation_triggers": ["competitor response uncertainty", "supply constraint", "margin below floor", "material pull-forward risk"]
+    },
+    {
+      "id": "ambiguous_planning_judgment",
+      "name": "Ambiguous planning judgment",
+      "examples": ["chase decision", "promo depth decision", "substitute vendor decision", "allocation under contaminated demand"],
+      "default_strategy": "frontier_model",
+      "fallback_strategy": "cascade",
+      "deterministic_controls": ["OTB check", "margin check", "capacity check", "economic penalty check"],
+      "escalation_triggers": ["contaminated evidence", "material markdown risk", "vendor commitment", "confidence below threshold"]
+    },
+    {
+      "id": "portfolio_tradeoff",
+      "name": "Cross-category portfolio tradeoff",
+      "examples": ["holiday OTB allocation", "vendor funding tradeoff", "executive exception request"],
+      "default_strategy": "frontier_plus_human_review",
+      "deterministic_controls": ["portfolio OTB check", "opportunity cost check", "receiving capacity check"],
+      "escalation_triggers": ["any irreversible commitment", "leadership override", "multi-category opportunity cost", "large downside band"]
+    },
+    {
+      "id": "operational_triage",
+      "name": "Operational exception triage",
+      "examples": ["store receiving overload", "transfer queue prioritization", "labor-constrained allocation"],
+      "default_strategy": "cascade",
+      "deterministic_controls": ["labor capacity check", "safety or compliance check", "service-level check"],
+      "escalation_triggers": ["safety issue", "public commitment", "customer trust risk", "capacity violation"]
+    }
+  ]
+}

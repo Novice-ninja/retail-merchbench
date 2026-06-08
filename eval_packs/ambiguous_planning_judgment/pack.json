@@ -1,0 +1,909 @@
+{
+  "id": "ambiguous_planning_judgment_v0",
+  "version": "0.1",
+  "task_segment": "ambiguous_planning_judgment",
+  "purpose": "Evaluate frontier-model suitability for ambiguous retail planning decisions where causal evidence is contaminated, externalities are active, and the answer must reframe the decision rather than optimize the most visible metric.",
+  "recommended_strategy_under_test": "frontier_model",
+  "quality_floor": {
+    "minimum_average_score": 8.8,
+    "minimum_item_score": 8,
+    "must_pass_items": 3,
+    "dimension_floor": {
+      "causal_framing": 0.85,
+      "constraint_tradeoff": 0.85,
+      "uncertainty_calibration": 0.8
+    }
+  },
+  "design_principles": [
+    "Require models to discount contaminated evidence.",
+    "Use multi-driver cases with real opportunity cost.",
+    "Reward reframing when the literal request is unsafe.",
+    "Require an executable decision band, not generic caution.",
+    "Penalize overconfident extrapolation from noisy demand."
+  ],
+  "coverage": {
+    "retail_functions": [
+      "replenishment_chase",
+      "allocation",
+      "vendor_supply",
+      "assortment_planning"
+    ],
+    "categories": [
+      "apparel",
+      "beauty",
+      "electronics",
+      "seasonal_outdoor"
+    ],
+    "ambiguity_sources": [
+      "stockout-censored demand",
+      "social signal without conversion",
+      "substitute supply with compliance caveat",
+      "weather reversal",
+      "executive pressure"
+    ],
+    "externalities": [
+      "viral trend",
+      "weather forecast change",
+      "supplier delay",
+      "competitor launch"
+    ],
+    "escalation_patterns": [
+      "material markdown risk",
+      "vendor commitment",
+      "confidence below threshold",
+      "contaminated evidence"
+    ]
+  },
+  "output_contract": {
+    "response_format": "json",
+    "required_fields": [
+      "decision",
+      "recommended_action",
+      "evidence_trusted",
+      "evidence_discounted",
+      "constraints",
+      "uncertainty",
+      "escalation_needed"
+    ],
+    "forbidden_behaviors": [
+      "optimize one visible metric",
+      "ignore opportunity cost",
+      "treat contaminated demand as clean",
+      "make irreversible commitments without caveats"
+    ]
+  },
+  "scoring": {
+    "total_points_per_item": 10,
+    "dimensions": {
+      "causal_framing": {
+        "points": 3,
+        "criteria": [
+          "Identifies the causal ambiguity driving the decision.",
+          "Discounts contaminated or non-comparable evidence.",
+          "Frames the right decision problem."
+        ]
+      },
+      "constraint_tradeoff": {
+        "points": 2,
+        "criteria": [
+          "Uses OTB, capacity, margin, compliance, or timing constraints.",
+          "Explains opportunity cost."
+        ]
+      },
+      "decision_quality": {
+        "points": 2,
+        "criteria": [
+          "Chooses the expected bounded decision.",
+          "Avoids both reckless approval and empty deferral."
+        ]
+      },
+      "uncertainty_calibration": {
+        "points": 2,
+        "criteria": [
+          "States confidence appropriately.",
+          "Names the next evidence that would change the decision."
+        ]
+      },
+      "actionability": {
+        "points": 1,
+        "criteria": [
+          "Provides concrete units, timing, gating, or review steps."
+        ]
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "amb_001",
+      "title": "Viral Fleece Chase With Return Contamination",
+      "difficulty": "hard",
+      "retail_function": "replenishment_chase",
+      "category": "apparel",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "Kids fleece has 2.4M views and pink is 82 percent sold through, but navy is 39 percent. Return rate is 18 percent versus 9 percent norm, mostly fit too small in sizes 7/8 and 10/12. Vendor asks for a 20,000 unit chase by tomorrow; lead time lands after peak cold-weather week."
+      },
+      "question": "Decide whether to approve the chase, condition it, or reject it.",
+      "expected_output": {
+        "decision": "do not approve full 20,000 unit chase",
+        "recommended_action": "condition a smaller color and size-corrected test only if vendor can adjust fit and land before useful demand window",
+        "evidence_discounted": [
+          "social views as demand",
+          "pink-only sell-through as national demand"
+        ],
+        "uncertainty": "medium_low"
+      },
+      "must_include": [
+        "reject full 20,000 unit chase",
+        "return rate 18 percent versus 9 percent",
+        "pink 82 percent and navy 39 percent",
+        "lead time after peak week"
+      ],
+      "must_not_include": [
+        "approve 20,000 units",
+        "treat social views as committed demand",
+        "ignore fit returns"
+      ],
+      "deterministic_checks": [
+        "return-rate comparison",
+        "lead-time window check",
+        "color split check"
+      ],
+      "escalation_triggers": [
+        "vendor commitment tomorrow",
+        "high return-rate chase"
+      ],
+      "scoring_focus": [
+        "contaminated demand",
+        "fit risk",
+        "conditioned decision"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "return-rate comparison",
+        "lead-time window check",
+        "color split check"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    },
+    {
+      "id": "amb_002",
+      "title": "Barrier Serum Expansion With Prestige Comp",
+      "difficulty": "hard",
+      "retail_function": "assortment_planning",
+      "category": "beauty",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "Merchant wants three new barrier serum SKUs after prestige competitor sold out. Same-retailer adjacent serum comps are mixed. Waitlist is 1,900 before price reveal. Only 4 facings open, each SKU needs 2. OTB after core replenishment is $11,800; proposed buy costs $52,800."
+      },
+      "question": "Decide the SKU architecture and scale.",
+      "expected_output": {
+        "decision": "reject full three-SKU launch",
+        "recommended_action": "one or two SKU constrained test within $11,800 after protecting core replenishment",
+        "evidence_discounted": [
+          "prestige comp",
+          "pre-price waitlist"
+        ],
+        "uncertainty": "medium_low"
+      },
+      "must_include": [
+        "reject three-SKU launch",
+        "$52,800 proposed cost exceeds $11,800",
+        "4 facings and 2 per SKU",
+        "prestige comp not clean"
+      ],
+      "must_not_include": [
+        "approve all three SKUs",
+        "treat waitlist as committed sales",
+        "ignore core replenishment"
+      ],
+      "deterministic_checks": [
+        "OTB check",
+        "fixture check",
+        "comp quality check"
+      ],
+      "escalation_triggers": [
+        "merchant requests full launch anyway",
+        "fixture exception required"
+      ],
+      "scoring_focus": [
+        "evidence discounting",
+        "constraint tradeoff",
+        "staged architecture"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "OTB check",
+        "fixture check",
+        "comp quality check"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    },
+    {
+      "id": "amb_003",
+      "title": "Substitute Charger Backorder Decision",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "2,400 ecommerce backorders on charger C-188. Substitute C-188B has 4,800 units available, same retail, good margin, FCC received, UL pending, barcode differs. Customer cancellations are rising but compliance team has not approved substitution."
+      },
+      "question": "Decide whether to use the substitute, wait, or split action.",
+      "expected_output": {
+        "decision": "do not release substitute until UL and barcode approval",
+        "recommended_action": "escalate compliance; prepare customer communication and partial waitlist plan",
+        "evidence_trusted": [
+          "backorder quantity",
+          "availability"
+        ],
+        "constraints": [
+          "UL pending",
+          "barcode mismatch"
+        ]
+      },
+      "must_include": [
+        "do not release before UL approval",
+        "2,400 backorders",
+        "4,800 available units",
+        "barcode differs"
+      ],
+      "must_not_include": [
+        "ship substitute immediately",
+        "treat FCC as enough",
+        "ignore customer communication"
+      ],
+      "deterministic_checks": [
+        "UL compliance gate",
+        "barcode mismatch gate",
+        "backorder coverage"
+      ],
+      "escalation_triggers": [
+        "severe compliance downside",
+        "customer cancellation pressure"
+      ],
+      "scoring_focus": [
+        "compliance judgment",
+        "customer risk",
+        "bounded response"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "UL compliance gate",
+        "barcode mismatch gate",
+        "backorder coverage"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    },
+    {
+      "id": "amb_004",
+      "title": "Patio Chase After Warm Weekend",
+      "difficulty": "hard",
+      "retail_function": "replenishment_chase",
+      "category": "seasonal_outdoor",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "Patio sets sold 38 percent above plan after two warm weekends. Four stores stocked out, censoring demand. Next 10 days forecast cold rain and outdoor traffic down 18-25 percent. Vendor chase MOQ is 1,200 units, lead time lands after Memorial Day, markdown risk rises sharply after week 8."
+      },
+      "question": "Decide whether to place the chase order.",
+      "expected_output": {
+        "decision": "do not place full MOQ chase now",
+        "recommended_action": "hold or condition a smaller allocation only if forecast and stockout-adjusted demand improve",
+        "evidence_discounted": [
+          "warm-weather spike",
+          "stockout-censored demand"
+        ],
+        "uncertainty": "medium"
+      },
+      "must_include": [
+        "do not place full 1,200 MOQ chase",
+        "weather reversal",
+        "stockout-censored demand",
+        "lead time after Memorial Day"
+      ],
+      "must_not_include": [
+        "chase because sales up 38 percent",
+        "ignore markdown risk",
+        "treat stockouts as clean upside"
+      ],
+      "deterministic_checks": [
+        "MOQ check",
+        "lead-time seasonality check",
+        "weather caveat check"
+      ],
+      "escalation_triggers": [
+        "full vendor commitment requested",
+        "forecast uncertainty remains high"
+      ],
+      "scoring_focus": [
+        "externality handling",
+        "censored demand",
+        "chase discipline"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "MOQ check",
+        "lead-time seasonality check",
+        "weather caveat check"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    },
+    {
+      "id": "amb_005",
+      "title": "Berry Weather Spike With DC Capacity",
+      "difficulty": "hard",
+      "retail_function": "replenishment_and_allocation",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "Heatwave forecast adds 18 percent berry demand in the Southwest for 6 days. The DC has 92 percent cold-chain capacity already committed, inbound raspberries are 2 days late, and last year's comp was stockout-censored in 38 percent of stores.",
+        "retail_context": {
+          "category": "grocery",
+          "retail_function": "replenishment_and_allocation",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "case_key": "grocery_weather"
+      },
+      "question": "Decide whether to proceed, hold, test, or reframe the question under the contaminated evidence.",
+      "expected_output": {
+        "decision": "conditional hold or small controlled test",
+        "recommended_action": "reframe away from a full commitment and verify the contaminated signal first",
+        "evidence_trusted": [
+          "18 percent berry demand",
+          "92 percent cold-chain capacity"
+        ],
+        "evidence_discounted": [
+          "contaminated comp or external shock"
+        ],
+        "constraints": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "uncertainty": "medium to high because the demand signal is not clean",
+        "escalation_needed": true
+      },
+      "must_include": [
+        "18 percent berry demand",
+        "92 percent cold-chain capacity",
+        "2 days late",
+        "38 percent stockout-censored"
+      ],
+      "must_not_include": [
+        "treat last year's comp as clean demand",
+        "ignore cold-chain capacity",
+        "blanket chase all stores"
+      ],
+      "deterministic_checks": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "escalation_triggers": [
+        "cold-chain capacity exceeds safe receiving limit",
+        "late inbound creates service risk"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_action",
+        "evidence_trusted"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    },
+    {
+      "id": "amb_006",
+      "title": "Beauty Trend Spike With Vendor Funding Window",
+      "difficulty": "medium",
+      "retail_function": "assortment_and_promotion",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A serum shade is trending on social channels with a 41 percent search spike. Vendor co-op funding expires in 9 days, the promo margin floor is 44 percent, and two top stores report tester theft and low attachment to the regimen kit.",
+        "retail_context": {
+          "category": "beauty",
+          "retail_function": "assortment_and_promotion",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "case_key": "beauty_trend"
+      },
+      "question": "Decide whether to proceed, hold, test, or reframe the question under the contaminated evidence.",
+      "expected_output": {
+        "decision": "conditional hold or small controlled test",
+        "recommended_action": "reframe away from a full commitment and verify the contaminated signal first",
+        "evidence_trusted": [
+          "41 percent search spike",
+          "9 days"
+        ],
+        "evidence_discounted": [
+          "contaminated comp or external shock"
+        ],
+        "constraints": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "uncertainty": "medium to high because the demand signal is not clean",
+        "escalation_needed": false
+      },
+      "must_include": [
+        "41 percent search spike",
+        "9 days",
+        "44 percent margin floor",
+        "low attachment"
+      ],
+      "must_not_include": [
+        "assume the social trend proves sell-through",
+        "ignore tester theft",
+        "promote below margin floor"
+      ],
+      "deterministic_checks": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "escalation_triggers": [
+        "funding expires before execution",
+        "promotion breaks margin floor"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_action",
+        "evidence_trusted"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    },
+    {
+      "id": "amb_007",
+      "title": "Tool Set Chase With Vendor Reliability Drop",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "hard_goods",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A 120-piece tool set is up 26 percent in DIY channels after a competitor recall. The vendor fill rate fell from 94 percent to 71 percent over 4 weeks, MOQ is 480 units, and the item has a 13 percent bulky-item return rate.",
+        "retail_context": {
+          "category": "hard_goods",
+          "retail_function": "vendor_supply",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "case_key": "hardgoods_vendor"
+      },
+      "question": "Decide whether to proceed, hold, test, or reframe the question under the contaminated evidence.",
+      "expected_output": {
+        "decision": "conditional hold or small controlled test",
+        "recommended_action": "reframe away from a full commitment and verify the contaminated signal first",
+        "evidence_trusted": [
+          "26 percent",
+          "71 percent fill rate"
+        ],
+        "evidence_discounted": [
+          "contaminated comp or external shock"
+        ],
+        "constraints": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "uncertainty": "medium to high because the demand signal is not clean",
+        "escalation_needed": true
+      },
+      "must_include": [
+        "26 percent",
+        "71 percent fill rate",
+        "MOQ 480",
+        "13 percent return rate"
+      ],
+      "must_not_include": [
+        "chase full demand without vendor risk",
+        "ignore MOQ",
+        "ignore bulky-item returns"
+      ],
+      "deterministic_checks": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "fill rate stays below 80 percent",
+        "bulky returns exceed plan"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_action",
+        "evidence_trusted"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    },
+    {
+      "id": "amb_008",
+      "title": "Headphone Price Match With MAP Risk",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A marketplace seller lists the premium headphone at $149.99 while our price is $179.99. Vendor MAP is $169.99, unit cost is $118.00, attachment on warranty is 22 percent, and 31 percent of recent returns cite counterfeit concern in competitor reviews.",
+        "retail_context": {
+          "category": "electronics",
+          "retail_function": "pricing_promotion",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "case_key": "electronics_map"
+      },
+      "question": "Decide whether to proceed, hold, test, or reframe the question under the contaminated evidence.",
+      "expected_output": {
+        "decision": "conditional hold or small controlled test",
+        "recommended_action": "reframe away from a full commitment and verify the contaminated signal first",
+        "evidence_trusted": [
+          "$149.99",
+          "$169.99 MAP"
+        ],
+        "evidence_discounted": [
+          "contaminated comp or external shock"
+        ],
+        "constraints": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "uncertainty": "medium to high because the demand signal is not clean",
+        "escalation_needed": true
+      },
+      "must_include": [
+        "$149.99",
+        "$169.99 MAP",
+        "$118.00 unit cost",
+        "31 percent"
+      ],
+      "must_not_include": [
+        "match below MAP",
+        "treat marketplace seller as clean competitor",
+        "ignore warranty attachment"
+      ],
+      "deterministic_checks": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "escalation_triggers": [
+        "MAP breach requested",
+        "counterfeit or price-image risk is unresolved"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_action",
+        "evidence_trusted"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    },
+    {
+      "id": "amb_009",
+      "title": "Patio Set Buy With Return And DC Constraint",
+      "difficulty": "hard",
+      "retail_function": "initial_buy",
+      "category": "home",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A patio dining set has a 33 percent pre-season intent lift, but the DC furniture floor is capped at 84 trailers. The vendor lead time slipped from 28 to 43 days, assembly complaints are 18 percent above benchmark, and holding the buy protects $420k OTB for late-spring umbrellas.",
+        "retail_context": {
+          "category": "home",
+          "retail_function": "initial_buy",
+          "decision_value_band": "500k_plus"
+        },
+        "known_controls": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "case_key": "home_capacity"
+      },
+      "question": "Decide whether to proceed, hold, test, or reframe the question under the contaminated evidence.",
+      "expected_output": {
+        "decision": "conditional hold or small controlled test",
+        "recommended_action": "reframe away from a full commitment and verify the contaminated signal first",
+        "evidence_trusted": [
+          "33 percent intent lift",
+          "84 trailers"
+        ],
+        "evidence_discounted": [
+          "contaminated comp or external shock"
+        ],
+        "constraints": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "uncertainty": "medium to high because the demand signal is not clean",
+        "escalation_needed": true
+      },
+      "must_include": [
+        "33 percent intent lift",
+        "84 trailers",
+        "43 days",
+        "$420k OTB"
+      ],
+      "must_not_include": [
+        "ignore umbrella opportunity cost",
+        "ignore DC capacity",
+        "assume intent lift equals demand"
+      ],
+      "deterministic_checks": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "escalation_triggers": [
+        "DC floor capacity is exceeded",
+        "lead time misses seasonal selling window"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_action",
+        "evidence_trusted"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    },
+    {
+      "id": "amb_010",
+      "title": "Trail Shoe Allocation With Size-Curve Noise",
+      "difficulty": "medium",
+      "retail_function": "allocation_size_fit",
+      "category": "footwear",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "minutes",
+      "call_volume_band": "high",
+      "input": {
+        "source_note": "Trail shoe conversion is up 19 percent in mountain stores after rain, but sizes 10-12 stocked out for 5 days. E-commerce returns are 16 percent for fit, store labor can process only 320 transfer pairs this week, and the next vendor cut is 6 weeks away.",
+        "retail_context": {
+          "category": "footwear",
+          "retail_function": "allocation_size_fit",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "case_key": "footwear_size"
+      },
+      "question": "Decide whether to proceed, hold, test, or reframe the question under the contaminated evidence.",
+      "expected_output": {
+        "decision": "conditional hold or small controlled test",
+        "recommended_action": "reframe away from a full commitment and verify the contaminated signal first",
+        "evidence_trusted": [
+          "19 percent",
+          "sizes 10-12"
+        ],
+        "evidence_discounted": [
+          "contaminated comp or external shock"
+        ],
+        "constraints": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "uncertainty": "medium to high because the demand signal is not clean",
+        "escalation_needed": false
+      },
+      "must_include": [
+        "19 percent",
+        "sizes 10-12",
+        "320 transfer pairs",
+        "6 weeks"
+      ],
+      "must_not_include": [
+        "read total conversion as clean",
+        "ignore transfer labor",
+        "over-allocate fit-risk sizes"
+      ],
+      "deterministic_checks": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "labor cap blocks transfer plan",
+        "size-level read remains censored"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_action",
+        "evidence_trusted"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    },
+    {
+      "id": "amb_011",
+      "title": "Holiday Marketplace Seller With Customer Trust Risk",
+      "difficulty": "hard",
+      "retail_function": "marketplace_and_seasonal",
+      "category": "marketplace",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A third-party seller offers 8,000 units of a holiday decor item with 37 percent lower cost. The seller has 91 percent on-time delivery, packaging defect claims are 4.8 percent, and the item is used in a public holiday promise landing page that launches in 72 hours.",
+        "retail_context": {
+          "category": "marketplace",
+          "retail_function": "marketplace_and_seasonal",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "case_key": "seasonal_marketplace"
+      },
+      "question": "Decide whether to proceed, hold, test, or reframe the question under the contaminated evidence.",
+      "expected_output": {
+        "decision": "conditional hold or small controlled test",
+        "recommended_action": "reframe away from a full commitment and verify the contaminated signal first",
+        "evidence_trusted": [
+          "8,000 units",
+          "37 percent lower cost"
+        ],
+        "evidence_discounted": [
+          "contaminated comp or external shock"
+        ],
+        "constraints": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "uncertainty": "medium to high because the demand signal is not clean",
+        "escalation_needed": true
+      },
+      "must_include": [
+        "8,000 units",
+        "37 percent lower cost",
+        "91 percent on-time delivery",
+        "72 hours"
+      ],
+      "must_not_include": [
+        "approve solely because cost is lower",
+        "ignore packaging defects",
+        "ignore public promise risk"
+      ],
+      "deterministic_checks": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "escalation_triggers": [
+        "public promise is at risk",
+        "seller reliability below launch threshold"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_action",
+        "evidence_trusted"
+      ],
+      "ambiguity_type": "contaminated evidence and premise uncertainty",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "expected_failure_mode": "The answer optimizes the literal prompt and misses contaminated evidence or the need to reframe.",
+      "scoring_rationale": "Score should reward premise challenge, causal mechanism, uncertainty calibration, and reversible next steps."
+    }
+  ]
+}

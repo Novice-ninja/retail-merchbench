@@ -1,0 +1,100 @@
+{
+  "version": "0.2",
+  "description": "Default MerchBench economic routing policies by retail decision segment. Quality floors use the 10-point segment eval-pack scale.",
+  "policies": {
+    "low_risk_summarization": {
+      "quality_floor": 7,
+      "required_dimension_floor": {},
+      "cost_weight": 0.9,
+      "latency_weight": 0.8,
+      "human_review_expected": false,
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "eval_pack_path": "eval_packs/low_risk_summarization/pack.json"
+    },
+    "structured_extraction": {
+      "quality_floor": 7.5,
+      "required_dimension_floor": {},
+      "cost_weight": 1.0,
+      "latency_weight": 0.8,
+      "human_review_expected": false,
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "eval_pack_path": "eval_packs/structured_extraction/pack.json"
+    },
+    "constraint_checking": {
+      "quality_floor": 7,
+      "required_dimension_floor": {
+        "constraint_handling": 80,
+        "economic_impact": 70
+      },
+      "cost_weight": 0.9,
+      "latency_weight": 0.6,
+      "human_review_expected": false,
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "eval_pack_path": "eval_packs/constraint_checking/pack.json"
+    },
+    "routine_planning_recommendation": {
+      "quality_floor": 7,
+      "required_dimension_floor": {
+        "constraint_handling": 70,
+        "economic_impact": 75
+      },
+      "cost_weight": 0.55,
+      "latency_weight": 0.45,
+      "human_review_expected": false,
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "eval_pack_path": "eval_packs/routine_planning_recommendation/pack.json"
+    },
+    "ambiguous_planning_judgment": {
+      "quality_floor": 7,
+      "required_dimension_floor": {
+        "problem_framing": 75,
+        "constraint_handling": 80,
+        "uncertainty_calibration": 75,
+        "economic_impact": 85
+      },
+      "cost_weight": 0.25,
+      "latency_weight": 0.25,
+      "human_review_expected": false,
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "eval_pack_path": "eval_packs/ambiguous_planning_judgment/pack.json"
+    },
+    "pricing_promotion": {
+      "quality_floor": 7,
+      "required_dimension_floor": {
+        "constraint_handling": 75,
+        "economic_impact": 85
+      },
+      "cost_weight": 0.35,
+      "latency_weight": 0.3,
+      "human_review_expected": false,
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "eval_pack_path": "eval_packs/pricing_promotion/pack.json"
+    },
+    "operational_triage": {
+      "quality_floor": 7,
+      "required_dimension_floor": {
+        "constraint_handling": 80,
+        "economic_impact": 80
+      },
+      "cost_weight": 0.35,
+      "latency_weight": 0.45,
+      "human_review_expected": true,
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "eval_pack_path": "eval_packs/operational_triage/pack.json"
+    },
+    "portfolio_tradeoff": {
+      "quality_floor": 7.5,
+      "required_dimension_floor": {
+        "problem_framing": 80,
+        "constraint_handling": 85,
+        "uncertainty_calibration": 75,
+        "economic_impact": 90
+      },
+      "cost_weight": 0.15,
+      "latency_weight": 0.2,
+      "human_review_expected": true,
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel_but_requires_human_review_calibration",
+      "eval_pack_path": "eval_packs/portfolio_tradeoff/pack.json"
+    }
+  }
+}

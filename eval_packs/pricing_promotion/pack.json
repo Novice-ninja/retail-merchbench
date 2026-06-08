@@ -1,0 +1,864 @@
+{
+  "id": "pricing_promotion_v0",
+  "version": "0.1",
+  "task_segment": "pricing_promotion",
+  "purpose": "Evaluate model and workflow choices for retail pricing and promotion decisions where margin, vendor funding, competitive response, cannibalization, and inventory constraints jointly determine whether a promotion is economically justified.",
+  "recommended_strategy_under_test": "mid_model",
+  "quality_floor": {
+    "minimum_average_score": 8.5,
+    "minimum_item_score": 7.5,
+    "must_pass_items": 3,
+    "dimension_floor": {
+      "margin_reasoning": 0.85,
+      "demand_interpretation": 0.8,
+      "promotion_actionability": 0.8
+    }
+  },
+  "design_principles": [
+    "Reward margin-aware decisions over unit-lift chasing.",
+    "Include competitor actions without making share loss certain.",
+    "Test pull-forward, cannibalization, supply, and vendor funding together.",
+    "Require a concrete price, depth, or hold decision.",
+    "Escalate only when downside or ambiguity exceeds routine promotion scope."
+  ],
+  "coverage": {
+    "retail_functions": [
+      "pricing_promotion",
+      "markdown_exit",
+      "channel_inventory",
+      "vendor_supply"
+    ],
+    "categories": [
+      "grocery",
+      "beauty",
+      "home",
+      "electronics"
+    ],
+    "ambiguity_sources": [
+      "competitor price move without share proof",
+      "vendor funding changes unit economics",
+      "pull-forward masks incrementality",
+      "supply constraint changes promotion risk",
+      "attachment or basket effect offsets margin loss"
+    ],
+    "externalities": [
+      "competitor promotion",
+      "weather event",
+      "vendor funding window",
+      "social trend"
+    ],
+    "escalation_patterns": [
+      "margin floor breach",
+      "supply-limited promotion",
+      "customer trust or price image risk",
+      "portfolio-level cannibalization"
+    ]
+  },
+  "output_contract": {
+    "response_format": "json",
+    "required_fields": [
+      "decision",
+      "recommended_price_or_depth",
+      "margin_read",
+      "demand_read",
+      "risk_controls",
+      "escalation_needed"
+    ],
+    "forbidden_behaviors": [
+      "optimize unit lift without margin math",
+      "assert competitor share loss without evidence",
+      "ignore vendor funding or exclusions",
+      "promote a supply-constrained SKU aggressively"
+    ]
+  },
+  "scoring": {
+    "total_points_per_item": 10,
+    "dimensions": {
+      "margin_reasoning": {
+        "points": 3,
+        "criteria": [
+          "Computes or uses margin correctly.",
+          "Accounts for vendor funding or cost changes.",
+          "Respects margin floor or markdown budget."
+        ]
+      },
+      "demand_interpretation": {
+        "points": 2,
+        "criteria": [
+          "Separates incremental demand from pull-forward or cannibalization.",
+          "Treats competitor action as uncertain unless evidence is provided."
+        ]
+      },
+      "constraint_awareness": {
+        "points": 2,
+        "criteria": [
+          "Uses inventory cover, replenishment timing, or channel constraints.",
+          "Avoids promotional actions that create stockout or service risk."
+        ]
+      },
+      "promotion_actionability": {
+        "points": 2,
+        "criteria": [
+          "Provides a concrete price, depth, hold, or targeted promotion decision.",
+          "Defines guardrails, duration, or next read."
+        ]
+      },
+      "calibration": {
+        "points": 1,
+        "criteria": [
+          "States appropriate confidence and escalation stance."
+        ]
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "prc_001",
+      "title": "Coffee Price Match Under Supply Constraint",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "Competitor A is at $7.99 for 5 days on 12-count coffee. Our price is $9.49, cost $5.75, margin floor 32 percent. Top 80 stores have 1.4 weeks cover and replenishment arrives in 12 days. Last loyalty promo lifted units 24 percent but post-promo demand fell 11 percent."
+      },
+      "question": "Decide whether to price match, target, or hold. Include margin and supply reasoning.",
+      "expected_output": {
+        "decision": "do not blanket price match",
+        "recommended_price_or_depth": "hold or target a limited loyalty offer that stays above margin floor",
+        "margin_read": "$7.99 creates about 28 percent margin, below 32 percent floor",
+        "demand_read": "prior lift may include pull-forward",
+        "risk_controls": [
+          "avoid promoting supply-constrained stores",
+          "monitor competitor in-stock and share data"
+        ]
+      },
+      "must_include": [
+        "28 percent margin below 32 percent floor",
+        "1.4 weeks cover",
+        "12 day replenishment",
+        "11 percent post-promo decline"
+      ],
+      "must_not_include": [
+        "blanket match at $7.99",
+        "claim share loss is proven",
+        "ignore pull-forward"
+      ],
+      "deterministic_checks": [
+        "margin calculation",
+        "inventory cover check",
+        "promo pull-forward check"
+      ],
+      "escalation_triggers": [
+        "leadership insists on blanket match",
+        "competitor in-stock data confirms severe share loss"
+      ],
+      "scoring_focus": [
+        "price decision",
+        "margin floor",
+        "supply constraint"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "margin calculation",
+        "inventory cover check",
+        "promo pull-forward check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    },
+    {
+      "id": "prc_002",
+      "title": "Vendor-Funded Beauty Gift Promo",
+      "difficulty": "medium",
+      "retail_function": "pricing_promotion",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "Vendor funds $3 per unit for a $29 serum gift set for one week. Unit cost is $12. Regular margin is 58.6 percent. Proposed promo price is $24. Inventory cover is 5.5 weeks, ecommerce cover 2.1 weeks. Promo excludes marketplace channel."
+      },
+      "question": "Recommend whether to run the promo and where.",
+      "expected_output": {
+        "decision": "run a limited owned-channel promo",
+        "recommended_price_or_depth": "$24 for one week in stores and owned ecommerce, excluding marketplace",
+        "margin_read": "vendor funding keeps effective margin acceptable at about 62.5 percent on funded units",
+        "risk_controls": [
+          "exclude marketplace",
+          "watch ecommerce cover"
+        ]
+      },
+      "must_include": [
+        "$3 vendor funding",
+        "$24 promo price",
+        "$12 unit cost",
+        "marketplace excluded"
+      ],
+      "must_not_include": [
+        "include marketplace",
+        "ignore ecommerce cover",
+        "calculate margin without vendor funding"
+      ],
+      "deterministic_checks": [
+        "funded margin calculation",
+        "channel exclusion check",
+        "cover check"
+      ],
+      "escalation_triggers": [
+        "marketplace inclusion requested",
+        "funding confirmation missing"
+      ],
+      "scoring_focus": [
+        "vendor funding economics",
+        "channel targeting",
+        "promo actionability"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "funded margin calculation",
+        "channel exclusion check",
+        "cover check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    },
+    {
+      "id": "prc_003",
+      "title": "Patio Markdown Before Rainy Weekend",
+      "difficulty": "hard",
+      "retail_function": "markdown_exit",
+      "category": "seasonal_outdoor",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "Patio sets are 64 percent sold through versus 72 percent plan. Weather forecast shows two rainy weekends in the Southeast, outdoor traffic down 18-25 percent. Markdown budget allows 15 percent now or 25 percent after Memorial Day. Current gross margin at 15 percent off is 43 percent; at 25 percent off is 35 percent."
+      },
+      "question": "Recommend markdown timing and depth.",
+      "expected_output": {
+        "decision": "take a targeted 15 percent markdown now in weather-impacted regions",
+        "recommended_price_or_depth": "15 percent regional markdown",
+        "margin_read": "15 percent preserves 43 percent margin versus 35 percent at 25 percent",
+        "risk_controls": [
+          "re-read after rainy weekends",
+          "avoid national markdown unless sell-through worsens"
+        ]
+      },
+      "must_include": [
+        "64 percent versus 72 percent sell-through",
+        "18-25 percent traffic decline",
+        "15 percent now",
+        "43 percent margin at 15 percent"
+      ],
+      "must_not_include": [
+        "national 25 percent immediately",
+        "ignore weather",
+        "hold all markdown until after Memorial Day"
+      ],
+      "deterministic_checks": [
+        "margin comparison check",
+        "weather region check",
+        "sell-through gap check"
+      ],
+      "escalation_triggers": [
+        "national markdown requested",
+        "weather forecast worsens materially"
+      ],
+      "scoring_focus": [
+        "regional targeting",
+        "timing tradeoff",
+        "margin preservation"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "margin comparison check",
+        "weather region check",
+        "sell-through gap check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    },
+    {
+      "id": "prc_004",
+      "title": "Accessory Attachment Promo Tradeoff",
+      "difficulty": "medium",
+      "retail_function": "pricing_promotion",
+      "category": "electronics",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "Tablet case retail $39.99, cost $13.50. Proposed 20 percent off when bought with a tablet. Attachment rate is 22 percent, target 30 percent. Tablet margin is unaffected. Case inventory cover is 7 weeks. Prior standalone 20 percent promo lifted case units but lowered attachment quality."
+      },
+      "question": "Recommend whether to use the attachment promo.",
+      "expected_output": {
+        "decision": "test bundle-only 20 percent attachment promo",
+        "recommended_price_or_depth": "20 percent off case only with tablet purchase",
+        "margin_read": "case margin remains positive and cover is high",
+        "risk_controls": [
+          "do not run standalone discount",
+          "measure attachment rate and basket margin"
+        ]
+      },
+      "must_include": [
+        "bundle-only",
+        "20 percent off",
+        "22 percent attachment versus 30 percent target",
+        "7 weeks cover"
+      ],
+      "must_not_include": [
+        "standalone 20 percent discount",
+        "ignore attachment rate",
+        "claim tablet margin changes"
+      ],
+      "deterministic_checks": [
+        "bundle condition check",
+        "attachment gap check",
+        "inventory cover check"
+      ],
+      "escalation_triggers": [
+        "standalone promo requested",
+        "basket margin falls below target"
+      ],
+      "scoring_focus": [
+        "bundle condition",
+        "attachment economics",
+        "test guardrails"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "bundle condition check",
+        "attachment gap check",
+        "inventory cover check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    },
+    {
+      "id": "prc_005",
+      "title": "Berry Weather Spike With DC Capacity",
+      "difficulty": "hard",
+      "retail_function": "replenishment_and_allocation",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "Heatwave forecast adds 18 percent berry demand in the Southwest for 6 days. The DC has 92 percent cold-chain capacity already committed, inbound raspberries are 2 days late, and last year's comp was stockout-censored in 38 percent of stores.",
+        "retail_context": {
+          "category": "grocery",
+          "retail_function": "replenishment_and_allocation",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "case_key": "grocery_weather"
+      },
+      "question": "Decide whether to price, promote, hold, or target. Include margin, demand, and risk-control reasoning.",
+      "expected_output": {
+        "decision": "do not approve a blanket promotion without passing economics and supply controls",
+        "recommended_price_or_depth": "hold, target, or cap the offer until deterministic controls clear",
+        "margin_read": "validate margin floor, funding, MAP, and cost exposure before any price move",
+        "demand_read": "treat demand lift as uncertain when stockouts, trend spikes, or competitor actions contaminate the read",
+        "risk_controls": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "18 percent berry demand",
+        "92 percent cold-chain capacity",
+        "2 days late",
+        "38 percent stockout-censored"
+      ],
+      "must_not_include": [
+        "treat last year's comp as clean demand",
+        "ignore cold-chain capacity",
+        "blanket chase all stores"
+      ],
+      "deterministic_checks": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "escalation_triggers": [
+        "cold-chain capacity exceeds safe receiving limit",
+        "late inbound creates service risk"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_price_or_depth",
+        "margin_read"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    },
+    {
+      "id": "prc_006",
+      "title": "Beauty Trend Spike With Vendor Funding Window",
+      "difficulty": "medium",
+      "retail_function": "assortment_and_promotion",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A serum shade is trending on social channels with a 41 percent search spike. Vendor co-op funding expires in 9 days, the promo margin floor is 44 percent, and two top stores report tester theft and low attachment to the regimen kit.",
+        "retail_context": {
+          "category": "beauty",
+          "retail_function": "assortment_and_promotion",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "case_key": "beauty_trend"
+      },
+      "question": "Decide whether to price, promote, hold, or target. Include margin, demand, and risk-control reasoning.",
+      "expected_output": {
+        "decision": "do not approve a blanket promotion without passing economics and supply controls",
+        "recommended_price_or_depth": "hold, target, or cap the offer until deterministic controls clear",
+        "margin_read": "validate margin floor, funding, MAP, and cost exposure before any price move",
+        "demand_read": "treat demand lift as uncertain when stockouts, trend spikes, or competitor actions contaminate the read",
+        "risk_controls": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "41 percent search spike",
+        "9 days",
+        "44 percent margin floor",
+        "low attachment"
+      ],
+      "must_not_include": [
+        "assume the social trend proves sell-through",
+        "ignore tester theft",
+        "promote below margin floor"
+      ],
+      "deterministic_checks": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "escalation_triggers": [
+        "funding expires before execution",
+        "promotion breaks margin floor"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_price_or_depth",
+        "margin_read"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    },
+    {
+      "id": "prc_007",
+      "title": "Tool Set Chase With Vendor Reliability Drop",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "hard_goods",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A 120-piece tool set is up 26 percent in DIY channels after a competitor recall. The vendor fill rate fell from 94 percent to 71 percent over 4 weeks, MOQ is 480 units, and the item has a 13 percent bulky-item return rate.",
+        "retail_context": {
+          "category": "hard_goods",
+          "retail_function": "vendor_supply",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "case_key": "hardgoods_vendor"
+      },
+      "question": "Decide whether to price, promote, hold, or target. Include margin, demand, and risk-control reasoning.",
+      "expected_output": {
+        "decision": "do not approve a blanket promotion without passing economics and supply controls",
+        "recommended_price_or_depth": "hold, target, or cap the offer until deterministic controls clear",
+        "margin_read": "validate margin floor, funding, MAP, and cost exposure before any price move",
+        "demand_read": "treat demand lift as uncertain when stockouts, trend spikes, or competitor actions contaminate the read",
+        "risk_controls": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "26 percent",
+        "71 percent fill rate",
+        "MOQ 480",
+        "13 percent return rate"
+      ],
+      "must_not_include": [
+        "chase full demand without vendor risk",
+        "ignore MOQ",
+        "ignore bulky-item returns"
+      ],
+      "deterministic_checks": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "fill rate stays below 80 percent",
+        "bulky returns exceed plan"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_price_or_depth",
+        "margin_read"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    },
+    {
+      "id": "prc_008",
+      "title": "Headphone Price Match With MAP Risk",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A marketplace seller lists the premium headphone at $149.99 while our price is $179.99. Vendor MAP is $169.99, unit cost is $118.00, attachment on warranty is 22 percent, and 31 percent of recent returns cite counterfeit concern in competitor reviews.",
+        "retail_context": {
+          "category": "electronics",
+          "retail_function": "pricing_promotion",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "case_key": "electronics_map"
+      },
+      "question": "Decide whether to price, promote, hold, or target. Include margin, demand, and risk-control reasoning.",
+      "expected_output": {
+        "decision": "do not approve a blanket promotion without passing economics and supply controls",
+        "recommended_price_or_depth": "hold, target, or cap the offer until deterministic controls clear",
+        "margin_read": "validate margin floor, funding, MAP, and cost exposure before any price move",
+        "demand_read": "treat demand lift as uncertain when stockouts, trend spikes, or competitor actions contaminate the read",
+        "risk_controls": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "$149.99",
+        "$169.99 MAP",
+        "$118.00 unit cost",
+        "31 percent"
+      ],
+      "must_not_include": [
+        "match below MAP",
+        "treat marketplace seller as clean competitor",
+        "ignore warranty attachment"
+      ],
+      "deterministic_checks": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "escalation_triggers": [
+        "MAP breach requested",
+        "counterfeit or price-image risk is unresolved"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_price_or_depth",
+        "margin_read"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    },
+    {
+      "id": "prc_009",
+      "title": "Patio Set Buy With Return And DC Constraint",
+      "difficulty": "hard",
+      "retail_function": "initial_buy",
+      "category": "home",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A patio dining set has a 33 percent pre-season intent lift, but the DC furniture floor is capped at 84 trailers. The vendor lead time slipped from 28 to 43 days, assembly complaints are 18 percent above benchmark, and holding the buy protects $420k OTB for late-spring umbrellas.",
+        "retail_context": {
+          "category": "home",
+          "retail_function": "initial_buy",
+          "decision_value_band": "500k_plus"
+        },
+        "known_controls": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "case_key": "home_capacity"
+      },
+      "question": "Decide whether to price, promote, hold, or target. Include margin, demand, and risk-control reasoning.",
+      "expected_output": {
+        "decision": "do not approve a blanket promotion without passing economics and supply controls",
+        "recommended_price_or_depth": "hold, target, or cap the offer until deterministic controls clear",
+        "margin_read": "validate margin floor, funding, MAP, and cost exposure before any price move",
+        "demand_read": "treat demand lift as uncertain when stockouts, trend spikes, or competitor actions contaminate the read",
+        "risk_controls": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "33 percent intent lift",
+        "84 trailers",
+        "43 days",
+        "$420k OTB"
+      ],
+      "must_not_include": [
+        "ignore umbrella opportunity cost",
+        "ignore DC capacity",
+        "assume intent lift equals demand"
+      ],
+      "deterministic_checks": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "escalation_triggers": [
+        "DC floor capacity is exceeded",
+        "lead time misses seasonal selling window"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_price_or_depth",
+        "margin_read"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    },
+    {
+      "id": "prc_010",
+      "title": "Trail Shoe Allocation With Size-Curve Noise",
+      "difficulty": "medium",
+      "retail_function": "allocation_size_fit",
+      "category": "footwear",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "minutes",
+      "call_volume_band": "high",
+      "input": {
+        "source_note": "Trail shoe conversion is up 19 percent in mountain stores after rain, but sizes 10-12 stocked out for 5 days. E-commerce returns are 16 percent for fit, store labor can process only 320 transfer pairs this week, and the next vendor cut is 6 weeks away.",
+        "retail_context": {
+          "category": "footwear",
+          "retail_function": "allocation_size_fit",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "case_key": "footwear_size"
+      },
+      "question": "Decide whether to price, promote, hold, or target. Include margin, demand, and risk-control reasoning.",
+      "expected_output": {
+        "decision": "do not approve a blanket promotion without passing economics and supply controls",
+        "recommended_price_or_depth": "hold, target, or cap the offer until deterministic controls clear",
+        "margin_read": "validate margin floor, funding, MAP, and cost exposure before any price move",
+        "demand_read": "treat demand lift as uncertain when stockouts, trend spikes, or competitor actions contaminate the read",
+        "risk_controls": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "19 percent",
+        "sizes 10-12",
+        "320 transfer pairs",
+        "6 weeks"
+      ],
+      "must_not_include": [
+        "read total conversion as clean",
+        "ignore transfer labor",
+        "over-allocate fit-risk sizes"
+      ],
+      "deterministic_checks": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "labor cap blocks transfer plan",
+        "size-level read remains censored"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_price_or_depth",
+        "margin_read"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    },
+    {
+      "id": "prc_011",
+      "title": "Holiday Marketplace Seller With Customer Trust Risk",
+      "difficulty": "hard",
+      "retail_function": "marketplace_and_seasonal",
+      "category": "marketplace",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A third-party seller offers 8,000 units of a holiday decor item with 37 percent lower cost. The seller has 91 percent on-time delivery, packaging defect claims are 4.8 percent, and the item is used in a public holiday promise landing page that launches in 72 hours.",
+        "retail_context": {
+          "category": "marketplace",
+          "retail_function": "marketplace_and_seasonal",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "case_key": "seasonal_marketplace"
+      },
+      "question": "Decide whether to price, promote, hold, or target. Include margin, demand, and risk-control reasoning.",
+      "expected_output": {
+        "decision": "do not approve a blanket promotion without passing economics and supply controls",
+        "recommended_price_or_depth": "hold, target, or cap the offer until deterministic controls clear",
+        "margin_read": "validate margin floor, funding, MAP, and cost exposure before any price move",
+        "demand_read": "treat demand lift as uncertain when stockouts, trend spikes, or competitor actions contaminate the read",
+        "risk_controls": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "8,000 units",
+        "37 percent lower cost",
+        "91 percent on-time delivery",
+        "72 hours"
+      ],
+      "must_not_include": [
+        "approve solely because cost is lower",
+        "ignore packaging defects",
+        "ignore public promise risk"
+      ],
+      "deterministic_checks": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "escalation_triggers": [
+        "public promise is at risk",
+        "seller reliability below launch threshold"
+      ],
+      "scoring_focus": [
+        "decision",
+        "recommended_price_or_depth",
+        "margin_read"
+      ],
+      "ambiguity_type": "margin, supply, and competitive-response ambiguity",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "expected_failure_mode": "The answer chases unit lift while missing margin, funding, supply, or pull-forward risk.",
+      "scoring_rationale": "Score should reward margin-aware economics, demand interpretation, risk controls, and human-review boundaries."
+    }
+  ]
+}

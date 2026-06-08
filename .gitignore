@@ -1,0 +1,31 @@
+.DS_Store
+.env
+.env.local
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local provider run outputs. Curated published artifacts are committed
+# explicitly under reports/eval_packs/.
+reports/eval_packs/provider_*_responses.json
+reports/eval_packs/provider_*_scores.json
+reports/eval_packs/provider_*_summary.md
+reports/eval_packs/provider_*_manifest.json
+reports/eval_packs/openrouter_*_responses.json
+reports/eval_packs/openrouter_*_scores.json
+reports/eval_packs/openrouter_*_summary.md
+reports/eval_packs/openrouter_*_manifest.json
+
+# TeX build products
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.log
+paper/*.out
+paper/*.synctex.gz
+paper/*.toc

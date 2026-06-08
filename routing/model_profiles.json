@@ -1,0 +1,154 @@
+{
+  "version": "0.2",
+  "description": "Canonical model and workflow profile metadata for MerchBench routing reports. Cost and latency indices are coarse artifact-level priors until production telemetry is available.",
+  "cluster_order": [
+    "Rules and heuristics",
+    "Local models",
+    "Small paid models",
+    "Free hosted open models",
+    "Free hosted frontier models",
+    "Efficient paid frontier models",
+    "Premium paid frontier models",
+    "Human reviewed workflows"
+  ],
+  "cluster_descriptions": {
+    "Rules and heuristics": "Best for deterministic gates: OTB, MOQ, margin floors, capacity, policy, and schema checks.",
+    "Local models": "Useful for no-quota experimentation and privacy-sensitive smoke tests, but current local scores are below deployable judgment thresholds.",
+    "Small paid models": "Useful for high-volume low-risk calls when deterministic validation and escalation are present.",
+    "Free hosted open models": "Useful quota pool for open-model comparators and inexpensive hosted experiments.",
+    "Free hosted frontier models": "Strong free-capacity comparators; current best free hosted run is Z.ai GLM 4.7 on Cerebras.",
+    "Efficient paid frontier models": "Best current economic frontier for broad retail judgment in the stored panel.",
+    "Premium paid frontier models": "Quality anchors for high-downside exceptions where incremental quality justifies cost and latency.",
+    "Human reviewed workflows": "Required for irreversible, high-value, safety, legal, brand, or executive exception decisions."
+  },
+  "models": {
+    "baseline/source_echo": {
+      "display_name": "Source echo baseline",
+      "cluster": "Rules and heuristics",
+      "strategy_tier": "rules_only",
+      "cost_index": 0.1,
+      "latency_index": 0.1,
+      "notes": "Adversarial scorer sanity check; anti-echo hardening keeps it below deployable thresholds."
+    },
+    "baseline/keyword_guardrail": {
+      "display_name": "Keyword guardrail baseline",
+      "cluster": "Rules and heuristics",
+      "strategy_tier": "rules_only",
+      "cost_index": 0.1,
+      "latency_index": 0.1,
+      "notes": "Adversarial keyword-stuffing sanity check."
+    },
+    "ollama/gemma4:e2b": {
+      "display_name": "Gemma local",
+      "cluster": "Local models",
+      "strategy_tier": "local_model",
+      "cost_index": 0.0,
+      "latency_index": 6.0,
+      "notes": "Best local score, but many rows returned empty or parse-invalid content."
+    },
+    "ollama/llama3.2:3b": {
+      "display_name": "Llama 3.2 local",
+      "cluster": "Local models",
+      "strategy_tier": "small_model",
+      "cost_index": 0.0,
+      "latency_index": 3.0,
+      "notes": "Reliable local output producer, but materially weaker judgment."
+    },
+    "ollama/lfm2.5-thinking:1.2b": {
+      "display_name": "LFM local 1.2B",
+      "cluster": "Local models",
+      "strategy_tier": "small_model",
+      "cost_index": 0.0,
+      "latency_index": 6.5,
+      "notes": "Tiny local comparator with frequent response-contract failures."
+    },
+    "openai/gpt-4.1-nano": {
+      "display_name": "GPT-4.1 Nano",
+      "cluster": "Small paid models",
+      "strategy_tier": "small_model",
+      "cost_index": 0.1,
+      "latency_index": 1.2,
+      "notes": "Clean older direct-OpenAI baseline, now surpassed by GPT-5 Nano."
+    },
+    "openai/gpt-5-nano": {
+      "display_name": "GPT-5 Nano",
+      "cluster": "Small paid models",
+      "strategy_tier": "small_model",
+      "cost_index": 0.1,
+      "latency_index": 1.8,
+      "notes": "Very low-cost paid baseline with useful improvement over GPT-4.1 Nano."
+    },
+    "groq/llama-3.3-70b-versatile": {
+      "display_name": "Llama 3.3 70B",
+      "cluster": "Free hosted open models",
+      "strategy_tier": "frontier_model",
+      "cost_index": 0.0,
+      "latency_index": 2.0,
+      "notes": "Large hosted open comparator, but below the current paid frontier."
+    },
+    "groq/meta-llama/llama-4-scout-17b-16e-instruct": {
+      "display_name": "Llama 4 Scout 17B",
+      "cluster": "Free hosted open models",
+      "strategy_tier": "mid_model",
+      "cost_index": 0.0,
+      "latency_index": 2.0,
+      "notes": "Efficient hosted baseline with moderate full-suite quality."
+    },
+    "groq/qwen/qwen3-32b": {
+      "display_name": "Qwen3 32B",
+      "cluster": "Free hosted open models",
+      "strategy_tier": "mid_model",
+      "cost_index": 0.0,
+      "latency_index": 4.0,
+      "notes": "Best Groq-hosted result in the current full-suite run."
+    },
+    "cerebras/gpt-oss-120b": {
+      "display_name": "GPT-OSS 120B",
+      "cluster": "Free hosted frontier models",
+      "strategy_tier": "frontier_model",
+      "cost_index": 0.0,
+      "latency_index": 4.0,
+      "notes": "Strong open model and useful free-capacity comparator."
+    },
+    "cerebras/zai-glm-4.7": {
+      "display_name": "Z.ai GLM 4.7",
+      "cluster": "Free hosted frontier models",
+      "strategy_tier": "frontier_model",
+      "cost_index": 0.0,
+      "latency_index": 8.0,
+      "notes": "Strongest free hosted result in the current full-suite panel."
+    },
+    "openai/gpt-5-mini": {
+      "display_name": "GPT-5 Mini",
+      "cluster": "Efficient paid frontier models",
+      "strategy_tier": "mid_model",
+      "cost_index": 1.0,
+      "latency_index": 5.0,
+      "notes": "Best cheap paid specialist for summarization, extraction, and portfolio triage."
+    },
+    "openai/gpt-5.4-mini": {
+      "display_name": "GPT-5.4 Mini",
+      "cluster": "Efficient paid frontier models",
+      "strategy_tier": "frontier_model",
+      "cost_index": 1.2,
+      "latency_index": 3.0,
+      "notes": "Current economic frontier result for broad judgment-heavy retail workflows."
+    },
+    "openai/gpt-5.4": {
+      "display_name": "GPT-5.4",
+      "cluster": "Premium paid frontier models",
+      "strategy_tier": "frontier_model",
+      "cost_index": 5.0,
+      "latency_index": 3.5,
+      "notes": "Near-top overall quality and strongest ambiguous-judgment profile."
+    },
+    "openai/gpt-5.5": {
+      "display_name": "GPT-5.5",
+      "cluster": "Premium paid frontier models",
+      "strategy_tier": "frontier_model",
+      "cost_index": 10.0,
+      "latency_index": 3.0,
+      "notes": "Overall quality leader; best reserved for high-downside exceptions."
+    }
+  }
+}

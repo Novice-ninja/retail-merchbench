@@ -1,0 +1,17 @@
+{
+  "provider": "cerebras",
+  "started_at_utc": "2026-06-07T03:30:10.591996+00:00",
+  "completed_at_utc": "2026-06-07T15:41:50.395935+00:00",
+  "stop_reason": null,
+  "total": 100,
+  "ok": 100,
+  "failed": 0,
+  "by_model": {
+    "cerebras/zai-glm-4.7": {
+      "provider_model_id": "zai-glm-4.7",
+      "total": 100,
+      "ok": 100,
+      "failed": 0
+    }
+  }
+}

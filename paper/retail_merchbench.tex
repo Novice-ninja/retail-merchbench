@@ -1,0 +1,896 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\newcommand{\benchmark}{\textsc{MerchBench}}
+\newcommand{\score}[1]{#1/10}
+\newcommand{\code}[1]{\texttt{#1}}
+\definecolor{mbink}{HTML}{17211B}
+\definecolor{mbteal}{HTML}{277C78}
+\definecolor{mbsage}{HTML}{88A88F}
+\definecolor{mbgold}{HTML}{C8912F}
+\definecolor{mbclay}{HTML}{B85F42}
+\definecolor{mbpurple}{HTML}{6D5375}
+\newcommand{\heatcell}[2]{\cellcolor{#1}\textcolor{white}{\textbf{#2}}}
+
+\title{\benchmark{}: A Retail AI Model-Routing Benchmark for Economically Sufficient Model Choice in Merchandise Planning}
+\author{Nirav Parekh \\ MerchBench Project}
+\date{June 7, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Retail organizations deploying language models rarely need an abstract answer to the question ``which model is best?'' They need a more operational answer: for each class of retail workflow, which model or workflow tier is economically sufficient once decision quality, latency, inference cost, downside risk, reversibility, deterministic controls, and human review are considered? \benchmark{} introduces a benchmark and reporting framework for this model-routing problem in retail merchandise planning.
+
+\benchmark{} evaluates language models on retail-native decision tasks involving noisy evidence, contaminated signals, operational constraints, causal ambiguity, external shocks, reflexive effects, and economic consequences. The benchmark is deliberately distinct from consumer shopping-agent benchmarks, customer-service tool-agent benchmarks, and statistical demand-forecasting benchmarks. It targets merchant and planner judgment: whether a model can identify weak or contaminated evidence, challenge a poorly framed planning question, reason within open-to-buy (OTB), minimum order quantity (MOQ), pack, margin, lead-time, channel, and capacity constraints, calibrate uncertainty, and produce an action that a retail operator could actually use or safely escalate.
+
+The current release centers on a 100-item segment eval-pack corpus across eight economic-routing segments: low-risk summarization, structured extraction, constraint checking, routine planning recommendation, pricing and promotion, ambiguous planning judgment, portfolio tradeoff, and operational triage. Each segment pack records ambiguity type, risk level, reversibility, deterministic controls, escalation triggers, expected failure mode, expected output contract, and scoring rationale.
+
+We report results from deterministic sanity baselines and a curated provider panel with full 100/100 coverage for 14 real models across local Ollama, hosted Groq/Cerebras, and the paid OpenAI ladder. After anti-echo scorer hardening, \code{openai/gpt-5.5} is the overall leader at \score{7.4614}. \code{openai/gpt-5.4} scores \score{7.3907}, and \code{openai/gpt-5.4-mini} scores \score{7.3693}. The economically salient finding is not the top score alone: \code{openai/gpt-5.4-mini} is within 0.0921 points of \code{gpt-5.5} at roughly 13 percent of the observed artifact cost, making it the broad economic default. \code{openai/gpt-5-mini} is the strongest cheap paid specialist for summarization, structured extraction, and portfolio tradeoff. \code{cerebras/zai-glm-4.7} is the strongest free hosted comparator at \score{6.8471}. Pricing and promotion and routine planning remain below the \score{7.0} proxy autonomy floor even for the strongest models, implying that material price moves and higher-risk planning recommendations should retain deterministic checks and human review.
+
+The contribution of \benchmark{} is therefore not a static leaderboard. It is a reproducible structure for deciding which model, rules layer, cascade, or human-review workflow is economically right for each class of retail decision. The findings should be consumed as automated routing priors pending human-rater calibration, repeated-run variance, and production latency and retry measurement.
+\end{abstract}
+
+\section{Introduction}
+
+Retail merchandise planning is a high-leverage decision environment. A merchant deciding whether to chase a viral item, a planner deciding whether to protect OTB for a seasonal program, an allocation team deciding whether scarce inventory should flow to stores or ecommerce, or a pricing team deciding whether to match a competitor promotion is rarely solving a clean arithmetic problem. The visible math is often straightforward. The hard part is deciding whether the evidence is valid, whether the question is framed correctly, whether constraints make the recommended action feasible, and whether the action changes the future state in a way that creates hidden downside.
+
+Large language models are increasingly plausible components in retail workflows. They can summarize vendor notes, explain weekly business results, classify exceptions, draft replenishment rationales, inspect markdown options, support allocation decisions, evaluate price-match requests, and help planners prepare executive narratives. This creates an economic deployment problem. A retailer building an AI workflow does not simply choose the strongest model available. Every model call trades off quality, cost, latency, reliability, variance, review burden, and error downside.
+
+The economically correct model can differ by workflow. A high-cost frontier model may be justified for a high-value, irreversible portfolio OTB decision. The same model may be wasteful for extracting a receipt date from a vendor email. A small or local model may be acceptable for low-risk summarization but unsafe for material pricing. A deterministic rule may outperform every model for margin-floor validation, while a model may be useful for explaining why a proposed exception should be escalated.
+
+\benchmark{} is designed around this reality. It asks two linked questions:
+
+\begin{enumerate}[leftmargin=*]
+  \item Can a model produce a commercially sound retail-planning answer from a self-contained prompt?
+  \item Is that model the economically sufficient choice for this task class once cost, latency burden, downside risk, reversibility, deterministic controls, and human review are considered?
+\end{enumerate}
+
+The second question is the distinctive one. A model reaching a high score is not a benchmark failure. It may mean the task class is solvable. The commercial question is whether a cheaper model, deterministic control, cascade, or human-in-the-loop workflow is sufficient. \benchmark{} therefore treats quality as one input to routing rather than the entire objective.
+
+\subsection*{Contributions}
+
+\begin{itemize}[leftmargin=*]
+  \item We introduce a retail-native model-routing benchmark that evaluates model and workflow choice by economic sufficiency rather than absolute model rank alone.
+  \item We define a merchandise-planning failure taxonomy covering evidence humility, reframing failure, constraint blindness, causal-chain collapse, and mixed executive-pressure cases.
+  \item We release a 100-item segment eval-pack corpus across eight retail decision segments with explicit metadata for ambiguity, risk, reversibility, controls, escalation, failure mode, and scoring rationale.
+  \item We report full-suite stored results for 14 real models plus deterministic baselines, including paid, free hosted, and local inference sources.
+  \item We provide an Atlas and report that translate scores into segment-level recommendations, quality leaders, economic picks, controls, and human-review boundaries.
+  \item We explicitly separate automated routing priors from final benchmark claims and define the remaining validation work required for journal-grade external rankings.
+\end{itemize}
+
+\subsection*{What This Benchmark Does Not Claim}
+
+\begin{center}
+\begin{tabularx}{0.94\textwidth}{X}
+\toprule
+\benchmark{} does not claim a universal best model for all retail work. It does not claim autonomous readiness for material pricing, portfolio, safety, legal, or executive override decisions. It does not provide final human-validated rankings, production p95 latency, or retailer-specific cost models. It is an automated-score artifact and routing-prior package. Retailers must calibrate quality floors, cost weights, review policy, and error costs against their own categories, data systems, operating rhythms, and approval model. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Related Work and Positioning}
+
+\benchmark{} is located at the intersection of language-model evaluation, retail decision support, tool-agent benchmarking, and operations research. Its distinctive object of evaluation is merchant-side planning judgment and economic model routing.
+
+\paragraph{Consumer shopping-agent benchmarks.}
+Benchmarks such as WebShop, ShoppingBench, ShoppingComp, and WebMall study consumer shopping agents: product search, item comparison, report generation, checkout behavior, vouchers, budgets, and multi-shop navigation \cite{webshop, shoppingbench, shoppingcomp, webmall}. These benchmarks are valuable for ecommerce agents. They are not designed to evaluate internal merchant decisions such as chase ordering, OTB allocation, assortment expansion, markdown depth, pack feasibility, store receiving constraints, or promotion cannibalization. \benchmark{} focuses on the retailer's planning decision rather than the shopper's purchase journey.
+
+\paragraph{Tool-agent and customer-service benchmarks.}
+tau-bench and tau2-bench evaluate tool-agent-user interaction, policy following, database-state correctness, and dual-control conversational environments \cite{taubench, tau2bench}. Such benchmarks are relevant to future retail agents connected to private systems. \benchmark{} intentionally begins with static, self-contained planning prompts to isolate decision quality before adding retrieval, tools, memory, environment state, or multi-turn agency. This makes the current benchmark narrower but more diagnostic for the judgment layer.
+
+\paragraph{Retail operations simulation.}
+Recent retail operations agent work evaluates long-horizon autonomous decision-making and strategy stability under stochastic retail environments \cite{retailopsagents}. \benchmark{} is complementary. It targets local planning judgment: whether a model can identify contaminated evidence, challenge a premise, respect constraints, and reason about economic consequences. A future simulation layer could evaluate whether those recommendations remain stable over repeated decision cycles.
+
+\paragraph{Forecasting and scanner-data benchmarks.}
+Retail forecasting competitions such as M5 evaluate demand forecast accuracy on hierarchical sales data \cite{m5accuracy, m5background}. Scanner datasets such as Dominick's and dunnhumby provide valuable retail realism for pricing and promotion research \cite{dominicks, dunnhumby}. \benchmark{} does not measure forecasting accuracy. It assumes a planner may already have forecasts, comps, reads, vendor notes, and constraints, then asks whether a model reasons correctly about their reliability and implications.
+
+\paragraph{General LLM evaluation methodology.}
+\benchmark{} borrows from HELM-style transparent reporting, LiveBench-style contamination awareness, and LLM-as-judge calibration concerns \cite{helm, livebench, mtbench}. It exposes prompts, schemas, response artifacts, model identifiers, scoring outputs, cost estimates, and validation caveats. It also treats public contamination, scorer robustness, repeated-run variance, and human agreement as first-class threats to validity.
+
+\section{Economic Model-Routing Thesis}
+
+The core thesis of \benchmark{} is that retail AI systems should be evaluated by economic workflow fit. A model is not deployed in a vacuum. It is embedded in an operational process with call volume, latency expectations, hard constraints, review policies, and business downside.
+
+We define a conceptual economic-fit objective:
+
+\begin{equation}
+\text{economic\_fit} =
+  \text{decision\_quality\_value}
+  - \text{expected\_error\_cost}
+  - \text{inference\_cost}
+  - \text{latency\_penalty}
+  - \text{variance\_or\_retry\_cost}
+  - \text{human\_review\_cost}.
+\end{equation}
+
+This is not a universal formula with fixed weights. A retailer must calibrate each term. A grocer, apparel retailer, marketplace, specialty hard-goods retailer, and beauty retailer have different margins, cycle times, review norms, vendor funding models, inventory risks, and customer promises. \benchmark{} provides a framework and public priors; internal deployment requires local calibration.
+
+This framing changes what should be reported. A single leaderboard is insufficient. For each task segment, \benchmark{} reports:
+
+\begin{itemize}[leftmargin=*]
+  \item the quality leader;
+  \item the economic pick;
+  \item the cheapest model or workflow that clears a relevant quality floor;
+  \item deterministic controls needed before or after the model call;
+  \item escalation triggers for stronger models or human review;
+  \item residual risk after the recommended workflow.
+\end{itemize}
+
+\section{Benchmark Architecture}
+
+\benchmark{} contains one primary public evaluation layer and several reproducibility artifacts.
+
+\subsection{Decision-Construct Taxonomy}
+
+The benchmark begins with a taxonomy of retail decision constructs. These constructs define what the 100-item segment corpus is trying to measure and prevent the benchmark from becoming a loose collection of retail-themed prompts. The central constructs are evidence quality, problem framing, constraint handling, uncertainty calibration, actionability, and economic impact.
+
+Each eval item is authored from this construct layer and includes:
+
+\begin{itemize}[leftmargin=*]
+  \item business context and structured retail facts shown to the model;
+  \item the model-facing task question;
+  \item metadata for retail function, ambiguity, risk level, reversibility, controls, escalation triggers, and expected failure mode;
+  \item required signals and expected output fields;
+  \item known bad response patterns;
+  \item expert-authored scoring rationale.
+\end{itemize}
+
+This design supports both score computation and qualitative error analysis. It also makes the intended retail behavior inspectable before any model response is scored.
+
+\subsection{Failure Taxonomy}
+
+The benchmark is organized around five failure classes:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.24\textwidth} X}
+\toprule
+Failure class & Evaluation purpose \\
+\midrule
+FC-1 Evidence Humility & Tests whether the model avoids false precision when comps, reads, or trend signals are thin, contradictory, contaminated, or missing. \\
+FC-2 Reframing Failure & Tests whether the model challenges the planning question before optimizing the wrong lever. \\
+FC-3 Constraint Blindness & Tests whether the model respects OTB, MOQ, pack, margin, timing, vendor, channel, labor, and capacity constraints. \\
+FC-4 Causal Chain Collapse & Tests whether the model keeps multi-period cause and effect coherent, especially when earlier actions distort later observations. \\
+Mixed Executive Pressure & Combines multiple failure modes under leadership pressure, opportunity cost, customer-trust exposure, or irreversible commitments. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+These failure classes reflect a common property of retail planning: bad recommendations can be linguistically plausible. A response can sound commercially fluent while still chasing a stockout-censored signal, ignoring a pack multiple, violating a margin floor, or approving a promotion that merely pulls forward demand.
+
+\subsection{Segment Eval-Pack Layer}
+
+The segment eval-pack layer is the primary routing corpus. It contains 100 task items across eight economic decision segments. These items are designed to evaluate specific workflow classes. Each item includes the task prompt, expected outputs, deterministic checks, escalation triggers, risk metadata, reversibility, ambiguity type, expected failure mode, and scoring rationale.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.24\textwidth} r X}
+\toprule
+Segment & Items & Economic-routing role \\
+\midrule
+Low-risk summarization & 17 & High-volume faithful compression; cheap models acceptable if source fidelity and no-decision boundaries hold. \\
+Structured extraction & 17 & Rules and schema first; model fallback for messy text; deterministic validation remains authoritative. \\
+Constraint checking & 11 & Hard gates for OTB, MOQ, pack, margin, capacity, timing, and policy; models explain or triage exceptions. \\
+Routine planning recommendation & 11 & Bounded actions with deterministic guardrails and escalation for high value, low confidence, or irreversibility. \\
+Pricing and promotion & 11 & Margin-aware decisions under vendor funding, competitor pressure, supply limits, and pull-forward risk. \\
+Ambiguous planning judgment & 11 & Contaminated evidence, causal reframing, opportunity cost, uncertainty calibration, and conditional action. \\
+Portfolio tradeoff & 11 & Cross-category OTB and opportunity-cost decisions that require strong reasoning plus human review. \\
+Operational triage & 11 & Exception prioritization, owner routing, safety, compliance, labor capacity, and customer-trust gates. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Formal Task Definition}
+
+Each segment eval-pack item can be represented as a tuple
+\[
+  x_i = (p_i, c_i, o_i, m_i, r_i),
+\]
+where \(p_i\) is the model-facing prompt, \(c_i\) is the output contract, \(o_i\) is the expected operational decision or response type, \(m_i\) is the set of must-include and must-not-include checks, and \(r_i\) is routing metadata such as risk, reversibility, deterministic controls, and escalation triggers. A model \(f\) produces a response \(y_i=f(p_i)\). The scorer maps \((x_i,y_i)\) to a normalized score \(s_i \in [0,10]\) and diagnostic flags.
+
+The benchmark is intentionally not a pure answer-key benchmark. Many retail decisions have acceptable answer bands rather than one correct sentence. The scoring target is therefore not lexical identity with an expert answer. It is whether the response satisfies the relevant commercial obligations: identifies valid evidence, avoids known bad patterns, respects hard constraints, calibrates uncertainty, and produces a usable action or escalation.
+
+\subsection{Corpus Construction Protocol}
+
+The corpus was constructed by first defining economic-routing segments, then writing task items inside each segment, then validating each item against a schema and metadata gates. The authoring protocol requires each item to specify the intended retail workflow, the ambiguity type, the downside band, whether the action is reversible, deterministic controls that should govern the workflow, escalation triggers, expected failure modes, and scoring rationale.
+
+This construction order matters. If examples are written before the segment taxonomy, the benchmark can become a loose collection of retail-themed prompts. If the scorer is written before failure modes are explicit, it can reward generic advice. \benchmark{} reverses that order: the retail workflow and failure mode are defined first, then the prompt and scoring checks are authored to test that behavior.
+
+\subsection{Quality Assurance Gates}
+
+Repository validation enforces several construction constraints. The segment layer must contain at least 100 items; every declared routing segment must have a corresponding pack; item identifiers must be unique; high-risk segments must have sufficient coverage; hard items must include multiple deterministic checks; high-downside items must include escalation triggers; and routing metadata must be present and internally consistent. Stored baseline responses and scores are recomputed from the current packs to detect stale artifacts.
+
+These gates do not prove that the benchmark is final. They enforce a minimum standard of structural integrity so that evaluation results remain reproducible as the corpus expands.
+
+\section{Design Principles}
+
+\benchmark{} items are difficult for retail reasons, not because the grading key is arbitrary. The design is governed by eleven principles.
+
+\paragraph{Retail representativeness.}
+Items map to merchant, planner, allocation, pricing, vendor, inventory, ecommerce, or store-operations workflows. Generic business riddles with retail vocabulary are excluded.
+
+\paragraph{Ambiguity.}
+Inputs include incomplete, contaminated, contradictory, or weak evidence that still permits reasoned action. Clean textbook arithmetic is not enough.
+
+\paragraph{Connectedness.}
+At least two variables interact. Examples include size mix and OTB, weather and category mix, lead time and markdown timing, vendor funding and margin, or labor capacity and allocation feasibility.
+
+\paragraph{Causality.}
+Strong answers must identify mechanisms, not only correlations. Stockouts can censor demand; promotions can pull forward purchases; delayed receipts can create false markdown risk; leadership pressure can distort portfolio judgment.
+
+\paragraph{Externalities.}
+Items incorporate forces such as weather, competitive response, trend decay, vendor reliability, reviews, calendar timing, marketplace dynamics, customer promise, and store operations.
+
+\paragraph{Reflexivity.}
+Recommendations change the future state. A chase order changes markdown risk; a price match trains future behavior; an allocation shift changes channel reads; using OTB on one program blocks another.
+
+\paragraph{Randomness.}
+Items name uncertainty sources such as returns, conversion, size-level variance, receipt timing, cancellation, competitor behavior, or weather shifts. This discourages false precision.
+
+\paragraph{Toughness.}
+A simple heuristic should fail in a known way. Difficulty should come from commercial interactions and tradeoffs rather than hidden facts.
+
+\paragraph{Routing signal.}
+The item should help distinguish rules, small models, mid models, frontier models, cascades, and human-review workflows. If all strategies should behave the same, the item may be useful as a control but not as a routing discriminator.
+
+\paragraph{Answerability.}
+A strong answer must be possible from the prompt alone. The benchmark does not require private retailer knowledge.
+
+\paragraph{Scoring integrity.}
+Required signals, known bad patterns, expert answers, acceptable bands, and economic penalties are written before scoring model responses.
+
+\section{Scoring Methodology}
+
+\subsection{Scoring Dimensions}
+
+Segment eval-pack scores use a normalized 10-point checklist. Each scorecard is pre-specified before model responses are scored, and the scoring code recomputes totals from stored criterion outputs.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.24\textwidth} p{0.16\textwidth} X}
+\toprule
+Dimension & Role & What it measures \\
+\midrule
+Evidence Quality & Signal audit & Identifies and weights valid, weak, missing, or contaminated signals. \\
+Problem Framing & Decision framing & Solves the right business problem, not just the literal prompt. \\
+Constraint Handling & Feasibility gate & Applies OTB, MOQ, pack, timing, channel, vendor, and feasibility constraints. \\
+Uncertainty Calibration & Risk control & Matches confidence to evidence quality and decision risk. \\
+Actionability & Workflow fit & Gives a usable recommendation with enough specificity. \\
+Economic Impact & Downside control & Avoids decisions that create material business risk. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Segment Eval-Pack Score}
+
+The scoring implementation combines output-contract compliance, must-include checks, must-not-include checks, deterministic-field checks, escalation agreement, and anti-echo penalties. The scoring dimensions differ by segment. Summarization rewards source fidelity and no-decision discipline. Extraction rewards exact values and schema compliance. Pricing rewards margin, funding, supply, competitor-response, and pull-forward awareness. Portfolio tradeoff rewards opportunity-cost reasoning and escalation.
+
+The scorer is intentionally bootstrap-grade. It is strong enough for internal routing diagnostics and deterministic baseline audits, but it is not a final human-calibrated benchmark judge. \benchmark{} therefore reports automated scores as routing priors.
+
+\subsection{Anti-Echo Baselines}
+
+The benchmark includes adversarial deterministic baselines to prevent the scorer from rewarding superficial overlap:
+
+\begin{itemize}[leftmargin=*]
+  \item source echo;
+  \item keyword guardrail stuffing;
+  \item generic consultant answer;
+  \item always escalate;
+  \item always buy or chase;
+  \item always conservative or no action;
+  \item arithmetic-only answer.
+\end{itemize}
+
+The anti-echo audit keeps shallow strategies below deployable thresholds. Source echo scores \score{3.3530} and keyword guardrail stuffing scores \score{4.3280} on the 100-item corpus. This is important because surface copying and keyword stuffing should not look like strong retail judgment.
+
+\subsection{Score Interpretation}
+
+the benchmark uses \score{7.0} as a proxy floor for candidate autonomy in lower-risk segments, not as a universal production threshold. Scores below that level can still be useful for assisted drafting, explanation, triage, or cascade prefiltering. Scores above that level can still require review when the segment has high downside, low reversibility, legal or safety exposure, or executive override risk.
+
+The benchmark therefore reports three levels of evidence:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Task score}: how well the response satisfies the item-level scoring contract.
+  \item \textbf{Segment score}: how well the model performs for a workflow class.
+  \item \textbf{Routing recommendation}: how the score should be interpreted after considering cost, risk, reversibility, deterministic controls, and review policy.
+\end{itemize}
+
+A model can be a segment quality leader but not the economic pick. Conversely, a model can be an economic pick only if its residual risks are bounded by deterministic checks, review policy, or a cascade.
+
+\section{Experimental Setup}
+
+\subsection{Corpus and Coverage}
+
+The current result set covers all 100 segment eval-pack items for the curated model panel. Deterministic baselines also cover the full corpus. Partial OpenRouter free-tier probes are retained as capacity artifacts but excluded from the main ranked panel. xAI was configured but unavailable because the account returned a no-credits or no-license error.
+
+\subsection{Models}
+
+The main ranked panel contains 14 real models:
+
+\begin{itemize}[leftmargin=*]
+  \item six paid OpenAI models: \code{gpt-5.5}, \code{gpt-5.4}, \code{gpt-5.4-mini}, \code{gpt-5-mini}, \code{gpt-5-nano}, and \code{gpt-4.1-nano};
+  \item two Cerebras-hosted models: \code{zai-glm-4.7} and \code{gpt-oss-120b};
+  \item three Groq-hosted open models: \code{qwen3-32b}, \code{llama-4-scout-17b}, and \code{llama-3.3-70b-versatile};
+  \item three local Ollama models: \code{gemma4:e2b}, \code{llama3.2:3b}, and \code{lfm2.5-thinking:1.2b}.
+\end{itemize}
+
+Local models were run sequentially with memory-conscious unloading. \code{llama3.2:3b} produced clean structured coverage. \code{gemma4:e2b} and \code{lfm2.5-thinking:1.2b} are scoreable but have response-contract failure caveats.
+
+\subsection{Cost and Latency Measurement}
+
+For paid OpenAI models, reports artifact cost estimated from recorded token usage and encoded pricing. For free hosted and local runs, cost is reported as zero-dollar observed artifact cost, not as production economics. Latency is not yet a production p95 measurement. The Atlas uses response-token burden as a rough experience-burden proxy.
+
+\subsection{Reproducibility}
+
+The offline artifact rebuild is:
+
+\begin{verbatim}
+make reproduce
+\end{verbatim}
+
+The report and Atlas can be regenerated with:
+
+\begin{verbatim}
+make atlas
+\end{verbatim}
+
+The repository validation command is:
+
+\begin{verbatim}
+python3 -m harness.validate_repo
+\end{verbatim}
+
+\section{Empirical Results}
+
+\subsection{Main Leaderboard}
+
+Table \ref{tab:leaderboard} reports the main leaderboard. It excludes deterministic sanity baselines and partial or unavailable provider probes.
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabularx}{\textwidth}{r X r r r r}
+\toprule
+Rank & Model & Overall & Risk-weighted & Artifact cost & Cost / 1k calls \\
+\midrule
+1 & \code{openai/gpt-5.5} & 7.4614 & 7.3718 & \$1.3371 & \$13.3709 \\
+2 & \code{openai/gpt-5.4} & 7.3907 & 7.1874 & \$0.7420 & \$7.4198 \\
+3 & \code{openai/gpt-5.4-mini} & 7.3693 & 7.2283 & \$0.1725 & \$1.7247 \\
+4 & \code{openai/gpt-5-mini} & 7.0175 & 6.6453 & \$0.1439 & \$1.4392 \\
+5 & \code{cerebras/zai-glm-4.7} & 6.8471 & 6.6584 & \$0 & n/a \\
+6 & \code{cerebras/gpt-oss-120b} & 5.9780 & 5.8128 & \$0 & n/a \\
+7 & \code{openai/gpt-5-nano} & 5.7188 & 5.4273 & \$0.0140 & \$0.1405 \\
+8 & \code{groq/qwen/qwen3-32b} & 5.6355 & 5.5091 & \$0 & n/a \\
+9 & \code{groq/llama-4-scout-17b-16e-instruct} & 5.3578 & 5.0503 & \$0 & n/a \\
+10 & \code{openai/gpt-4.1-nano} & 5.1859 & 5.0006 & \$0.0112 & \$0.1120 \\
+11 & \code{groq/llama-3.3-70b-versatile} & 4.8350 & 4.4095 & \$0 & n/a \\
+12 & \code{ollama/gemma4:e2b} & 3.4145 & 3.1942 & \$0 & n/a \\
+13 & \code{ollama/llama3.2:3b} & 3.2148 & 2.8997 & \$0 & n/a \\
+14 & \code{ollama/lfm2.5-thinking:1.2b} & 2.3328 & 2.1933 & \$0 & n/a \\
+\bottomrule
+\end{tabularx}
+\caption{the benchmark model panel results over the full 100-item segment eval-pack corpus. Artifact cost and cost per 1,000 calls are run-specific estimates, not production price guarantees.}
+\label{tab:leaderboard}
+\end{table*}
+
+The overall winner is \code{openai/gpt-5.5}. However, \code{openai/gpt-5.4-mini} is the most important economic finding. It is within 0.0921 points of the leader while costing roughly 13 percent of the observed artifact cost. Its risk-weighted score of \score{7.2283} is also slightly above \code{gpt-5.4}'s \score{7.1874}, because it performs especially well in portfolio tradeoff and structured extraction.
+
+\subsection{OpenAI Ladder}
+
+The OpenAI ladder defines the clearest quality-cost frontier because all six models use the same provider family and have encoded artifact pricing. The five-model GPT-5 ladder cost approximately \$2.4095 for the stored responses; including \code{gpt-4.1-nano}, the OpenAI artifact cost is approximately \$2.4207.
+
+The ladder supports four practical tiers:
+
+\begin{itemize}[leftmargin=*]
+  \item \code{gpt-4.1-nano} and \code{gpt-5-nano}: inexpensive baselines for low-risk or high-volume experiments, but below the proxy autonomy floor.
+  \item \code{gpt-5-mini}: best cheap paid specialist for summarization, structured extraction, and portfolio triage.
+  \item \code{gpt-5.4-mini}: current broad economic default for judgment-heavy but guardrailed workflows.
+  \item \code{gpt-5.4} and \code{gpt-5.5}: premium anchors for ambiguous judgment, constraint explanation, pricing, and operational triage where downside justifies cost.
+\end{itemize}
+
+\subsection{Segment Routing Matrix}
+
+Table \ref{tab:segments} reports the segment-level quality leaders, economic picks, and review boundaries.
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.18\textwidth} >{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.22\textwidth} X}
+\toprule
+Segment & Quality leader & Economic pick & Human-review boundary \\
+\midrule
+Summarization & \code{gpt-5-mini} (8.0696) & \code{gpt-5-mini} (8.0696) & No, unless the summary becomes a decision recommendation or contains conflicting financial figures. \\
+Extraction & \code{gpt-5-mini} (8.5700) & \code{gpt-5-mini} (8.5700) & Only for material missing values or field conflicts. \\
+Constraint checks & \code{gpt-5.4} (8.2879) & \code{gpt-5-mini} (7.7792) & Required when a violated constraint is overridden. \\
+Routine planning & \code{gpt-5.4} (6.9939) & \code{gpt-5.4-mini} (6.7273) & Only for high inventory value, low confidence, or irreversible actions. \\
+Pricing and promo & \code{gpt-5.5} (6.7780) & \code{gpt-5.4} (6.4629) & Yes for material price moves, below-floor margin, or high competitive-response uncertainty. \\
+Ambiguous judgment & \code{gpt-5.4} (8.5311) & \code{gpt-5.4-mini} (7.3076) & Recommended for vendor commitments, high markdown risk, or executive-pressure cases. \\
+Portfolio tradeoff & \code{gpt-5-mini} (8.0774) & \code{gpt-5.4-mini} (8.0008) & Yes; this should not be fully autonomous in the current evidence base. \\
+Ops triage & \code{gpt-5.5} (7.5235) & \code{gpt-5.4-mini} (6.8261) & Yes when safety, legal, public commitment, or customer-trust exposure appears. \\
+\bottomrule
+\end{tabularx}
+\caption{the benchmark segment routing matrix. Economic pick reflects quality, cost, and segment-risk interpretation, not only the top segment score.}
+\label{tab:segments}
+\end{table*}
+
+\subsection{Visual Routing Summary}
+
+The segment heatmap in Figure \ref{fig:segmentheatmap} makes the main routing pattern visible. The same model family does not dominate every workflow. \code{gpt-5-mini} is strongest for summarization and extraction, \code{gpt-5.4} leads constraint checking and ambiguous judgment, \code{gpt-5.5} leads pricing and operational triage, and \code{gpt-5.4-mini} is the most balanced economic default. The heatmap also shows why pricing and promotion remains non-autonomous: every model is below the \score{7.0} proxy floor. The repository Atlas extends this paper-safe figure with segment-level 2x2 small multiples, a routing ladder, and an economic-regret chart.
+
+\begin{figure}[t]
+\centering
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccccc}
+\toprule
+Model & Sum. & Ext. & Cstr. & Rout. & Price & Ambig. & Port. & Ops \\
+\midrule
+GPT-5.5 & \heatcell{mbsage}{7.1} & \heatcell{mbteal}{8.4} & \heatcell{mbsage}{7.8} & \heatcell{mbsage}{7.0} & \heatcell{mbgold}{6.8} & \heatcell{mbsage}{7.7} & \heatcell{mbsage}{7.1} & \heatcell{mbsage}{7.5} \\
+GPT-5.4 & \heatcell{mbsage}{7.6} & \heatcell{mbteal}{8.1} & \heatcell{mbteal}{8.3} & \heatcell{mbgold}{7.0} & \heatcell{mbgold}{6.5} & \heatcell{mbteal}{8.5} & \heatcell{mbclay}{5.4} & \heatcell{mbsage}{7.3} \\
+GPT-5.4 Mini & \heatcell{mbsage}{7.5} & \heatcell{mbteal}{8.4} & \heatcell{mbsage}{7.1} & \heatcell{mbgold}{6.7} & \heatcell{mbgold}{6.3} & \heatcell{mbsage}{7.3} & \heatcell{mbteal}{8.0} & \heatcell{mbgold}{6.8} \\
+GPT-5 Mini & \heatcell{mbteal}{8.1} & \heatcell{mbteal}{8.6} & \heatcell{mbsage}{7.8} & \heatcell{mbgold}{6.2} & \heatcell{mbclay}{5.7} & \heatcell{mbclay}{5.7} & \heatcell{mbteal}{8.1} & \heatcell{mbpurple}{4.7} \\
+GPT-5 Nano & \heatcell{mbgold}{6.6} & \heatcell{mbgold}{6.8} & \heatcell{mbgold}{6.1} & \heatcell{mbgold}{6.0} & \heatcell{mbpurple}{4.7} & \heatcell{mbpurple}{3.6} & \heatcell{mbsage}{7.2} & \heatcell{mbpurple}{3.7} \\
+GPT-4.1 Nano & \heatcell{mbgold}{6.1} & \heatcell{mbclay}{5.7} & \heatcell{mbclay}{5.5} & \heatcell{mbpurple}{3.8} & \heatcell{mbpurple}{2.5} & \heatcell{mbclay}{5.4} & \heatcell{mbgold}{6.5} & \heatcell{mbclay}{5.2} \\
+\bottomrule
+\end{tabular}}
+\caption{OpenAI ladder segment heatmap. Columns abbreviate summarization, extraction, constraint checking, routine planning, pricing and promotion, ambiguous judgment, portfolio tradeoff, and operational triage. Dark teal cells are strongest; purple cells are weakest.}
+\label{fig:segmentheatmap}
+\end{figure}
+
+Figure \ref{fig:routingquadrant} translates the leaderboard into an executive routing quadrant. The top-left quadrant is the target operating zone: models or workflows that clear enough quality at low enough economic burden. The top-right quadrant is an escalation zone, not a default. The lower quadrants remain useful for experiments, prefilters, deterministic-control wrappers, or local development, but not for unreviewed retail judgment.
+
+\begin{figure}[t]
+\centering
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{0.16\textwidth} X X}
+\toprule
+ & Lower economic burden & Higher economic burden \\
+\midrule
+Higher routing confidence &
+\cellcolor{mbteal!16}\textbf{Default routable.} \code{gpt-5.4-mini} as the broad guardrailed-judgment default; \code{gpt-5-mini} for summarization, extraction, and portfolio triage; \code{zai-glm-4.7} as the strongest free hosted comparator. &
+\cellcolor{mbgold!22}\textbf{Premium escalation.} \code{gpt-5.5} and \code{gpt-5.4} for high-downside exceptions, pricing analysis, ambiguous judgment, operational triage, and explanations around hard-constraint overrides. \\
+\addlinespace
+Lower routing confidence &
+\cellcolor{mbclay!13}\textbf{Narrow or prefilter only.} \code{gpt-5-nano}, \code{gpt-4.1-nano}, \code{qwen3-32b}, and \code{gpt-oss-120b} can support low-risk drafts, probes, or deterministic-control workflows but do not clear broad judgment floors. &
+\cellcolor{mbpurple!14}\textbf{Do not default.} Current small local/Ollama and response-contract-fragile runs are useful for no-quota development and harness testing, not broad retail-planning decisions in the benchmark. \\
+\bottomrule
+\end{tabularx}
+\caption{the benchmark economic routing quadrant. The axes are qualitative because final placement should be recalibrated with retailer-specific cost, latency, review, and downside assumptions.}
+\label{fig:routingquadrant}
+\end{figure}
+
+\section{Interpretation}
+
+\subsection{Premium Quality Is Not the Same as Default Routing}
+
+The main deployment lesson is that the top model should not be the default model for every workflow. \code{gpt-5.5} leads overall, but \code{gpt-5.4-mini} offers near-frontier quality at much lower observed cost. Retail AI systems should use premium models where incremental quality materially reduces downside, not where cheaper models already clear the relevant floor.
+
+\subsection{Clerical Fidelity Is a Distinct Segment}
+
+Summarization and extraction are not merely easy versions of planning judgment. They are distinct workflow classes with different controls. A model must preserve numbers, source caveats, missing values, and schema boundaries. \code{gpt-5-mini} leads both segments, making it the most attractive cheap paid specialist. Deterministic validation remains essential.
+
+\subsection{Pricing and Promotion Remain High Risk}
+
+Pricing and promotion is the weakest segment. The best score is \score{6.7780}, below the proxy autonomy threshold. This is commercially intuitive: pricing blends margin, competitor response, vendor funding, inventory cover, elasticity, MAP rules, and pull-forward risk. supports model-assisted drafting and analysis, not autonomous material price changes.
+
+\subsection{Portfolio Tradeoff Requires Review Even When Scores Are High}
+
+Portfolio tradeoff has high model scores, with \code{gpt-5-mini} and \code{gpt-5.4-mini} both above \score{8.0}. That does not imply autonomy. Cross-category OTB allocation involves opportunity cost, customer promise, leadership pressure, and irreversibility. The correct interpretation is strong model plus human review.
+
+\subsection{Free Hosted and Local Models Are Capacity Tools}
+
+\code{cerebras/zai-glm-4.7} is the strongest free hosted comparator and can support experimentation or quota diversification. Groq-hosted open models are useful for breadth and cost controls. Current local Ollama models are not deployable for broad retail judgment, but they can support no-quota local experiments and low-risk development workflows. Local response-contract failures should be treated as part of model suitability, not hidden from routing decisions.
+
+\section{Workflow Recommendations}
+
+Retail teams should deploy findings as routing defaults rather than model rankings.
+
+\begin{enumerate}[leftmargin=*]
+  \item Map each LLM call to a retail segment.
+  \item Define quality floor, latency SLA, call volume, reversibility, downside band, and review boundary.
+  \item Put deterministic checks around hard constraints: OTB, MOQ, pack, margin, capacity, compliance, safety, and schema validity.
+  \item Start with the cheapest model or workflow that can clear the segment floor.
+  \item Use \code{gpt-5.4-mini} as the broad default for guardrailed judgment workflows.
+  \item Escalate to \code{gpt-5.5}, \code{gpt-5.4}, or human review for irreversible, high-downside, or confidence-sensitive cases.
+  \item Validate on retailer-specific data before production.
+\end{enumerate}
+
+\section{Qualitative Error Analysis}
+
+\subsection{Stockout-Censored Demand}
+
+A typical ambiguous planning item contains a visible sales spike but also stockouts, late receipts, size imbalance, or channel skew. Weak answers chase the spike as if it were clean demand. Strong answers identify that sales understate demand in stocked sizes, overstate certainty in stocked-out sizes, and require a conditional action. This distinguishes planning judgment from arithmetic.
+
+\subsection{Unit-Lift Chasing}
+
+Pricing and promotion failures often optimize for units, share defense, or traffic without preserving margin, vendor funding, supply, or pull-forward risk. These answers can sound commercially fluent. They fail because retail profit is not unit volume alone.
+
+\subsection{Constraint Overriding}
+
+Some model responses correctly describe a business opportunity but recommend an action that violates MOQ, margin floor, capacity, pack multiple, or lead-time constraints. For these items, the correct workflow is not a stronger narrative. It is a deterministic gate plus escalation if the business wants an exception.
+
+\subsection{Overconfident Portfolio Judgment}
+
+High-scoring portfolio answers can still overstate certainty. A model may correctly identify opportunity cost and still recommend an irreversible allocation with too little uncertainty language. Human review remains the right boundary for cross-category OTB decisions.
+
+\section{Artifacts}
+
+the benchmark artifacts are stored in the repository:
+
+\begin{itemize}[leftmargin=*]
+  \item \path{reports/atlas/index.html}: executive Atlas.
+  \item \path{reports/atlas/report.md}: written report.
+  \item \path{reports/atlas/atlas_data.json}: structured data payload.
+  \item \path{reports/atlas/model_frontier.svg}: quality-cost frontier.
+  \item \path{reports/atlas/segment_heatmap.svg}: OpenAI segment heatmap.
+  \item \path{reports/atlas/segment_quadrants.svg}: segment-level 2x2 routing grid.
+  \item \path{reports/atlas/routing_ladder.svg}: workflow-tier routing ladder.
+  \item \path{reports/atlas/economic_regret.svg}: quality gap between segment leader and economic pick.
+  \item \path{reports/publication_metrics/economic_metrics.md}: risk-weighted and cost-normalized metrics.
+  \item \path{docs/HUMAN_RATER_PROTOCOL.md}: human calibration protocol.
+  \item \path{docs/DATA_CARD.md}: dataset card and limitations.
+\end{itemize}
+
+\section{Data Availability and Reproducibility Statement}
+
+The benchmark corpus, deterministic baselines, stored model responses, scoring outputs, routing recommendations, Atlas payload, and report-generation scripts are repository artifacts. The project intentionally preserves raw response artifacts because benchmark claims are only inspectable if readers can examine model outputs, not just aggregate scores.
+
+The primary reproducibility path is offline. A reader can regenerate deterministic baselines, scorer outputs, routing recommendations, publication metrics, and Atlas artifacts from stored files without spending provider tokens. Provider reruns require external API credentials or local Ollama models and may differ because model endpoints, provider aliases, decoding defaults, pricing, and rate limits can drift.
+
+The paper reports artifact costs observed from stored token usage for the OpenAI runs. These costs are not guaranteed future prices and should not be interpreted as procurement advice. Retail users should replace the public cost assumptions with their contracted model pricing, expected call volume, retry behavior, caching policy, and latency requirements.
+
+\section{Ethical and Deployment Considerations}
+
+Retail AI recommendations can affect assortment availability, customer trust, store labor, vendor negotiations, margin, waste, and employee workload. The benchmark is designed to support safer model routing, not to justify unreviewed automation of consequential commercial decisions. In high-downside segments, the recommended output of the benchmark is often a workflow boundary: deterministic controls, stronger-model escalation, or human review.
+
+The corpus uses synthetic retail tasks and does not contain customer personal data. Nevertheless, production deployments built from this benchmark should evaluate privacy, fairness across stores and regions, vendor and marketplace policy, accessibility, customer promise, and labor impact. A model that performs well on \benchmark{} may still fail if connected to stale inventory, biased demand signals, incomplete store-capacity data, or incentive structures that reward short-term unit lift over long-term customer economics.
+
+\section{Threats to Validity}
+
+\paragraph{Synthetic data.}
+The benchmark is synthetic but retail-grounded. Synthetic design enables controlled ambiguity and pre-registered scoring but may omit retailer-specific systems, approvals, policy details, and data-quality patterns.
+
+\paragraph{Automated scoring.}
+The scorer is suitable for routing diagnostics but not final external ranking. Human-rater calibration remains required.
+
+\paragraph{Single-run model artifacts.}
+Most ranked provider results are single stored runs. Repeated-run variance and rank stability are planned but not yet measured.
+
+\paragraph{Provider drift.}
+Provider model versions, pricing, free-tier limits, latency, and retry behavior can change. artifact cost is a snapshot, not a permanent price.
+
+\paragraph{Public contamination.}
+Public benchmark items can enter training data or prompt corpora after release. Future releases should include private holdouts or rotating packs.
+
+\paragraph{Economic calibration.}
+The economic-fit framework requires retailer-specific calibration. A public benchmark cannot know each retailer's true error costs, labor costs, category margins, or customer promise.
+
+\section{Future Work}
+
+\begin{itemize}[leftmargin=*]
+  \item Complete human-rater calibration with multiple retail practitioners and report inter-rater reliability.
+  \item Run repeated generations for key models and report mean, variance, confidence intervals, and rank stability.
+  \item Add production latency, retry, cache, and provider price normalization.
+  \item Add private or rotating segment packs to reduce public contamination.
+  \item Evaluate retailer-specific private packs to calibrate public routing priors.
+  \item Evaluate rules-only, model-only, and cascade workflows directly.
+  \item Package the runner as a Python library that retail teams can inherit for internal evals.
+\end{itemize}
+
+\section{Conclusion}
+
+\benchmark{} reframes retail language-model evaluation around economic model routing. It asks not only whether a model can produce a plausible retail-planning answer, but whether that model is the right economic choice for a specific class of retail decision.
+
+The current evidence shows why this framing matters. \code{gpt-5.5} is the overall quality leader, but \code{gpt-5.4-mini} is the broad economic default. \code{gpt-5-mini} is the cheap paid specialist for clerical fidelity and portfolio triage. \code{cerebras/zai-glm-4.7} is the strongest free hosted comparator. Pricing and promotion, routine planning, portfolio tradeoff, and high-risk operational triage still require deterministic controls or human review. Local and free hosted models are useful capacity sources but need strict boundaries.
+
+The intended contribution is practical and methodological: a retail-native framework for choosing models, controls, cascades, and review policies by task segment. In retail AI deployment, the winning strategy is not always the strongest model. It is the cheapest safe workflow that clears the quality floor, escalates the right cases, and preserves human judgment where automation remains risky.
+
+\appendix
+
+\section{Appendix A: Provider Coverage}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{l r X r X}
+\toprule
+Provider & Models & Best model & Best score & Interpretation \\
+\midrule
+OpenAI & 6 & \code{gpt-5.5} & 7.4614 & Paid ladder defines the quality-cost frontier. \\
+Cerebras & 2 & \code{zai-glm-4.7} & 6.8471 & Strongest free hosted result in the current artifacts. \\
+Groq & 3 & \code{qwen3-32b} & 5.6355 & Useful free hosted open-model comparator pool. \\
+Ollama & 3 & \code{gemma4:e2b} & 3.4145 & No-quota local experiments; not yet strong enough for broad judgment. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Appendix B: Risk-Weighted Metric}
+
+the benchmark reports a risk-weighted average to reduce the chance that low-risk summarization and extraction hide failures in pricing, portfolio tradeoff, ambiguous judgment, or operational triage. Segment weights are:
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Segment & Weight \\
+\midrule
+Low-risk summarization & 0.8 \\
+Structured extraction & 0.9 \\
+Constraint checking & 1.1 \\
+Routine planning recommendation & 1.2 \\
+Pricing and promotion & 1.7 \\
+Ambiguous planning judgment & 1.6 \\
+Portfolio tradeoff & 1.8 \\
+Operational triage & 1.5 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+These weights are public defaults, not retailer-specific value models. A retailer should replace them with internal downside and volume estimates.
+
+\section{Appendix C: Repeated-Run Protocol}
+
+The next empirical step is repeated-run measurement on the 24-item human-validation subset. The planned protocol is:
+
+\begin{enumerate}[leftmargin=*]
+  \item Run each selected model three times on the same 24-item subset with recorded decoding settings.
+  \item Expand to five runs for models within 0.25 points of one another or models being recommended for production routing.
+  \item Report mean score, standard deviation, confidence interval, failed-item rate, retry count, total tokens, and latency where available.
+  \item Mark score gaps below one pooled standard deviation as not meaningfully separated.
+\end{enumerate}
+
+\section{Appendix D: Human-Rater Protocol}
+
+The human-rater protocol asks retail practitioners to score blind responses across evidence quality, problem framing, constraint handling, causal reasoning, uncertainty calibration, actionability, economic risk, and escalation appropriateness. The first calibration target is three independent raters over a 24-item subset spanning all eight segments. No human ratings are fabricated in the benchmark.
+
+\section{Appendix E: Reproducibility Checklist}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.30\textwidth} X}
+\toprule
+Requirement & Release status \\
+\midrule
+Public task corpus & Segment eval packs are stored in the repository. \\
+Public scoring code & Segment scorer, objective scorecard validation, and repository validation are included. \\
+Stored model outputs & Full-suite model response artifacts are stored for the ranked panel. \\
+Stored scores & Per-model score artifacts and summaries are stored under \path{reports/eval_packs}. \\
+Deterministic baselines & Source echo, keyword guardrail, generic, escalation, arithmetic, and fixed-action baselines are included. \\
+Anti-echo audit & Scorer robustness report is stored under \path{reports/eval_packs/scorer_robustness.md}. \\
+Economic metrics & Cost-normalized and risk-weighted metrics are stored under \path{reports/publication_metrics}. \\
+Representative segment examples & Appendix F provides one representative item per segment, with the intended construct and ideal-response criteria. \\
+Provider-agnostic runner & The command-line runner supports stored-response scoring and provider reruns for OpenAI, OpenRouter, Groq, Cerebras, Ollama, GitHub Models, Cloudflare Workers AI, and xAI-compatible endpoints. \\
+Human validation & Protocol and subset exist; real human ratings remain future work. \\
+Repeated runs & Protocol exists; repeated-run empirical results remain future work. \\
+Production latency & Not yet measured; current Atlas uses response-token burden as a proxy. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Appendix F: Segment Eval-Pack Design and Representative Items}
+
+This appendix is intended to make the benchmark inspectable without requiring the reader to open every JSON pack while reading the paper. The full item corpus remains the artifact of record under \path{eval_packs/}. The examples below are representative excerpts, not hidden holdouts. Each segment is designed around a workflow class that a retailer might route to a different model tier, deterministic control, cascade, or human-review boundary.
+
+\subsection*{Segment Pack Shape}
+
+\small
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.21\textwidth} r >{\raggedright\arraybackslash}p{0.17\textwidth} >{\raggedright\arraybackslash}p{0.19\textwidth} >{\raggedright\arraybackslash}p{0.28\textwidth}}
+\toprule
+Segment & Items & Difficulty mix & Risk mix & Typical response shape \\
+\midrule
+\endfirsthead
+\toprule
+Segment & Items & Difficulty mix & Risk mix & Typical response shape \\
+\midrule
+\endhead
+Low-risk summarization & 17 & 10 hard, 7 medium & 10 medium, 5 high, 2 severe & Faithful business recap with source caveats, conflicts, missing facts, and no unsupported recommendation. \\
+Structured extraction & 17 & 10 hard, 7 medium & 9 medium, 4 high, 3 severe, 1 low & Schema-ready fields, explicit nulls or unknowns, conflict flags, and deterministic validation targets. \\
+Constraint checking & 11 & 8 hard, 3 medium & 5 medium, 3 high, 3 severe & Pass/fail feasibility decision with arithmetic, violated constraints, and allowed exception path. \\
+Routine planning recommendation & 11 & 7 hard, 4 medium & 4 medium, 3 high, 2 severe, 2 low & Bounded recommendation, constraint checks, confidence, next read, and escalation trigger. \\
+Pricing and promotion & 11 & 7 hard, 4 medium & 6 medium, 3 high, 2 severe & Margin-aware promotional recommendation with funding, supply, competitor, and pull-forward risk. \\
+Ambiguous planning judgment & 11 & 9 hard, 2 medium & 5 high, 3 severe, 3 medium & Reframed decision, contaminated-signal analysis, conditional action, and uncertainty calibration. \\
+Portfolio tradeoff & 11 & 9 hard, 2 medium & 5 high, 3 severe, 3 medium & Cross-category allocation logic, opportunity cost, budget reconciliation, and review boundary. \\
+Operational triage & 11 & 7 hard, 4 medium & 5 high, 4 medium, 2 severe & Prioritized exception routing with safety, customer promise, capacity, and owner assignment. \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsection*{Representative Items and Ideal-Response Criteria}
+
+\small
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.14\textwidth} >{\raggedright\arraybackslash}p{0.28\textwidth} >{\raggedright\arraybackslash}p{0.24\textwidth} >{\raggedright\arraybackslash}p{0.24\textwidth}}
+\toprule
+Segment & Representative item and prompt excerpt & What it captures & Ideal response looks for \\
+\midrule
+\endfirsthead
+\toprule
+Segment & Representative item and prompt excerpt & What it captures & Ideal response looks for \\
+\midrule
+\endhead
+Low-risk summarization &
+\textbf{Beauty vendor receipt delay recap.} GlowLab says shampoo POs now leave port on May 3, arrive DC May 10, versus an original Apr 26 date. Impacted units are 1,800 shampoo and 900 conditioner, but a carrier update gives a different ETA. &
+Tests whether a model can compress messy operational evidence without turning a recap into an unsupported planning decision. The difficulty comes from conflicting source dates and unit-level detail. &
+Preserve dates, unit counts, and source attribution; explicitly flag the ETA conflict; state what is unknown; avoid inventing financial impact or recommending an action unless requested. \\
+\addlinespace
+Structured extraction &
+\textbf{Beauty vendor cost and MOQ email.} Effective 2026-07-01, shampoo SKU GL-SH-12 moves from \$5.10 to \$5.55. Conditioner GL-CD-12 stays \$5.40 through July. MOQ is 600 units per SKU, carton pack 12, lead time 8 weeks, and June POs keep old costs. &
+Tests schema fidelity, unchanged-field handling, effective-date extraction, and whether a model drops operational constraints while extracting cost data. &
+Return SKU-level fields for both SKUs, exact costs, effective dates, unchanged conditioner status, MOQ, pack multiple, lead time, and June-PO exception; use explicit null or unknown fields rather than guessing. \\
+\addlinespace
+Constraint checking &
+\textbf{Beauty OTB and MOQ feasibility gate.} Proposal: launch three serum textures at 900 units each. Constraints include \$11 unit cost, \$11,800 available OTB after core replenishment, MOQ 600 units per SKU, pack multiple 12, four open facings, and two minimum facings per SKU. &
+Tests hard feasibility gates where a deterministic rule can be more authoritative than a fluent recommendation. The main traps are approving an impossible facing plan or ignoring OTB arithmetic. &
+Compute order cost and facing requirement; show that three SKUs require six facings and exceed four available facings; identify whether OTB and MOQ pass separately; reject or resize the launch rather than approve it. \\
+\addlinespace
+Routine planning &
+\textbf{Low-risk toner ecommerce rebalance.} Toner T-44 is 160 percent to plan in ecommerce and 98 percent in stores. Ecommerce cover is 0.8 weeks; stores have 3.2 weeks. Transfer cost is low. Minimum store cover after transfer is 2.4 weeks. Suggested pool is 420 units. &
+Tests bounded, reversible planning recommendations where the right answer is not executive escalation but a controlled action with a next read. &
+Recommend a constrained transfer only if store cover remains above 2.4 weeks; state expected benefit, confidence, and next-review trigger; avoid over-ordering or treating channel demand as certain. \\
+\addlinespace
+Pricing and promotion &
+\textbf{Coffee price match under supply constraint.} Competitor A is at \$7.99 for five days on 12-count coffee. Our price is \$9.49, cost is \$5.75, margin floor is 32 percent, top stores have 1.4 weeks cover, and replenishment arrives in 12 days. Last loyalty promo lifted units 24 percent but post-promo demand fell 11 percent. &
+Tests whether the model resists unit-lift chasing. The item blends margin-floor math, inventory cover, replenishment lag, competitor pressure, and promotion pull-forward. &
+Calculate or reason through gross-margin floor, supply risk, and pull-forward; avoid blanket price match if it violates margin or stock position; suggest narrower store, loyalty, or vendor-funded alternatives plus human review for material price moves. \\
+\addlinespace
+Ambiguous judgment &
+\textbf{Viral fleece chase with return contamination.} Kids fleece has 2.4M social views and pink is 82 percent sold through, but navy is 39 percent. Return rate is 18 percent versus a 9 percent norm, mostly fit-too-small in sizes 7/8 and 10/12. Vendor asks for a 20,000-unit chase by tomorrow; lead time lands after peak cold weather. &
+Tests contaminated evidence, trend reflexivity, size-fit causal reasoning, and timing risk. A weak answer chases views and sell-through; a strong answer asks whether the signal is real and actionable. &
+Discount the viral and sell-through signal because returns, color skew, size issues, and post-peak landing contaminate demand; propose a smaller or conditional action, fit remediation, or no chase; state uncertainty and escalation needs. \\
+\addlinespace
+Portfolio tradeoff &
+\textbf{Holiday OTB three-way allocation.} Remaining holiday OTB is either \$2.4M from finance or \$2.1M from a VP comment. Beauty asks for \$650k, toys asks for \$900k, and outerwear needs \$500k by next Friday to avoid cold-store stockouts. Leadership wants all three approved. &
+Tests cross-category opportunity cost under conflicting budget evidence and executive pressure. The item should make a model challenge the premise before allocating. &
+Reconcile the OTB conflict before approval; compare total ask to both budget figures; identify timing, stockout, margin, and vendor-support tradeoffs; recommend a provisional allocation plus human review rather than rubber-stamping all requests. \\
+\addlinespace
+Operational triage &
+\textbf{Storm water fire-lane triage.} District asks to push 22 pallets of water by Friday. Stores can safely receive 14 before fire-lane blockage. One store had an emergency aisle-clearance issue last storm. Supplier can ship 28 by 3 p.m. &
+Tests whether safety and store-capacity constraints override commercial urgency. The main failure is optimizing shipment volume while ignoring fire-lane risk. &
+Cap or stage shipments at the safe capacity, prioritize stores by need, assign owners for safety clearance and receiving, escalate the fire-lane exception, and avoid shipping all 22 or 28 pallets without capacity resolution. \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\section{Appendix G: Repository Reproducibility and Model-Runner Protocol}
+
+The public repository for this artifact is:
+
+\begin{center}
+\url{https://github.com/Novice-ninja/retail-merchbench.git}
+\end{center}
+
+The intended first reproduction path is offline. It should rebuild deterministic baselines, stored-response scores, routing recommendations, publication metrics, and the Atlas without calling external model providers:
+
+\begin{verbatim}
+git clone https://github.com/Novice-ninja/retail-merchbench.git
+cd retail-merchbench
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+make reproduce
+python3 -m harness.validate_repo
+\end{verbatim}
+
+Deterministic sanity baselines can be regenerated separately:
+
+\begin{verbatim}
+make eval-pack-baselines
+\end{verbatim}
+
+To score an existing response artifact from any model or internal workflow, use the stored-response scoring path:
+
+\begin{verbatim}
+python3 -m merchbench.cli eval-pack-score \
+  --responses path/to/model_responses.json \
+  --output-scores reports/eval_packs/model_scores.json \
+  --output-summary reports/eval_packs/model_summary.md
+\end{verbatim}
+
+To run a small provider-backed smoke test on a new model, configure credentials in \path{.env.local} using \path{.env.example} as the template, then run:
+
+\begin{verbatim}
+python3 -m merchbench.cli eval-pack-provider \
+  --provider openai \
+  --models gpt-4.1-nano \
+  --items-per-pack 1 \
+  --resume
+\end{verbatim}
+
+For local Ollama reruns, the memory-safe pattern is sequential execution with resume enabled and model unloading between items:
+
+\begin{verbatim}
+python3 -m merchbench.cli eval-pack-provider \
+  --provider ollama \
+  --models llama3.2:3b \
+  --unload-after-item \
+  --resume
+\end{verbatim}
+
+The runner is provider-agnostic at the harness boundary. The current configuration supports OpenAI, OpenRouter, Groq, Cerebras, Ollama, GitHub Models, Cloudflare Workers AI, and xAI-compatible endpoints where valid credentials and account capacity exist. Provider reruns are not guaranteed to reproduce the exact numbers because model aliases, decoding defaults, pricing, quotas, and endpoint implementations can change. The stored artifacts remain the reference for the results reported in this paper.
+
+\begin{thebibliography}{99}
+
+\bibitem{retailopsagents}
+Linghua Zhang, Jun Wang, Jingtong Wu, and Zhisong Zhang.
+\newblock Evaluating Long-Horizon Autonomous Decision-Making and Strategy Stability of LLM Agents in Realistic Retail Environments.
+\newblock arXiv:2603.16453, 2026.
+
+\bibitem{taubench}
+Shunyu Yao, Noah Shinn, Pedram Razavi, and Karthik Narasimhan.
+\newblock tau-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains.
+\newblock arXiv:2406.12045, 2024.
+
+\bibitem{tau2bench}
+Victor Barres, Honghua Dong, Soham Ray, Xujie Si, and Karthik Narasimhan.
+\newblock tau2-Bench: Evaluating Conversational Agents in a Dual-Control Environment.
+\newblock arXiv:2506.07982, 2025.
+
+\bibitem{webshop}
+Shunyu Yao, Howard Chen, John Yang, and Karthik Narasimhan.
+\newblock WebShop: Towards Scalable Real-World Web Interaction with Grounded Language Agents.
+\newblock arXiv:2207.01206, 2023.
+
+\bibitem{shoppingbench}
+Jiangyuan Wang, Kejun Xiao, Qi Sun, Huaipeng Zhao, Tao Luo, Jian Dong Zhang, and Xiaoyi Zeng.
+\newblock ShoppingBench: A Real-World Intent-Grounded Shopping Benchmark for LLM-based Agents.
+\newblock arXiv:2508.04266, 2025.
+
+\bibitem{shoppingcomp}
+Huaixiao Tou, Ying Zeng, Yuemeng Li, Cong Ma, Muzhi Li, Minghao Li, Weijie Yuan, He Zhang, and Kai Jia.
+\newblock ShoppingComp: Are LLMs Really Ready for Your Shopping Cart?
+\newblock arXiv:2511.22978, 2025.
+
+\bibitem{webmall}
+Ralph Peeters, Aaron Steiner, Luca Schwarz, Julian Yuya Caspary, and Christian Bizer.
+\newblock WebMall: A Multi-Shop Benchmark for Evaluating Web Agents.
+\newblock arXiv:2508.13024, 2025.
+
+\bibitem{helm}
+Percy Liang, Rishi Bommasani, Tony Lee, Dimitris Tsipras, Dilara Soylu, Michihiro Yasunaga, Yian Zhang, Deepak Narayanan, Yuhuai Wu, Ananya Kumar, and others.
+\newblock Holistic Evaluation of Language Models.
+\newblock Transactions on Machine Learning Research, 2023.
+
+\bibitem{livebench}
+Colin White, Samuel Dooley, Manley Roberts, Arka Pal, Ben Feuer, Siddhartha Jain, Ravid Shwartz-Ziv, Neel Jain, Khalid Saifullah, Sreemanti Dey, and others.
+\newblock LiveBench: A Challenging, Contamination-Limited LLM Benchmark.
+\newblock arXiv:2406.19314, 2024.
+
+\bibitem{mtbench}
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica.
+\newblock Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena.
+\newblock Advances in Neural Information Processing Systems Datasets and Benchmarks Track, 2023.
+
+\bibitem{m5accuracy}
+Spyros Makridakis, Evangelos Spiliotis, and Vassilios Assimakopoulos.
+\newblock M5 Accuracy Competition: Results, Findings, and Conclusions.
+\newblock International Journal of Forecasting, 38(4):1346--1364, 2022.
+
+\bibitem{m5background}
+Spyros Makridakis, Evangelos Spiliotis, and Vassilios Assimakopoulos.
+\newblock The M5 Competition: Background, Organization, and Implementation.
+\newblock International Journal of Forecasting, 2022.
+
+\bibitem{dominicks}
+Kilts Center for Marketing, University of Chicago Booth School of Business.
+\newblock Dominick's Dataset.
+\newblock 2026.
+
+\bibitem{dunnhumby}
+dunnhumby.
+\newblock The Complete Journey.
+\newblock 2026.
+
+\end{thebibliography}
+
+\end{document}

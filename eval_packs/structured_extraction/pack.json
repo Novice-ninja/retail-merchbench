@@ -1,0 +1,1520 @@
+{
+  "id": "structured_extraction_v0",
+  "version": "0.1",
+  "task_segment": "structured_extraction",
+  "purpose": "Evaluate whether rules-only or low-cost model fallback workflows can convert messy retail source text into reliable structured fields. The pack emphasizes exact extraction, normalization, conflict detection, missing-field handling, and escalation flags rather than narrative quality.",
+  "recommended_strategy_under_test": "rules_only",
+  "quality_floor": {
+    "minimum_average_score": 9,
+    "minimum_item_score": 8,
+    "must_pass_items": 9,
+    "dimension_floor": {
+      "field_accuracy": 0.9,
+      "normalization": 0.85,
+      "conflict_detection": 0.85,
+      "schema_compliance": 1
+    }
+  },
+  "design_principles": [
+    "Treat exact field extraction as the primary business outcome.",
+    "Reward nulls and escalation flags when source material is missing or conflicting.",
+    "Separate deterministic parser performance from model fallback performance.",
+    "Use realistic retail documents such as vendor emails, promo terms, invoices, compliance notes, and store-capacity messages.",
+    "Require machine-readable JSON that can flow into a retailer's harness without manual cleanup."
+  ],
+  "coverage": {
+    "retail_functions": [
+      "vendor_supply",
+      "pricing_promotion",
+      "store_operations_constraints",
+      "channel_inventory",
+      "assortment_planning",
+      "external_shock_response"
+    ],
+    "categories": [
+      "beauty",
+      "grocery",
+      "electronics",
+      "home",
+      "apparel",
+      "seasonal_outdoor"
+    ],
+    "ambiguity_sources": [
+      "conflicting effective dates",
+      "missing compliance certificate",
+      "mixed units of measure",
+      "supplier substitute with changed attributes",
+      "invoice deductions embedded in prose",
+      "store capacity constraints mixed with demand notes"
+    ],
+    "externalities": [
+      "storm preparation",
+      "competitor price move",
+      "vendor cost inflation",
+      "freight delay",
+      "regulatory certification"
+    ],
+    "escalation_patterns": [
+      "field conflict",
+      "missing required commercial term",
+      "compliance or safety field missing",
+      "value outside deterministic validation range"
+    ]
+  },
+  "output_contract": {
+    "response_format": "json",
+    "required_fields": [
+      "record_type",
+      "entities",
+      "commercial_terms",
+      "dates",
+      "quantities",
+      "conflicts",
+      "missing_required_fields",
+      "escalation_needed",
+      "escalation_reason"
+    ],
+    "forbidden_behaviors": [
+      "infer a missing value as if it were present",
+      "silently reconcile conflicting dates or quantities",
+      "return prose instead of parseable JSON",
+      "drop the source identifier for extracted critical fields"
+    ],
+    "normalization_rules": [
+      "dates use ISO 8601 format when day, month, and year are available",
+      "currency values are numbers without symbols",
+      "percentages are decimal fractions only when the item explicitly asks for normalized decimal output",
+      "missing values are null and listed in missing_required_fields"
+    ]
+  },
+  "scoring": {
+    "total_points_per_item": 10,
+    "dimensions": {
+      "field_accuracy": {
+        "points": 4,
+        "criteria": [
+          "Extracts every required commercial, date, entity, and quantity field exactly from the source.",
+          "Does not hallucinate absent values.",
+          "Preserves source distinctions across SKUs, stores, vendors, and lots.",
+          "Keeps critical field source references or source provenance."
+        ]
+      },
+      "normalization": {
+        "points": 2,
+        "criteria": [
+          "Normalizes dates, dollars, percentages, and units according to the output contract.",
+          "Keeps units of measure explicit when normalization would change meaning."
+        ]
+      },
+      "conflict_detection": {
+        "points": 2,
+        "criteria": [
+          "Detects conflicting values and records both source values.",
+          "Separates conflicts from merely missing or uncertain fields."
+        ]
+      },
+      "schema_compliance": {
+        "points": 1,
+        "criteria": [
+          "Returns parseable JSON with all required top-level fields."
+        ]
+      },
+      "escalation_flagging": {
+        "points": 1,
+        "criteria": [
+          "Flags escalation when missing, conflicting, safety, compliance, or material value issues prevent safe automation."
+        ]
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "ext_001",
+      "title": "Beauty Vendor Cost and MOQ Email",
+      "difficulty": "medium",
+      "retail_function": "vendor_supply",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_text": "From GlowLab: Effective 2026-07-01, shampoo SKU GL-SH-12 moves from $5.10 to $5.55 unit cost. Conditioner GL-CD-12 stays $5.40 through July. MOQ is 600 units per SKU, carton pack 12, lead time 8 weeks. June POs already acknowledged at old costs."
+      },
+      "question": "Extract vendor cost, MOQ, pack, lead-time, and effective-date fields into JSON.",
+      "expected_output": {
+        "record_type": "vendor_cost_change",
+        "entities": {
+          "vendor": "GlowLab",
+          "skus": [
+            "GL-SH-12",
+            "GL-CD-12"
+          ]
+        },
+        "commercial_terms": {
+          "GL-SH-12": {
+            "old_unit_cost": 5.1,
+            "new_unit_cost": 5.55,
+            "effective_date": "2026-07-01"
+          },
+          "GL-CD-12": {
+            "unit_cost": 5.4,
+            "cost_status": "unchanged_through_july"
+          },
+          "moq_units_per_sku": 600,
+          "carton_pack": 12,
+          "lead_time_weeks": 8
+        },
+        "conflicts": [],
+        "missing_required_fields": [],
+        "escalation_needed": false
+      },
+      "must_include": [
+        "GL-SH-12 old cost 5.10",
+        "GL-SH-12 new cost 5.55",
+        "2026-07-01 effective date",
+        "GL-CD-12 unchanged at 5.40",
+        "600 MOQ per SKU",
+        "carton pack 12",
+        "lead time 8 weeks"
+      ],
+      "must_not_include": [
+        "apply 5.55 to conditioner",
+        "change June PO costs",
+        "omit SKU-level cost distinction"
+      ],
+      "deterministic_checks": [
+        "currency parse check",
+        "date normalization check",
+        "SKU-specific field check"
+      ],
+      "escalation_triggers": [
+        "cost field missing or conflicts"
+      ],
+      "scoring_focus": [
+        "SKU-level field accuracy",
+        "date normalization",
+        "unchanged-term handling"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "currency parse check",
+        "date normalization check",
+        "SKU-specific field check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_002",
+      "title": "Conflicting Receipt Date Thread",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "home",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_text": "Email 1 from vendor, sent 2026-04-18: PO 7712 storage bins are confirmed for DC arrival 2026-05-09, 3,600 units. Email 2 from freight forwarder, sent 2026-04-19: vessel delay moves PO 7712 DC appointment to 2026-05-14, customs hold possible. Merchant note: set date is 2026-05-12."
+      },
+      "question": "Extract receipt information and identify any conflicts or escalation triggers.",
+      "expected_output": {
+        "record_type": "receipt_update",
+        "entities": {
+          "po": "7712",
+          "product": "storage bins"
+        },
+        "dates": {
+          "vendor_dc_arrival": "2026-05-09",
+          "freight_dc_appointment": "2026-05-14",
+          "set_date": "2026-05-12"
+        },
+        "quantities": {
+          "units": 3600
+        },
+        "conflicts": [
+          {
+            "field": "dc_receipt_date",
+            "values": [
+              "2026-05-09",
+              "2026-05-14"
+            ]
+          }
+        ],
+        "missing_required_fields": [],
+        "escalation_needed": true,
+        "escalation_reason": "Receipt date conflicts and freight date is after set date."
+      },
+      "must_include": [
+        "PO 7712",
+        "3,600 units",
+        "2026-05-09 vendor date",
+        "2026-05-14 freight date",
+        "2026-05-12 set date",
+        "date conflict"
+      ],
+      "must_not_include": [
+        "choose 2026-05-09 as confirmed final date",
+        "drop customs hold caveat",
+        "omit escalation"
+      ],
+      "deterministic_checks": [
+        "date conflict check",
+        "event-date comparison check",
+        "unit preservation check"
+      ],
+      "escalation_triggers": [
+        "conflicting DC receipt dates",
+        "latest appointment after set date"
+      ],
+      "scoring_focus": [
+        "conflict capture",
+        "date normalization",
+        "set-date escalation"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "date conflict check",
+        "event-date comparison check",
+        "unit preservation check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_003",
+      "title": "Vendor Promo Funding Terms",
+      "difficulty": "medium",
+      "retail_function": "pricing_promotion",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_text": "RoasterCo agrees to fund $1.20 per unit on 24-count coffee SKU RC-24 from 2026-06-03 through 2026-06-16. Funding excludes 12-count RC-12 and online marketplace orders. Retail cannot fall below $13.99 during the event."
+      },
+      "question": "Extract promotion funding terms and exclusions into JSON.",
+      "expected_output": {
+        "record_type": "promo_funding",
+        "entities": {
+          "vendor": "RoasterCo",
+          "funded_sku": "RC-24",
+          "excluded_skus": [
+            "RC-12"
+          ],
+          "excluded_channels": [
+            "online marketplace"
+          ]
+        },
+        "commercial_terms": {
+          "funding_per_unit": 1.2,
+          "minimum_retail": 13.99
+        },
+        "dates": {
+          "start": "2026-06-03",
+          "end": "2026-06-16"
+        },
+        "conflicts": [],
+        "missing_required_fields": [],
+        "escalation_needed": false
+      },
+      "must_include": [
+        "$1.20 per unit funding",
+        "RC-24 funded SKU",
+        "RC-12 excluded",
+        "online marketplace excluded",
+        "$13.99 minimum retail",
+        "2026-06-03 to 2026-06-16"
+      ],
+      "must_not_include": [
+        "apply funding to RC-12",
+        "omit channel exclusion",
+        "treat $13.99 as funding"
+      ],
+      "deterministic_checks": [
+        "date range check",
+        "SKU inclusion/exclusion check",
+        "currency parse check"
+      ],
+      "escalation_triggers": [
+        "funding or exclusion missing"
+      ],
+      "scoring_focus": [
+        "funding field accuracy",
+        "exclusion handling",
+        "date range normalization"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "date range check",
+        "SKU inclusion/exclusion check",
+        "currency parse check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_004",
+      "title": "Electronics Compliance Certificate Gap",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "seconds",
+      "call_volume_band": "medium",
+      "input": {
+        "source_text": "Vendor proposes substitute charger SKU C-188B for backordered C-188. C-188B cost is $6.40, retail $19.99, lead time 10 days, available qty 4,800. UL certificate: pending. FCC certificate: received 2026-03-22. Packaging barcode differs from C-188."
+      },
+      "question": "Extract substitute SKU fields and flag any missing compliance requirements.",
+      "expected_output": {
+        "record_type": "substitute_sku",
+        "entities": {
+          "original_sku": "C-188",
+          "substitute_sku": "C-188B"
+        },
+        "commercial_terms": {
+          "unit_cost": 6.4,
+          "retail": 19.99,
+          "lead_time_days": 10,
+          "available_quantity": 4800
+        },
+        "compliance": {
+          "UL_certificate": "pending",
+          "FCC_certificate": "received_2026-03-22",
+          "barcode_differs": true
+        },
+        "conflicts": [],
+        "missing_required_fields": [
+          "UL_certificate_received"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "UL certificate is pending for an electronics substitute."
+      },
+      "must_include": [
+        "C-188 original SKU",
+        "C-188B substitute SKU",
+        "$6.40 cost",
+        "$19.99 retail",
+        "10 day lead time",
+        "4,800 available quantity",
+        "UL pending",
+        "FCC received 2026-03-22",
+        "barcode differs"
+      ],
+      "must_not_include": [
+        "mark UL as received",
+        "omit compliance escalation",
+        "treat C-188B as identical to C-188"
+      ],
+      "deterministic_checks": [
+        "compliance field check",
+        "SKU substitution check",
+        "quantity and cost parse check"
+      ],
+      "escalation_triggers": [
+        "UL certificate pending",
+        "substitute barcode differs"
+      ],
+      "scoring_focus": [
+        "compliance missing-field handling",
+        "substitute identity",
+        "commercial term extraction"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "compliance field check",
+        "SKU substitution check",
+        "quantity and cost parse check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_005",
+      "title": "Store Receiving Capacity Message",
+      "difficulty": "medium",
+      "retail_function": "store_operations_constraints",
+      "category": "grocery",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "high",
+      "latency_sla": "seconds",
+      "call_volume_band": "medium",
+      "input": {
+        "source_text": "Coastal District storm push: Store 118 can receive 6 pallets Friday before 2 p.m.; Store 124 can receive 4 pallets Friday but no freezer staging; Store 201 can receive 0 pallets Friday due to fire-lane inspection. Regional ask was 14 pallets total."
+      },
+      "question": "Extract store-level receiving capacity and escalation fields.",
+      "expected_output": {
+        "record_type": "store_capacity",
+        "entities": {
+          "district": "Coastal District",
+          "stores": [
+            "118",
+            "124",
+            "201"
+          ]
+        },
+        "quantities": {
+          "regional_requested_pallets": 14,
+          "store_capacity_pallets": {
+            "118": 6,
+            "124": 4,
+            "201": 0
+          },
+          "total_known_capacity_pallets": 10
+        },
+        "constraints": {
+          "118": "Friday before 2 p.m.",
+          "124": "Friday but no freezer staging",
+          "201": "0 pallets Friday due to fire-lane inspection"
+        },
+        "conflicts": [],
+        "missing_required_fields": [],
+        "escalation_needed": true,
+        "escalation_reason": "Known capacity is 10 pallets versus 14 requested, and Store 201 has a fire-lane inspection constraint."
+      },
+      "must_include": [
+        "Store 118 capacity 6 pallets",
+        "Store 124 capacity 4 pallets",
+        "Store 201 capacity 0 pallets",
+        "14 pallets requested",
+        "10 total known capacity",
+        "fire-lane inspection"
+      ],
+      "must_not_include": [
+        "assign pallets to Store 201",
+        "ignore freezer staging constraint",
+        "state capacity equals 14"
+      ],
+      "deterministic_checks": [
+        "store-level quantity sum check",
+        "capacity versus request check",
+        "safety constraint check"
+      ],
+      "escalation_triggers": [
+        "capacity below requested pallets",
+        "fire-lane inspection"
+      ],
+      "scoring_focus": [
+        "store-level extraction",
+        "capacity arithmetic",
+        "safety escalation"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "store-level quantity sum check",
+        "capacity versus request check",
+        "safety constraint check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_006",
+      "title": "Cost Increase and MAP Notice",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "seasonal_outdoor",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_text": "OutdoorPro notice: effective 2026-08-15, patio heater PH-20 cost rises from $82 to $91. MAP remains $149 through 2026-10-31. Existing PO 4550 for 720 units keeps old cost if it ships by 2026-08-10; if ship date slips, new cost applies. Lead time currently 11-13 weeks."
+      },
+      "question": "Extract cost, MAP, PO exception, and lead-time fields.",
+      "expected_output": {
+        "record_type": "cost_map_notice",
+        "entities": {
+          "vendor": "OutdoorPro",
+          "sku": "PH-20",
+          "po": "4550"
+        },
+        "commercial_terms": {
+          "old_cost": 82,
+          "new_cost": 91,
+          "map_price": 149,
+          "po_units": 720,
+          "lead_time_weeks_low": 11,
+          "lead_time_weeks_high": 13
+        },
+        "dates": {
+          "cost_effective_date": "2026-08-15",
+          "map_valid_through": "2026-10-31",
+          "old_cost_ship_deadline": "2026-08-10"
+        },
+        "conflicts": [],
+        "missing_required_fields": [],
+        "escalation_needed": true,
+        "escalation_reason": "PO 4550 cost depends on whether ship date slips past 2026-08-10."
+      },
+      "must_include": [
+        "PH-20",
+        "$82 old cost",
+        "$91 new cost",
+        "$149 MAP",
+        "2026-08-15 cost effective date",
+        "2026-10-31 MAP valid through",
+        "PO 4550",
+        "720 units",
+        "2026-08-10 ship deadline",
+        "11-13 weeks lead time"
+      ],
+      "must_not_include": [
+        "apply new cost unconditionally to PO 4550",
+        "omit ship-date condition",
+        "turn MAP into retail recommendation"
+      ],
+      "deterministic_checks": [
+        "conditional date check",
+        "MAP field check",
+        "lead-time range parse check"
+      ],
+      "escalation_triggers": [
+        "conditional PO cost exposure",
+        "lead-time range crosses seasonal timing"
+      ],
+      "scoring_focus": [
+        "conditional extraction",
+        "date normalization",
+        "lead-time range handling"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "conditional date check",
+        "MAP field check",
+        "lead-time range parse check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_007",
+      "title": "Invoice Deduction and Chargeback Parse",
+      "difficulty": "medium",
+      "retail_function": "vendor_supply",
+      "category": "apparel",
+      "decision_value_band": "1k_25k",
+      "error_downside_band": "low",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_text": "Invoice INV-8831, vendor NorthKids, PO 6620. Gross invoice $18,240 for 960 units. Deduct shortage claim $432 and carton noncompliance chargeback $180. Vendor disputes only the $180 chargeback. Net payable shown by AP: $17,628."
+      },
+      "question": "Extract invoice, deduction, dispute, and payable fields.",
+      "expected_output": {
+        "record_type": "invoice_deduction",
+        "entities": {
+          "invoice": "INV-8831",
+          "vendor": "NorthKids",
+          "po": "6620"
+        },
+        "commercial_terms": {
+          "gross_invoice": 18240,
+          "units": 960,
+          "shortage_deduction": 432,
+          "carton_noncompliance_chargeback": 180,
+          "disputed_amount": 180,
+          "net_payable": 17628
+        },
+        "conflicts": [],
+        "missing_required_fields": [],
+        "escalation_needed": false
+      },
+      "must_include": [
+        "INV-8831",
+        "NorthKids",
+        "PO 6620",
+        "$18,240 gross invoice",
+        "960 units",
+        "$432 shortage deduction",
+        "$180 disputed chargeback",
+        "$17,628 net payable"
+      ],
+      "must_not_include": [
+        "mark shortage deduction as disputed",
+        "drop net payable",
+        "misclassify gross invoice as net payable"
+      ],
+      "deterministic_checks": [
+        "invoice arithmetic check",
+        "disputed amount check",
+        "entity parse check"
+      ],
+      "escalation_triggers": [
+        "net payable arithmetic mismatch"
+      ],
+      "scoring_focus": [
+        "financial field extraction",
+        "dispute scope",
+        "arithmetic consistency"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "low",
+      "reversibility": "high",
+      "deterministic_controls": [
+        "invoice arithmetic check",
+        "disputed amount check",
+        "entity parse check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_008",
+      "title": "Vendor Substitute Attribute Change",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "medium",
+      "input": {
+        "source_text": "Vendor offers substitute serum bottle SB-30B for out-of-stock SB-30. Same formula and UPC, but bottle changes from glass to PET, shelf height changes from 4.8 in to 5.3 in, and unit cost drops from $8.20 to $7.95. Vendor did not provide updated planogram fit confirmation."
+      },
+      "question": "Extract substitute attributes and missing required confirmations.",
+      "expected_output": {
+        "record_type": "substitute_attribute_change",
+        "entities": {
+          "original_sku": "SB-30",
+          "substitute_sku": "SB-30B",
+          "upc_status": "same"
+        },
+        "commercial_terms": {
+          "old_unit_cost": 8.2,
+          "new_unit_cost": 7.95
+        },
+        "attributes": {
+          "formula": "same",
+          "bottle_material_old": "glass",
+          "bottle_material_new": "PET",
+          "shelf_height_old_inches": 4.8,
+          "shelf_height_new_inches": 5.3
+        },
+        "missing_required_fields": [
+          "updated_planogram_fit_confirmation"
+        ],
+        "conflicts": [],
+        "escalation_needed": true,
+        "escalation_reason": "Shelf height changed and planogram fit confirmation is missing."
+      },
+      "must_include": [
+        "SB-30 original SKU",
+        "SB-30B substitute SKU",
+        "same UPC",
+        "glass to PET",
+        "4.8 inch to 5.3 inch shelf height",
+        "$8.20 to $7.95 unit cost",
+        "missing planogram fit confirmation"
+      ],
+      "must_not_include": [
+        "mark substitute as fully equivalent",
+        "omit shelf height change",
+        "infer planogram fit is approved"
+      ],
+      "deterministic_checks": [
+        "attribute change check",
+        "missing confirmation check",
+        "unit cost comparison check"
+      ],
+      "escalation_triggers": [
+        "planogram fit confirmation missing",
+        "physical dimension changed"
+      ],
+      "scoring_focus": [
+        "attribute-level extraction",
+        "missing-field handling",
+        "fixture risk escalation"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "attribute change check",
+        "missing confirmation check",
+        "unit cost comparison check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_009",
+      "title": "Returns Defect Rollup Extraction",
+      "difficulty": "medium",
+      "retail_function": "assortment_planning",
+      "category": "home",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_text": "SKU H-12, lot M22. Return rate 13.4% for week 21 versus 5.1% category norm. Reason mix: lid crack 39%, wrong dimensions 18%, arrived damaged 11%, changed mind 9%, other 23%. Quality sample request opened as QR-441."
+      },
+      "question": "Extract return-rate, reason-mix, lot, and quality request fields.",
+      "expected_output": {
+        "record_type": "return_defect_rollup",
+        "entities": {
+          "sku": "H-12",
+          "lot": "M22",
+          "quality_request": "QR-441"
+        },
+        "metrics": {
+          "return_rate": 0.134,
+          "category_norm_return_rate": 0.051,
+          "week": 21,
+          "reason_mix": {
+            "lid_crack": 0.39,
+            "wrong_dimensions": 0.18,
+            "arrived_damaged": 0.11,
+            "changed_mind": 0.09,
+            "other": 0.23
+          }
+        },
+        "conflicts": [],
+        "missing_required_fields": [],
+        "escalation_needed": true,
+        "escalation_reason": "Return rate exceeds category norm and quality request QR-441 is open."
+      },
+      "must_include": [
+        "H-12",
+        "lot M22",
+        "13.4 percent return rate",
+        "5.1 percent category norm",
+        "week 21",
+        "39 percent lid crack",
+        "QR-441"
+      ],
+      "must_not_include": [
+        "convert 13.4 percent to 13.4 decimal",
+        "omit lot",
+        "drop quality request"
+      ],
+      "deterministic_checks": [
+        "percentage normalization check",
+        "reason mix sum check",
+        "lot field check"
+      ],
+      "escalation_triggers": [
+        "return rate above category norm",
+        "quality sample request open"
+      ],
+      "scoring_focus": [
+        "percentage normalization",
+        "reason mix completeness",
+        "quality escalation"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "percentage normalization check",
+        "reason mix sum check",
+        "lot field check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_010",
+      "title": "Allocation Pack Multiple Instruction",
+      "difficulty": "hard",
+      "retail_function": "channel_inventory",
+      "category": "apparel",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "source_text": "Allocation note for girls fleece SKU GF-77: pack multiple 6 by size. Cluster A request: 144 units total, size split S 24, M 48, L 48, XL 24. Cluster B request: 90 units total, size split S 12, M 30, L 30, XL 18. Planner warns Cluster B M and L requests are not multiples of 6 after store-level split."
+      },
+      "question": "Extract allocation requests and pack-multiple issues.",
+      "expected_output": {
+        "record_type": "allocation_instruction",
+        "entities": {
+          "sku": "GF-77",
+          "clusters": [
+            "A",
+            "B"
+          ]
+        },
+        "quantities": {
+          "pack_multiple_by_size": 6,
+          "cluster_A": {
+            "total_units": 144,
+            "size_split": {
+              "S": 24,
+              "M": 48,
+              "L": 48,
+              "XL": 24
+            }
+          },
+          "cluster_B": {
+            "total_units": 90,
+            "size_split": {
+              "S": 12,
+              "M": 30,
+              "L": 30,
+              "XL": 18
+            }
+          }
+        },
+        "conflicts": [],
+        "pack_multiple_issues": [
+          "Cluster B M and L requests not multiples of 6 after store-level split"
+        ],
+        "missing_required_fields": [],
+        "escalation_needed": true,
+        "escalation_reason": "Pack multiple issue needs allocation review before execution."
+      },
+      "must_include": [
+        "GF-77",
+        "pack multiple 6 by size",
+        "Cluster A 144 total",
+        "Cluster B 90 total",
+        "Cluster B M 30 and L 30",
+        "pack multiple issue after store-level split"
+      ],
+      "must_not_include": [
+        "claim all Cluster B values are executable",
+        "drop size-level split",
+        "change pack multiple from 6"
+      ],
+      "deterministic_checks": [
+        "size split sum check",
+        "pack multiple divisibility check",
+        "cluster field completeness check"
+      ],
+      "escalation_triggers": [
+        "pack multiple issue before execution"
+      ],
+      "scoring_focus": [
+        "nested quantity extraction",
+        "pack multiple issue",
+        "cluster-level fidelity"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "size split sum check",
+        "pack multiple divisibility check",
+        "cluster field completeness check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_011",
+      "title": "Berry Weather Spike With DC Capacity",
+      "difficulty": "hard",
+      "retail_function": "replenishment_and_allocation",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "Heatwave forecast adds 18 percent berry demand in the Southwest for 6 days. The DC has 92 percent cold-chain capacity already committed, inbound raspberries are 2 days late, and last year's comp was stockout-censored in 38 percent of stores.",
+        "retail_context": {
+          "category": "grocery",
+          "retail_function": "replenishment_and_allocation",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "case_key": "grocery_weather"
+      },
+      "question": "Extract the structured retail exception fields. Mark conflicts and missing values instead of guessing.",
+      "expected_output": {
+        "record_type": "retail_exception_signal",
+        "entities": {
+          "category": "grocery",
+          "retail_function": "replenishment_and_allocation"
+        },
+        "commercial_terms": {
+          "decision_value_band": "100k_500k"
+        },
+        "dates": [
+          "2 days late"
+        ],
+        "quantities": [
+          "18 percent berry demand",
+          "92 percent cold-chain capacity",
+          "2 days late",
+          "38 percent stockout-censored"
+        ],
+        "conflicts": [
+          "source signals need deterministic validation"
+        ],
+        "missing_required_fields": [],
+        "escalation_needed": true,
+        "escalation_reason": "High-downside or customer-risk fields require review."
+      },
+      "must_include": [
+        "18 percent berry demand",
+        "92 percent cold-chain capacity",
+        "2 days late",
+        "38 percent stockout-censored"
+      ],
+      "must_not_include": [
+        "treat last year's comp as clean demand",
+        "ignore cold-chain capacity",
+        "blanket chase all stores"
+      ],
+      "deterministic_checks": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "escalation_triggers": [
+        "cold-chain capacity exceeds safe receiving limit",
+        "late inbound creates service risk"
+      ],
+      "scoring_focus": [
+        "record_type",
+        "entities",
+        "commercial_terms"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_012",
+      "title": "Beauty Trend Spike With Vendor Funding Window",
+      "difficulty": "medium",
+      "retail_function": "assortment_and_promotion",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A serum shade is trending on social channels with a 41 percent search spike. Vendor co-op funding expires in 9 days, the promo margin floor is 44 percent, and two top stores report tester theft and low attachment to the regimen kit.",
+        "retail_context": {
+          "category": "beauty",
+          "retail_function": "assortment_and_promotion",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "case_key": "beauty_trend"
+      },
+      "question": "Extract the structured retail exception fields. Mark conflicts and missing values instead of guessing.",
+      "expected_output": {
+        "record_type": "retail_exception_signal",
+        "entities": {
+          "category": "beauty",
+          "retail_function": "assortment_and_promotion"
+        },
+        "commercial_terms": {
+          "decision_value_band": "25k_100k"
+        },
+        "dates": [
+          "9 days"
+        ],
+        "quantities": [
+          "41 percent search spike",
+          "9 days",
+          "44 percent margin floor",
+          "low attachment"
+        ],
+        "conflicts": [
+          "source signals need deterministic validation"
+        ],
+        "missing_required_fields": [],
+        "escalation_needed": false,
+        "escalation_reason": null
+      },
+      "must_include": [
+        "41 percent search spike",
+        "9 days",
+        "44 percent margin floor",
+        "low attachment"
+      ],
+      "must_not_include": [
+        "assume the social trend proves sell-through",
+        "ignore tester theft",
+        "promote below margin floor"
+      ],
+      "deterministic_checks": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "escalation_triggers": [
+        "funding expires before execution",
+        "promotion breaks margin floor"
+      ],
+      "scoring_focus": [
+        "record_type",
+        "entities",
+        "commercial_terms"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_013",
+      "title": "Tool Set Chase With Vendor Reliability Drop",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "hard_goods",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A 120-piece tool set is up 26 percent in DIY channels after a competitor recall. The vendor fill rate fell from 94 percent to 71 percent over 4 weeks, MOQ is 480 units, and the item has a 13 percent bulky-item return rate.",
+        "retail_context": {
+          "category": "hard_goods",
+          "retail_function": "vendor_supply",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "case_key": "hardgoods_vendor"
+      },
+      "question": "Extract the structured retail exception fields. Mark conflicts and missing values instead of guessing.",
+      "expected_output": {
+        "record_type": "retail_exception_signal",
+        "entities": {
+          "category": "hard_goods",
+          "retail_function": "vendor_supply"
+        },
+        "commercial_terms": {
+          "decision_value_band": "100k_500k"
+        },
+        "dates": [],
+        "quantities": [
+          "26 percent",
+          "71 percent fill rate",
+          "MOQ 480",
+          "13 percent return rate"
+        ],
+        "conflicts": [
+          "source signals need deterministic validation"
+        ],
+        "missing_required_fields": [],
+        "escalation_needed": true,
+        "escalation_reason": "High-downside or customer-risk fields require review."
+      },
+      "must_include": [
+        "26 percent",
+        "71 percent fill rate",
+        "MOQ 480",
+        "13 percent return rate"
+      ],
+      "must_not_include": [
+        "chase full demand without vendor risk",
+        "ignore MOQ",
+        "ignore bulky-item returns"
+      ],
+      "deterministic_checks": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "fill rate stays below 80 percent",
+        "bulky returns exceed plan"
+      ],
+      "scoring_focus": [
+        "record_type",
+        "entities",
+        "commercial_terms"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_014",
+      "title": "Headphone Price Match With MAP Risk",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A marketplace seller lists the premium headphone at $149.99 while our price is $179.99. Vendor MAP is $169.99, unit cost is $118.00, attachment on warranty is 22 percent, and 31 percent of recent returns cite counterfeit concern in competitor reviews.",
+        "retail_context": {
+          "category": "electronics",
+          "retail_function": "pricing_promotion",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "case_key": "electronics_map"
+      },
+      "question": "Extract the structured retail exception fields. Mark conflicts and missing values instead of guessing.",
+      "expected_output": {
+        "record_type": "retail_exception_signal",
+        "entities": {
+          "category": "electronics",
+          "retail_function": "pricing_promotion"
+        },
+        "commercial_terms": {
+          "decision_value_band": "100k_500k"
+        },
+        "dates": [],
+        "quantities": [
+          "$149.99",
+          "$169.99 MAP",
+          "$118.00 unit cost",
+          "31 percent"
+        ],
+        "conflicts": [
+          "source signals need deterministic validation"
+        ],
+        "missing_required_fields": [],
+        "escalation_needed": true,
+        "escalation_reason": "High-downside or customer-risk fields require review."
+      },
+      "must_include": [
+        "$149.99",
+        "$169.99 MAP",
+        "$118.00 unit cost",
+        "31 percent"
+      ],
+      "must_not_include": [
+        "match below MAP",
+        "treat marketplace seller as clean competitor",
+        "ignore warranty attachment"
+      ],
+      "deterministic_checks": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "escalation_triggers": [
+        "MAP breach requested",
+        "counterfeit or price-image risk is unresolved"
+      ],
+      "scoring_focus": [
+        "record_type",
+        "entities",
+        "commercial_terms"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_015",
+      "title": "Patio Set Buy With Return And DC Constraint",
+      "difficulty": "hard",
+      "retail_function": "initial_buy",
+      "category": "home",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A patio dining set has a 33 percent pre-season intent lift, but the DC furniture floor is capped at 84 trailers. The vendor lead time slipped from 28 to 43 days, assembly complaints are 18 percent above benchmark, and holding the buy protects $420k OTB for late-spring umbrellas.",
+        "retail_context": {
+          "category": "home",
+          "retail_function": "initial_buy",
+          "decision_value_band": "500k_plus"
+        },
+        "known_controls": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "case_key": "home_capacity"
+      },
+      "question": "Extract the structured retail exception fields. Mark conflicts and missing values instead of guessing.",
+      "expected_output": {
+        "record_type": "retail_exception_signal",
+        "entities": {
+          "category": "home",
+          "retail_function": "initial_buy"
+        },
+        "commercial_terms": {
+          "decision_value_band": "500k_plus"
+        },
+        "dates": [
+          "43 days"
+        ],
+        "quantities": [
+          "33 percent intent lift",
+          "84 trailers",
+          "43 days",
+          "$420k OTB"
+        ],
+        "conflicts": [
+          "source signals need deterministic validation"
+        ],
+        "missing_required_fields": [],
+        "escalation_needed": true,
+        "escalation_reason": "High-downside or customer-risk fields require review."
+      },
+      "must_include": [
+        "33 percent intent lift",
+        "84 trailers",
+        "43 days",
+        "$420k OTB"
+      ],
+      "must_not_include": [
+        "ignore umbrella opportunity cost",
+        "ignore DC capacity",
+        "assume intent lift equals demand"
+      ],
+      "deterministic_checks": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "escalation_triggers": [
+        "DC floor capacity is exceeded",
+        "lead time misses seasonal selling window"
+      ],
+      "scoring_focus": [
+        "record_type",
+        "entities",
+        "commercial_terms"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_016",
+      "title": "Trail Shoe Allocation With Size-Curve Noise",
+      "difficulty": "medium",
+      "retail_function": "allocation_size_fit",
+      "category": "footwear",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "minutes",
+      "call_volume_band": "high",
+      "input": {
+        "source_note": "Trail shoe conversion is up 19 percent in mountain stores after rain, but sizes 10-12 stocked out for 5 days. E-commerce returns are 16 percent for fit, store labor can process only 320 transfer pairs this week, and the next vendor cut is 6 weeks away.",
+        "retail_context": {
+          "category": "footwear",
+          "retail_function": "allocation_size_fit",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "case_key": "footwear_size"
+      },
+      "question": "Extract the structured retail exception fields. Mark conflicts and missing values instead of guessing.",
+      "expected_output": {
+        "record_type": "retail_exception_signal",
+        "entities": {
+          "category": "footwear",
+          "retail_function": "allocation_size_fit"
+        },
+        "commercial_terms": {
+          "decision_value_band": "25k_100k"
+        },
+        "dates": [
+          "6 weeks"
+        ],
+        "quantities": [
+          "19 percent",
+          "sizes 10-12",
+          "320 transfer pairs",
+          "6 weeks"
+        ],
+        "conflicts": [
+          "source signals need deterministic validation"
+        ],
+        "missing_required_fields": [],
+        "escalation_needed": false,
+        "escalation_reason": null
+      },
+      "must_include": [
+        "19 percent",
+        "sizes 10-12",
+        "320 transfer pairs",
+        "6 weeks"
+      ],
+      "must_not_include": [
+        "read total conversion as clean",
+        "ignore transfer labor",
+        "over-allocate fit-risk sizes"
+      ],
+      "deterministic_checks": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "labor cap blocks transfer plan",
+        "size-level read remains censored"
+      ],
+      "scoring_focus": [
+        "record_type",
+        "entities",
+        "commercial_terms"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    },
+    {
+      "id": "ext_017",
+      "title": "Holiday Marketplace Seller With Customer Trust Risk",
+      "difficulty": "hard",
+      "retail_function": "marketplace_and_seasonal",
+      "category": "marketplace",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A third-party seller offers 8,000 units of a holiday decor item with 37 percent lower cost. The seller has 91 percent on-time delivery, packaging defect claims are 4.8 percent, and the item is used in a public holiday promise landing page that launches in 72 hours.",
+        "retail_context": {
+          "category": "marketplace",
+          "retail_function": "marketplace_and_seasonal",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "case_key": "seasonal_marketplace"
+      },
+      "question": "Extract the structured retail exception fields. Mark conflicts and missing values instead of guessing.",
+      "expected_output": {
+        "record_type": "retail_exception_signal",
+        "entities": {
+          "category": "marketplace",
+          "retail_function": "marketplace_and_seasonal"
+        },
+        "commercial_terms": {
+          "decision_value_band": "100k_500k"
+        },
+        "dates": [
+          "72 hours"
+        ],
+        "quantities": [
+          "8,000 units",
+          "37 percent lower cost",
+          "91 percent on-time delivery",
+          "72 hours"
+        ],
+        "conflicts": [
+          "source signals need deterministic validation"
+        ],
+        "missing_required_fields": [],
+        "escalation_needed": true,
+        "escalation_reason": "High-downside or customer-risk fields require review."
+      },
+      "must_include": [
+        "8,000 units",
+        "37 percent lower cost",
+        "91 percent on-time delivery",
+        "72 hours"
+      ],
+      "must_not_include": [
+        "approve solely because cost is lower",
+        "ignore packaging defects",
+        "ignore public promise risk"
+      ],
+      "deterministic_checks": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "escalation_triggers": [
+        "public promise is at risk",
+        "seller reliability below launch threshold"
+      ],
+      "scoring_focus": [
+        "record_type",
+        "entities",
+        "commercial_terms"
+      ],
+      "ambiguity_type": "messy source fields with missing or conflicting values",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "expected_failure_mode": "The answer fills missing fields, normalizes values incorrectly, or hides a source conflict.",
+      "scoring_rationale": "Score should reward exact field extraction, explicit missing values, conflict detection, and schema-ready output."
+    }
+  ]
+}

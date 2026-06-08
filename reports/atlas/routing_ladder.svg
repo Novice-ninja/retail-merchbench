@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="690" viewBox="0 0 1280 690" role="img" aria-labelledby="title desc">
+<title>MerchBench routing ladder</title>
+<desc>Workflow ladder showing recommended model tiers and review boundaries for each retail segment.</desc>
+<rect width="1280" height="690" fill="#f7f4ee"/>
+<text x="34" y="44" font-size="24" font-weight="800" fill="#17211b">Retail model-routing ladder</text>
+<text x="34" y="70" font-size="13" fill="#5e675f">Each row shows the default model tier, premium escalation point, and whether human review remains part of the workflow.</text>
+<text x="245" y="106" text-anchor="middle" font-size="12" font-weight="800" fill="#5e675f">Rules/checks</text>
+<line x1="245" y1="122" x2="245" y2="576" stroke="#d8ddd5" stroke-dasharray="3 5"/>
+<text x="410" y="106" text-anchor="middle" font-size="12" font-weight="800" fill="#5e675f">Small/local</text>
+<line x1="410" y1="122" x2="410" y2="576" stroke="#d8ddd5" stroke-dasharray="3 5"/>
+<text x="575" y="106" text-anchor="middle" font-size="12" font-weight="800" fill="#5e675f">Mini/mid</text>
+<line x1="575" y1="122" x2="575" y2="576" stroke="#d8ddd5" stroke-dasharray="3 5"/>
+<text x="740" y="106" text-anchor="middle" font-size="12" font-weight="800" fill="#5e675f">Efficient frontier</text>
+<line x1="740" y1="122" x2="740" y2="576" stroke="#d8ddd5" stroke-dasharray="3 5"/>
+<text x="905" y="106" text-anchor="middle" font-size="12" font-weight="800" fill="#5e675f">Premium frontier</text>
+<line x1="905" y1="122" x2="905" y2="576" stroke="#d8ddd5" stroke-dasharray="3 5"/>
+<text x="1070" y="106" text-anchor="middle" font-size="12" font-weight="800" fill="#5e675f">Human review</text>
+<line x1="1070" y1="122" x2="1070" y2="576" stroke="#d8ddd5" stroke-dasharray="3 5"/>
+<text x="34" y="154" font-size="13" font-weight="800" fill="#17211b">Summarization</text>
+<line x1="210" y1="150" x2="1070" y2="150" stroke="#d8ddd5" stroke-width="3"/>
+<circle cx="245" cy="150" r="7" fill="#fffdf8" stroke="#5e675f" stroke-width="2"/>
+<circle cx="575" cy="150" r="12" fill="#277c78" stroke="#17211b" stroke-width="2.5"/>
+<text x="575" y="154" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">E</text>
+<text x="210" y="174" font-size="10" fill="#5e675f">GPT-5 Mini default</text>
+<text x="34" y="212" font-size="13" font-weight="800" fill="#17211b">Extraction</text>
+<line x1="210" y1="208" x2="1070" y2="208" stroke="#d8ddd5" stroke-width="3"/>
+<circle cx="245" cy="208" r="7" fill="#fffdf8" stroke="#5e675f" stroke-width="2"/>
+<circle cx="575" cy="208" r="12" fill="#277c78" stroke="#17211b" stroke-width="2.5"/>
+<text x="575" y="212" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">E</text>
+<circle cx="1070" cy="208" r="11" fill="#fffdf8" stroke="#6d5375" stroke-width="2" stroke-dasharray="3 3"/>
+<text x="1070" y="212" text-anchor="middle" font-size="9" font-weight="800" fill="#6d5375">H</text>
+<text x="210" y="232" font-size="10" fill="#5e675f">GPT-5 Mini default</text>
+<text x="34" y="270" font-size="13" font-weight="800" fill="#17211b">Constraint checks</text>
+<line x1="210" y1="266" x2="1070" y2="266" stroke="#d8ddd5" stroke-width="3"/>
+<circle cx="245" cy="266" r="7" fill="#fffdf8" stroke="#5e675f" stroke-width="2"/>
+<circle cx="575" cy="266" r="12" fill="#277c78" stroke="#17211b" stroke-width="2.5"/>
+<text x="575" y="270" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">E</text>
+<circle cx="905" cy="266" r="10" fill="#c8912f" stroke="#17211b" stroke-width="1.6"/>
+<text x="905" y="270" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">L</text>
+<circle cx="1070" cy="266" r="11" fill="#6d5375" stroke="#6d5375" stroke-width="2"/>
+<text x="1070" y="270" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">H</text>
+<text x="210" y="290" font-size="10" fill="#5e675f">GPT-5 Mini default; GPT-5.4 leader</text>
+<text x="34" y="328" font-size="13" font-weight="800" fill="#17211b">Routine planning</text>
+<line x1="210" y1="324" x2="1070" y2="324" stroke="#d8ddd5" stroke-width="3"/>
+<circle cx="245" cy="324" r="7" fill="#fffdf8" stroke="#5e675f" stroke-width="2"/>
+<circle cx="740" cy="324" r="12" fill="#277c78" stroke="#17211b" stroke-width="2.5"/>
+<text x="740" y="328" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">E</text>
+<circle cx="905" cy="324" r="10" fill="#c8912f" stroke="#17211b" stroke-width="1.6"/>
+<text x="905" y="328" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">L</text>
+<circle cx="1070" cy="324" r="11" fill="#fffdf8" stroke="#6d5375" stroke-width="2" stroke-dasharray="3 3"/>
+<text x="1070" y="328" text-anchor="middle" font-size="9" font-weight="800" fill="#6d5375">H</text>
+<text x="210" y="348" font-size="10" fill="#5e675f">GPT-5.4 Mini default; GPT-5.4 leader</text>
+<text x="34" y="386" font-size="13" font-weight="800" fill="#17211b">Pricing &amp; promo</text>
+<line x1="210" y1="382" x2="1070" y2="382" stroke="#d8ddd5" stroke-width="3"/>
+<circle cx="245" cy="382" r="7" fill="#fffdf8" stroke="#5e675f" stroke-width="2"/>
+<circle cx="905" cy="382" r="12" fill="#277c78" stroke="#17211b" stroke-width="2.5"/>
+<text x="905" y="386" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">E</text>
+<circle cx="905" cy="382" r="10" fill="#c8912f" stroke="#17211b" stroke-width="1.6"/>
+<text x="905" y="386" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">L</text>
+<circle cx="1070" cy="382" r="11" fill="#6d5375" stroke="#6d5375" stroke-width="2"/>
+<text x="1070" y="386" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">H</text>
+<text x="210" y="406" font-size="10" fill="#5e675f">GPT-5.4 default; GPT-5.5 leader</text>
+<text x="34" y="444" font-size="13" font-weight="800" fill="#17211b">Ambiguous judgment</text>
+<line x1="210" y1="440" x2="1070" y2="440" stroke="#d8ddd5" stroke-width="3"/>
+<circle cx="245" cy="440" r="7" fill="#fffdf8" stroke="#5e675f" stroke-width="2"/>
+<circle cx="740" cy="440" r="12" fill="#277c78" stroke="#17211b" stroke-width="2.5"/>
+<text x="740" y="444" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">E</text>
+<circle cx="905" cy="440" r="10" fill="#c8912f" stroke="#17211b" stroke-width="1.6"/>
+<text x="905" y="444" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">L</text>
+<circle cx="1070" cy="440" r="11" fill="#6d5375" stroke="#6d5375" stroke-width="2"/>
+<text x="1070" y="444" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">H</text>
+<text x="210" y="464" font-size="10" fill="#5e675f">GPT-5.4 Mini default; GPT-5.4 leader</text>
+<text x="34" y="502" font-size="13" font-weight="800" fill="#17211b">Portfolio tradeoff</text>
+<line x1="210" y1="498" x2="1070" y2="498" stroke="#d8ddd5" stroke-width="3"/>
+<circle cx="245" cy="498" r="7" fill="#fffdf8" stroke="#5e675f" stroke-width="2"/>
+<circle cx="740" cy="498" r="12" fill="#277c78" stroke="#17211b" stroke-width="2.5"/>
+<text x="740" y="502" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">E</text>
+<circle cx="575" cy="498" r="10" fill="#c8912f" stroke="#17211b" stroke-width="1.6"/>
+<text x="575" y="502" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">L</text>
+<circle cx="1070" cy="498" r="11" fill="#6d5375" stroke="#6d5375" stroke-width="2"/>
+<text x="1070" y="502" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">H</text>
+<text x="210" y="522" font-size="10" fill="#5e675f">GPT-5.4 Mini default; GPT-5 Mini leader</text>
+<text x="34" y="560" font-size="13" font-weight="800" fill="#17211b">Ops triage</text>
+<line x1="210" y1="556" x2="1070" y2="556" stroke="#d8ddd5" stroke-width="3"/>
+<circle cx="245" cy="556" r="7" fill="#fffdf8" stroke="#5e675f" stroke-width="2"/>
+<circle cx="740" cy="556" r="12" fill="#277c78" stroke="#17211b" stroke-width="2.5"/>
+<text x="740" y="560" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">E</text>
+<circle cx="905" cy="556" r="10" fill="#c8912f" stroke="#17211b" stroke-width="1.6"/>
+<text x="905" y="560" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">L</text>
+<circle cx="1070" cy="556" r="11" fill="#6d5375" stroke="#6d5375" stroke-width="2"/>
+<text x="1070" y="560" text-anchor="middle" font-size="9" font-weight="800" fill="#ffffff">H</text>
+<text x="210" y="580" font-size="10" fill="#5e675f">GPT-5.4 Mini default; GPT-5.5 leader</text>
+<text x="34" y="648" font-size="12" font-weight="800" fill="#17211b">E</text>
+<text x="68" y="648" font-size="12" fill="#5e675f">economic pick</text>
+<text x="254" y="648" font-size="12" font-weight="800" fill="#17211b">L</text>
+<text x="288" y="648" font-size="12" fill="#5e675f">quality leader</text>
+<text x="474" y="648" font-size="12" font-weight="800" fill="#17211b">H</text>
+<text x="508" y="648" font-size="12" fill="#5e675f">human review required</text>
+<text x="734" y="648" font-size="12" font-weight="800" fill="#17211b">dashed H</text>
+<text x="800" y="648" font-size="12" fill="#5e675f">conditional review</text>
+</svg>

@@ -1,0 +1,863 @@
+{
+  "id": "operational_triage_v0",
+  "version": "0.1",
+  "task_segment": "operational_triage",
+  "purpose": "Evaluate cascade workflows for store and channel operations exceptions where the system must classify urgency, route to the right owner, respect safety or capacity constraints, and avoid solving decisions that require human approval.",
+  "recommended_strategy_under_test": "cascade",
+  "quality_floor": {
+    "minimum_average_score": 8.5,
+    "minimum_item_score": 7.5,
+    "must_pass_items": 3,
+    "dimension_floor": {
+      "triage_accuracy": 0.85,
+      "routing_quality": 0.85,
+      "safety_boundary": 0.9
+    }
+  },
+  "design_principles": [
+    "Prioritize correct routing and escalation over elegant prose.",
+    "Include safety, labor, service-level, and customer trust constraints.",
+    "Require urgency classification and owner assignment.",
+    "Reward cascade behavior that sends high-downside cases to humans.",
+    "Penalize direct execution when policy or safety gates are unresolved."
+  ],
+  "coverage": {
+    "retail_functions": [
+      "store_operations_constraints",
+      "channel_inventory",
+      "vendor_supply",
+      "external_shock_response"
+    ],
+    "categories": [
+      "grocery",
+      "electronics",
+      "beauty",
+      "home",
+      "multi_category"
+    ],
+    "ambiguity_sources": [
+      "safety issue mixed with demand spike",
+      "customer promise risk",
+      "labor capacity conflict",
+      "compliance uncertainty",
+      "channel imbalance"
+    ],
+    "externalities": [
+      "storm preparation",
+      "carrier delay",
+      "viral demand spike",
+      "regional outage"
+    ],
+    "escalation_patterns": [
+      "safety issue",
+      "public customer promise",
+      "capacity violation",
+      "compliance missing"
+    ]
+  },
+  "output_contract": {
+    "response_format": "json",
+    "required_fields": [
+      "priority",
+      "owner",
+      "triage_decision",
+      "blocked_by",
+      "safe_next_step",
+      "customer_or_store_risk",
+      "escalation_needed"
+    ],
+    "forbidden_behaviors": [
+      "approve unsafe operations action",
+      "ignore owner routing",
+      "collapse multiple exceptions into one generic priority",
+      "solve compliance-sensitive cases without escalation"
+    ]
+  },
+  "scoring": {
+    "total_points_per_item": 10,
+    "dimensions": {
+      "triage_accuracy": {
+        "points": 3,
+        "criteria": [
+          "Classifies priority correctly.",
+          "Identifies the primary blocker.",
+          "Does not over-escalate low-risk items."
+        ]
+      },
+      "routing_quality": {
+        "points": 2,
+        "criteria": [
+          "Routes to the correct owner or function.",
+          "Separates store, merchant, supply, compliance, and customer-care work."
+        ]
+      },
+      "safety_boundary": {
+        "points": 2,
+        "criteria": [
+          "Blocks unsafe or compliance-sensitive execution.",
+          "Requires human review where policy demands it."
+        ]
+      },
+      "actionability": {
+        "points": 2,
+        "criteria": [
+          "Provides a safe next step.",
+          "Names what data or approval is needed next."
+        ]
+      },
+      "format": {
+        "points": 1,
+        "criteria": [
+          "Returns concise parseable JSON."
+        ]
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "ops_001",
+      "title": "Storm Water Fire-Lane Triage",
+      "difficulty": "hard",
+      "retail_function": "store_operations_constraints",
+      "category": "grocery",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "high",
+      "latency_sla": "seconds",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "District asks to push 22 pallets of water by Friday. Stores can safely receive 14 before fire-lane blockage. One store had an emergency aisle clearance issue last storm. Supplier can ship 28 by 3 p.m."
+      },
+      "question": "Triage this exception and route it.",
+      "expected_output": {
+        "priority": "high",
+        "owner": "store operations with safety review",
+        "triage_decision": "block full 22 pallet push until safe capacity plan exists",
+        "blocked_by": [
+          "fire-lane capacity",
+          "emergency aisle history"
+        ],
+        "safe_next_step": "approve no more than verified safe capacity or split delivery after ops review"
+      },
+      "must_include": [
+        "high priority",
+        "14 pallet safe capacity",
+        "22 pallet ask",
+        "fire-lane or emergency aisle blocker"
+      ],
+      "must_not_include": [
+        "approve 22 pallets",
+        "route only to merchant",
+        "ignore 3 p.m. deadline"
+      ],
+      "deterministic_checks": [
+        "capacity comparison",
+        "safety keyword check",
+        "deadline check"
+      ],
+      "escalation_triggers": [
+        "fire-lane blockage risk",
+        "same-day supplier deadline"
+      ],
+      "scoring_focus": [
+        "safety boundary",
+        "routing owner",
+        "safe next step"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "capacity comparison",
+        "safety keyword check",
+        "deadline check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    },
+    {
+      "id": "ops_002",
+      "title": "Backorder Customer Promise Risk",
+      "difficulty": "hard",
+      "retail_function": "channel_inventory",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "seconds",
+      "call_volume_band": "medium",
+      "input": {
+        "facts": "2,400 ecommerce charger backorders have promised delivery dates starting tomorrow. Substitute SKU is available but UL pending. Customer care reports cancellation rate doubled in 24 hours."
+      },
+      "question": "Triage the exception and identify safe next step.",
+      "expected_output": {
+        "priority": "high",
+        "owner": "compliance plus customer care plus supply",
+        "triage_decision": "do not ship substitute until compliance clears",
+        "blocked_by": [
+          "UL pending",
+          "customer promise risk"
+        ],
+        "safe_next_step": "escalate compliance and prepare customer communication options"
+      },
+      "must_include": [
+        "2,400 backorders",
+        "promised dates starting tomorrow",
+        "UL pending",
+        "cancellation rate doubled"
+      ],
+      "must_not_include": [
+        "ship substitute now",
+        "route only to supply",
+        "ignore customer care"
+      ],
+      "deterministic_checks": [
+        "compliance blocker check",
+        "promise-date urgency check",
+        "owner routing check"
+      ],
+      "escalation_triggers": [
+        "compliance missing",
+        "public customer promise risk"
+      ],
+      "scoring_focus": [
+        "compliance boundary",
+        "customer trust",
+        "multi-owner routing"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "compliance blocker check",
+        "promise-date urgency check",
+        "owner routing check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    },
+    {
+      "id": "ops_003",
+      "title": "Beauty Viral SKU Channel Imbalance",
+      "difficulty": "medium",
+      "retail_function": "channel_inventory",
+      "category": "beauty",
+      "decision_value_band": "1k_25k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "facts": "Toner T-44 sold 160 percent to plan after influencer post. Ecommerce cover is 0.8 weeks and stores have 3.2 weeks. Store operations says transfers can ship tomorrow if total under 500 units."
+      },
+      "question": "Triage priority and route the action.",
+      "expected_output": {
+        "priority": "medium",
+        "owner": "inventory planning",
+        "triage_decision": "eligible for routine transfer review",
+        "blocked_by": [],
+        "safe_next_step": "route to channel inventory planner for under-500-unit transfer decision"
+      },
+      "must_include": [
+        "medium priority",
+        "0.8 weeks ecommerce cover",
+        "3.2 weeks store cover",
+        "under 500 unit transfer threshold"
+      ],
+      "must_not_include": [
+        "high safety escalation",
+        "new vendor order",
+        "ignore transfer cap"
+      ],
+      "deterministic_checks": [
+        "cover imbalance check",
+        "transfer cap check"
+      ],
+      "escalation_triggers": [
+        "transfer request exceeds 500 units"
+      ],
+      "scoring_focus": [
+        "routine triage",
+        "correct owner",
+        "not over-escalating"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "cover imbalance check",
+        "transfer cap check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    },
+    {
+      "id": "ops_004",
+      "title": "Storage Bin Quality Lot Triage",
+      "difficulty": "medium",
+      "retail_function": "store_operations_constraints",
+      "category": "home",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "facts": "Home storage bin H-12 lot M22 return rate is 13.4 percent versus 5.1 percent norm. Lid crack is 39 percent of returns. Stores ask whether to keep replenishing displays. Quality request QR-441 is open."
+      },
+      "question": "Triage the exception and owner.",
+      "expected_output": {
+        "priority": "medium_high",
+        "owner": "quality plus merchant planning",
+        "triage_decision": "pause automatic replenishment for lot M22 pending quality review",
+        "blocked_by": [
+          "open quality request QR-441",
+          "elevated lid crack returns"
+        ],
+        "safe_next_step": "route samples and lot-level sales/returns to quality"
+      },
+      "must_include": [
+        "13.4 percent versus 5.1 percent",
+        "39 percent lid crack",
+        "lot M22",
+        "QR-441"
+      ],
+      "must_not_include": [
+        "continue auto replenishment without review",
+        "declare root cause proven",
+        "route only to stores"
+      ],
+      "deterministic_checks": [
+        "return-rate comparison",
+        "quality request check",
+        "lot field check"
+      ],
+      "escalation_triggers": [
+        "quality request open",
+        "return rate above norm"
+      ],
+      "scoring_focus": [
+        "quality routing",
+        "safe pause",
+        "causal caution"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "return-rate comparison",
+        "quality request check",
+        "lot field check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    },
+    {
+      "id": "ops_005",
+      "title": "Berry Weather Spike With DC Capacity",
+      "difficulty": "hard",
+      "retail_function": "replenishment_and_allocation",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "Heatwave forecast adds 18 percent berry demand in the Southwest for 6 days. The DC has 92 percent cold-chain capacity already committed, inbound raspberries are 2 days late, and last year's comp was stockout-censored in 38 percent of stores.",
+        "retail_context": {
+          "category": "grocery",
+          "retail_function": "replenishment_and_allocation",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "case_key": "grocery_weather"
+      },
+      "question": "Triage the exception, route ownership, and identify the safest next step under store or customer risk.",
+      "expected_output": {
+        "priority": "high",
+        "owner": "merchant lead plus operations owner",
+        "triage_decision": "route to owner before approving any irreversible action",
+        "blocked_by": [
+          "cold-chain capacity check",
+          "late inbound check"
+        ],
+        "safe_next_step": "pause blanket execution, verify controls, and decide a narrow exception path",
+        "customer_or_store_risk": "customer trust, capacity, labor, or service-level exposure is present",
+        "escalation_needed": true
+      },
+      "must_include": [
+        "18 percent berry demand",
+        "92 percent cold-chain capacity",
+        "2 days late",
+        "38 percent stockout-censored"
+      ],
+      "must_not_include": [
+        "treat last year's comp as clean demand",
+        "ignore cold-chain capacity",
+        "blanket chase all stores"
+      ],
+      "deterministic_checks": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "escalation_triggers": [
+        "cold-chain capacity exceeds safe receiving limit",
+        "late inbound creates service risk"
+      ],
+      "scoring_focus": [
+        "priority",
+        "owner",
+        "triage_decision"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    },
+    {
+      "id": "ops_006",
+      "title": "Beauty Trend Spike With Vendor Funding Window",
+      "difficulty": "medium",
+      "retail_function": "assortment_and_promotion",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A serum shade is trending on social channels with a 41 percent search spike. Vendor co-op funding expires in 9 days, the promo margin floor is 44 percent, and two top stores report tester theft and low attachment to the regimen kit.",
+        "retail_context": {
+          "category": "beauty",
+          "retail_function": "assortment_and_promotion",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "case_key": "beauty_trend"
+      },
+      "question": "Triage the exception, route ownership, and identify the safest next step under store or customer risk.",
+      "expected_output": {
+        "priority": "medium",
+        "owner": "merchant lead plus operations owner",
+        "triage_decision": "route to owner before approving any irreversible action",
+        "blocked_by": [
+          "vendor funding window check",
+          "margin floor check"
+        ],
+        "safe_next_step": "pause blanket execution, verify controls, and decide a narrow exception path",
+        "customer_or_store_risk": "customer trust, capacity, labor, or service-level exposure is present",
+        "escalation_needed": false
+      },
+      "must_include": [
+        "41 percent search spike",
+        "9 days",
+        "44 percent margin floor",
+        "low attachment"
+      ],
+      "must_not_include": [
+        "assume the social trend proves sell-through",
+        "ignore tester theft",
+        "promote below margin floor"
+      ],
+      "deterministic_checks": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "escalation_triggers": [
+        "funding expires before execution",
+        "promotion breaks margin floor"
+      ],
+      "scoring_focus": [
+        "priority",
+        "owner",
+        "triage_decision"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    },
+    {
+      "id": "ops_007",
+      "title": "Tool Set Chase With Vendor Reliability Drop",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "hard_goods",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A 120-piece tool set is up 26 percent in DIY channels after a competitor recall. The vendor fill rate fell from 94 percent to 71 percent over 4 weeks, MOQ is 480 units, and the item has a 13 percent bulky-item return rate.",
+        "retail_context": {
+          "category": "hard_goods",
+          "retail_function": "vendor_supply",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "case_key": "hardgoods_vendor"
+      },
+      "question": "Triage the exception, route ownership, and identify the safest next step under store or customer risk.",
+      "expected_output": {
+        "priority": "high",
+        "owner": "merchant lead plus operations owner",
+        "triage_decision": "route to owner before approving any irreversible action",
+        "blocked_by": [
+          "vendor fill-rate check",
+          "MOQ check"
+        ],
+        "safe_next_step": "pause blanket execution, verify controls, and decide a narrow exception path",
+        "customer_or_store_risk": "customer trust, capacity, labor, or service-level exposure is present",
+        "escalation_needed": true
+      },
+      "must_include": [
+        "26 percent",
+        "71 percent fill rate",
+        "MOQ 480",
+        "13 percent return rate"
+      ],
+      "must_not_include": [
+        "chase full demand without vendor risk",
+        "ignore MOQ",
+        "ignore bulky-item returns"
+      ],
+      "deterministic_checks": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "fill rate stays below 80 percent",
+        "bulky returns exceed plan"
+      ],
+      "scoring_focus": [
+        "priority",
+        "owner",
+        "triage_decision"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    },
+    {
+      "id": "ops_008",
+      "title": "Headphone Price Match With MAP Risk",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A marketplace seller lists the premium headphone at $149.99 while our price is $179.99. Vendor MAP is $169.99, unit cost is $118.00, attachment on warranty is 22 percent, and 31 percent of recent returns cite counterfeit concern in competitor reviews.",
+        "retail_context": {
+          "category": "electronics",
+          "retail_function": "pricing_promotion",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "case_key": "electronics_map"
+      },
+      "question": "Triage the exception, route ownership, and identify the safest next step under store or customer risk.",
+      "expected_output": {
+        "priority": "high",
+        "owner": "merchant lead plus operations owner",
+        "triage_decision": "route to owner before approving any irreversible action",
+        "blocked_by": [
+          "MAP floor check",
+          "unit-margin check"
+        ],
+        "safe_next_step": "pause blanket execution, verify controls, and decide a narrow exception path",
+        "customer_or_store_risk": "customer trust, capacity, labor, or service-level exposure is present",
+        "escalation_needed": true
+      },
+      "must_include": [
+        "$149.99",
+        "$169.99 MAP",
+        "$118.00 unit cost",
+        "31 percent"
+      ],
+      "must_not_include": [
+        "match below MAP",
+        "treat marketplace seller as clean competitor",
+        "ignore warranty attachment"
+      ],
+      "deterministic_checks": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "escalation_triggers": [
+        "MAP breach requested",
+        "counterfeit or price-image risk is unresolved"
+      ],
+      "scoring_focus": [
+        "priority",
+        "owner",
+        "triage_decision"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    },
+    {
+      "id": "ops_009",
+      "title": "Patio Set Buy With Return And DC Constraint",
+      "difficulty": "hard",
+      "retail_function": "initial_buy",
+      "category": "home",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A patio dining set has a 33 percent pre-season intent lift, but the DC furniture floor is capped at 84 trailers. The vendor lead time slipped from 28 to 43 days, assembly complaints are 18 percent above benchmark, and holding the buy protects $420k OTB for late-spring umbrellas.",
+        "retail_context": {
+          "category": "home",
+          "retail_function": "initial_buy",
+          "decision_value_band": "500k_plus"
+        },
+        "known_controls": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "case_key": "home_capacity"
+      },
+      "question": "Triage the exception, route ownership, and identify the safest next step under store or customer risk.",
+      "expected_output": {
+        "priority": "high",
+        "owner": "merchant lead plus operations owner",
+        "triage_decision": "route to owner before approving any irreversible action",
+        "blocked_by": [
+          "DC trailer capacity check",
+          "lead-time slippage check"
+        ],
+        "safe_next_step": "pause blanket execution, verify controls, and decide a narrow exception path",
+        "customer_or_store_risk": "customer trust, capacity, labor, or service-level exposure is present",
+        "escalation_needed": true
+      },
+      "must_include": [
+        "33 percent intent lift",
+        "84 trailers",
+        "43 days",
+        "$420k OTB"
+      ],
+      "must_not_include": [
+        "ignore umbrella opportunity cost",
+        "ignore DC capacity",
+        "assume intent lift equals demand"
+      ],
+      "deterministic_checks": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "escalation_triggers": [
+        "DC floor capacity is exceeded",
+        "lead time misses seasonal selling window"
+      ],
+      "scoring_focus": [
+        "priority",
+        "owner",
+        "triage_decision"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    },
+    {
+      "id": "ops_010",
+      "title": "Trail Shoe Allocation With Size-Curve Noise",
+      "difficulty": "medium",
+      "retail_function": "allocation_size_fit",
+      "category": "footwear",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "minutes",
+      "call_volume_band": "high",
+      "input": {
+        "source_note": "Trail shoe conversion is up 19 percent in mountain stores after rain, but sizes 10-12 stocked out for 5 days. E-commerce returns are 16 percent for fit, store labor can process only 320 transfer pairs this week, and the next vendor cut is 6 weeks away.",
+        "retail_context": {
+          "category": "footwear",
+          "retail_function": "allocation_size_fit",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "case_key": "footwear_size"
+      },
+      "question": "Triage the exception, route ownership, and identify the safest next step under store or customer risk.",
+      "expected_output": {
+        "priority": "medium",
+        "owner": "merchant lead plus operations owner",
+        "triage_decision": "route to owner before approving any irreversible action",
+        "blocked_by": [
+          "size-level stockout check",
+          "store labor transfer cap check"
+        ],
+        "safe_next_step": "pause blanket execution, verify controls, and decide a narrow exception path",
+        "customer_or_store_risk": "customer trust, capacity, labor, or service-level exposure is present",
+        "escalation_needed": false
+      },
+      "must_include": [
+        "19 percent",
+        "sizes 10-12",
+        "320 transfer pairs",
+        "6 weeks"
+      ],
+      "must_not_include": [
+        "read total conversion as clean",
+        "ignore transfer labor",
+        "over-allocate fit-risk sizes"
+      ],
+      "deterministic_checks": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "labor cap blocks transfer plan",
+        "size-level read remains censored"
+      ],
+      "scoring_focus": [
+        "priority",
+        "owner",
+        "triage_decision"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    },
+    {
+      "id": "ops_011",
+      "title": "Holiday Marketplace Seller With Customer Trust Risk",
+      "difficulty": "hard",
+      "retail_function": "marketplace_and_seasonal",
+      "category": "marketplace",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A third-party seller offers 8,000 units of a holiday decor item with 37 percent lower cost. The seller has 91 percent on-time delivery, packaging defect claims are 4.8 percent, and the item is used in a public holiday promise landing page that launches in 72 hours.",
+        "retail_context": {
+          "category": "marketplace",
+          "retail_function": "marketplace_and_seasonal",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "case_key": "seasonal_marketplace"
+      },
+      "question": "Triage the exception, route ownership, and identify the safest next step under store or customer risk.",
+      "expected_output": {
+        "priority": "high",
+        "owner": "merchant lead plus operations owner",
+        "triage_decision": "route to owner before approving any irreversible action",
+        "blocked_by": [
+          "seller on-time delivery check",
+          "defect-rate check"
+        ],
+        "safe_next_step": "pause blanket execution, verify controls, and decide a narrow exception path",
+        "customer_or_store_risk": "customer trust, capacity, labor, or service-level exposure is present",
+        "escalation_needed": true
+      },
+      "must_include": [
+        "8,000 units",
+        "37 percent lower cost",
+        "91 percent on-time delivery",
+        "72 hours"
+      ],
+      "must_not_include": [
+        "approve solely because cost is lower",
+        "ignore packaging defects",
+        "ignore public promise risk"
+      ],
+      "deterministic_checks": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "escalation_triggers": [
+        "public promise is at risk",
+        "seller reliability below launch threshold"
+      ],
+      "scoring_focus": [
+        "priority",
+        "owner",
+        "triage_decision"
+      ],
+      "ambiguity_type": "ownership, safety, capacity, and customer-risk ambiguity",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "expected_failure_mode": "The answer treats a material store or customer-risk exception as routine instead of routing ownership.",
+      "scoring_rationale": "Score should reward owner routing, priority calibration, safe next steps, and detection of safety or trust risk."
+    }
+  ]
+}

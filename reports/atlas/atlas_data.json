@@ -1,0 +1,1244 @@
+{
+  "artifact_name": "Retail MerchBench Atlas",
+  "benchmark_items": 100,
+  "data_caveat": "The corpus contains 100 segment eval-pack items. Current provider model scores are from full-coverage stored runs for the curated panel. OpenRouter free-tier probes are partial and excluded from the main frontier; xAI was unavailable because the account returned a no-credits/no-license error. Cost is estimated from recorded token usage where pricing is encoded. Latency is shown as response-token burden, not production p95 latency. Deterministic baseline scores are used as scorer sanity checks, not deployable model recommendations. Scores remain routing diagnostics until human-rater calibration is complete.",
+  "decision_readout": {
+    "decision": "Use GPT-5.4 Mini as the broad economic default; reserve GPT-5.5 for high-downside exceptions; use GPT-5 Mini for clerical fidelity and portfolio triage; treat Z.ai GLM 4.7 as the best free hosted comparator.",
+    "evidence": "100 segment eval-pack items, 14 real models with full scored coverage in the curated panel, deterministic anti-echo baselines, and token-derived artifact cost estimates where pricing is encoded.",
+    "non_claim": "Retail MerchBench is not a human-validated public ranking, not a production latency study, and not a retailer-specific cost model."
+  },
+  "generated_at_utc": "2026-06-08T00:14:21+00:00",
+  "key_findings": [
+    "Retail MerchBench contains 100 segment eval items, and the curated provider panel has 100/100 scored coverage for 14 real models plus deterministic baselines.",
+    "GPT-5.5 is the overall leader at 7.4614/10, followed by GPT-5.4 at 7.3907/10 and GPT-5.4 Mini at 7.3693/10.",
+    "GPT-5.4 Mini is the economic frontier result: it lands within 0.0921 points of GPT-5.5 at about 13 percent of the observed artifact cost.",
+    "GPT-5 Mini is the best cheap paid specialist for summarization, structured extraction, and portfolio tradeoff.",
+    "Z.ai GLM 4.7 is the strongest free hosted result at 6.8471/10, clearly ahead of GPT-OSS 120B, Groq-hosted open models, and local Ollama models in this run.",
+    "The anti-echo scorer rejects shallow deterministic baselines: source echo scores 3.3530 and keyword guardrail stuffing scores 4.3280 on the 100-item corpus.",
+    "Pricing/promotion and routine planning remain below the 7.0 proxy autonomy floor even for the strongest models; these workflows need deterministic controls and human review.",
+    "Local Ollama models are useful for low-cost experimentation, but none clears deterministic keyword-guardrail baseline quality on this full-suite judgment benchmark.",
+    "OpenRouter free-tier probes stopped at the daily free-model cap and xAI was unavailable; they are documented as capacity findings, not ranked model results.",
+    "The scorer includes adversarial anti-echo baselines, but public benchmark claims still need human-rater calibration and repeated-run variance."
+  ],
+  "model_panel_items": 100,
+  "model_records": [
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Premium frontier",
+      "completion_tokens": 36592,
+      "cost_basis": "metered_openai_api",
+      "cost_index": 10.0,
+      "display_name": "GPT-5.5",
+      "estimated_cost_usd": 1.337085,
+      "experience_burden_index": 2.45,
+      "failed_items": 0,
+      "model_id": "openai/gpt-5.5",
+      "notes": "Overall quality leader in the 100-item run; best reserved for high-downside exceptions.",
+      "overall_average": 7.4614,
+      "packs_passing": 0,
+      "pareto_frontier": true,
+      "prompt_tokens": 47865,
+      "provider": "openai",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 7.7152,
+        "constraint_checking": 7.8349,
+        "low_risk_summarization": 7.0825,
+        "operational_triage": 7.5235,
+        "portfolio_tradeoff": 7.097,
+        "pricing_promotion": 6.778,
+        "routine_planning_recommendation": 6.9939,
+        "structured_extraction": 8.3748
+      },
+      "source_response_file": "reports/eval_packs/openai_gpt_55_responses.json",
+      "source_score_file": "reports/eval_packs/openai_gpt_55_scores.json",
+      "tier": "frontier_model",
+      "total_tokens": 84457
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Frontier proprietary",
+      "completion_tokens": 41488,
+      "cost_basis": "metered_openai_api",
+      "cost_index": 9.18,
+      "display_name": "GPT-5.4",
+      "estimated_cost_usd": 0.741982,
+      "experience_burden_index": 2.77,
+      "failed_items": 0,
+      "model_id": "openai/gpt-5.4",
+      "notes": "Near-top overall quality and the strongest ambiguous-judgment/constraint-checking profile.",
+      "overall_average": 7.3907,
+      "packs_passing": 0,
+      "pareto_frontier": true,
+      "prompt_tokens": 47865,
+      "provider": "openai",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 8.5311,
+        "constraint_checking": 8.2879,
+        "low_risk_summarization": 7.5713,
+        "operational_triage": 7.2776,
+        "portfolio_tradeoff": 5.4391,
+        "pricing_promotion": 6.4629,
+        "routine_planning_recommendation": 6.9939,
+        "structured_extraction": 8.0848
+      },
+      "source_response_file": "reports/eval_packs/openai_gpt_54_responses.json",
+      "source_score_file": "reports/eval_packs/openai_gpt_54_scores.json",
+      "tier": "frontier_model",
+      "total_tokens": 89353
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Efficient frontier",
+      "completion_tokens": 30349,
+      "cost_basis": "metered_openai_api",
+      "cost_index": 7.16,
+      "display_name": "GPT-5.4 Mini",
+      "estimated_cost_usd": 0.172469,
+      "experience_burden_index": 2.03,
+      "failed_items": 0,
+      "model_id": "openai/gpt-5.4-mini",
+      "notes": "Near-frontier quality at materially lower observed artifact cost than the premium models.",
+      "overall_average": 7.3693,
+      "packs_passing": 0,
+      "pareto_frontier": true,
+      "prompt_tokens": 47865,
+      "provider": "openai",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 7.3076,
+        "constraint_checking": 7.1076,
+        "low_risk_summarization": 7.5419,
+        "operational_triage": 6.8261,
+        "portfolio_tradeoff": 8.0008,
+        "pricing_promotion": 6.3379,
+        "routine_planning_recommendation": 6.7273,
+        "structured_extraction": 8.4314
+      },
+      "source_response_file": "reports/eval_packs/openai_gpt_54_mini_responses.json",
+      "source_score_file": "reports/eval_packs/openai_gpt_54_mini_scores.json",
+      "tier": "frontier_model",
+      "total_tokens": 78214
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Efficient mid-tier",
+      "completion_tokens": 65976,
+      "cost_basis": "metered_openai_api",
+      "cost_index": 6.91,
+      "display_name": "GPT-5 Mini",
+      "estimated_cost_usd": 0.143918,
+      "experience_burden_index": 4.41,
+      "failed_items": 0,
+      "model_id": "openai/gpt-5-mini",
+      "notes": "Best cheap paid default for summarization, extraction, and portfolio triage in this run.",
+      "overall_average": 7.0175,
+      "packs_passing": 0,
+      "pareto_frontier": true,
+      "prompt_tokens": 47865,
+      "provider": "openai",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 5.6636,
+        "constraint_checking": 7.7792,
+        "low_risk_summarization": 8.0696,
+        "operational_triage": 4.7072,
+        "portfolio_tradeoff": 8.0774,
+        "pricing_promotion": 5.6587,
+        "routine_planning_recommendation": 6.1939,
+        "structured_extraction": 8.57
+      },
+      "source_response_file": "reports/eval_packs/openai_gpt_5_mini_responses.json",
+      "source_score_file": "reports/eval_packs/openai_gpt_5_mini_scores.json",
+      "tier": "mid_model",
+      "total_tokens": 113841
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Free hosted frontier",
+      "completion_tokens": 149621,
+      "cost_basis": "free_tier_observed",
+      "cost_index": 0.2,
+      "display_name": "Z.ai GLM 4.7",
+      "estimated_cost_usd": 0.0,
+      "experience_burden_index": 10.0,
+      "failed_items": 0,
+      "model_id": "cerebras/zai-glm-4.7",
+      "notes": "Strongest free hosted result; competitive with paid small models on several segments.",
+      "overall_average": 6.8471,
+      "packs_passing": 0,
+      "pareto_frontier": true,
+      "prompt_tokens": 47457,
+      "provider": "cerebras",
+      "reasoning_tokens": 127879,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 7.4038,
+        "constraint_checking": 7.114,
+        "low_risk_summarization": 7.3941,
+        "operational_triage": 5.9011,
+        "portfolio_tradeoff": 7.5106,
+        "pricing_promotion": 5.0314,
+        "routine_planning_recommendation": 5.9394,
+        "structured_extraction": 7.7122
+      },
+      "source_response_file": "reports/eval_packs/cerebras_zai_glm_47_responses.json",
+      "source_score_file": "reports/eval_packs/cerebras_zai_glm_47_scores.json",
+      "tier": "frontier_model",
+      "total_tokens": 197078
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Free hosted frontier",
+      "completion_tokens": 74020,
+      "cost_basis": "free_tier_observed",
+      "cost_index": 0.2,
+      "display_name": "GPT-OSS 120B",
+      "estimated_cost_usd": 0.0,
+      "experience_burden_index": 4.95,
+      "failed_items": 0,
+      "model_id": "cerebras/gpt-oss-120b",
+      "notes": "Strong open model and a good free-capacity comparator.",
+      "overall_average": 5.978,
+      "packs_passing": 0,
+      "pareto_frontier": false,
+      "prompt_tokens": 54265,
+      "provider": "cerebras",
+      "reasoning_tokens": 49568,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 6.5197,
+        "constraint_checking": 5.7614,
+        "low_risk_summarization": 6.779,
+        "operational_triage": 5.1057,
+        "portfolio_tradeoff": 6.772,
+        "pricing_promotion": 3.9955,
+        "routine_planning_recommendation": 5.8788,
+        "structured_extraction": 6.3645
+      },
+      "source_response_file": "reports/eval_packs/cerebras_gpt_oss_120b_responses.json",
+      "source_score_file": "reports/eval_packs/cerebras_gpt_oss_120b_scores.json",
+      "tier": "frontier_model",
+      "total_tokens": 128285
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Small paid model",
+      "completion_tokens": 29140,
+      "cost_basis": "metered_openai_api",
+      "cost_index": 3.77,
+      "display_name": "GPT-5 Nano",
+      "estimated_cost_usd": 0.014049,
+      "experience_burden_index": 1.95,
+      "failed_items": 0,
+      "model_id": "openai/gpt-5-nano",
+      "notes": "Very cheap paid baseline with useful quality for bounded, low-risk workflows.",
+      "overall_average": 5.7188,
+      "packs_passing": 0,
+      "pareto_frontier": true,
+      "prompt_tokens": 47865,
+      "provider": "openai",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 3.5947,
+        "constraint_checking": 6.0966,
+        "low_risk_summarization": 6.6173,
+        "operational_triage": 3.7318,
+        "portfolio_tradeoff": 7.1717,
+        "pricing_promotion": 4.7019,
+        "routine_planning_recommendation": 5.9735,
+        "structured_extraction": 6.7889
+      },
+      "source_response_file": "reports/eval_packs/openai_gpt_5_nano_responses.json",
+      "source_score_file": "reports/eval_packs/openai_gpt_5_nano_scores.json",
+      "tier": "small_model",
+      "total_tokens": 77005
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Free hosted open",
+      "completion_tokens": 71093,
+      "cost_basis": "free_tier_observed",
+      "cost_index": 0.2,
+      "display_name": "Qwen3 32B",
+      "estimated_cost_usd": 0.0,
+      "experience_burden_index": 4.75,
+      "failed_items": 0,
+      "model_id": "groq/qwen/qwen3-32b",
+      "notes": "Best Groq-hosted model in the full-suite run; required higher caps to suppress thinking traces.",
+      "overall_average": 5.6355,
+      "packs_passing": 0,
+      "pareto_frontier": false,
+      "prompt_tokens": 49550,
+      "provider": "groq",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 5.2833,
+        "constraint_checking": 6.342,
+        "low_risk_summarization": 7.1773,
+        "operational_triage": 5.6182,
+        "portfolio_tradeoff": 5.5845,
+        "pricing_promotion": 4.3826,
+        "routine_planning_recommendation": 6.0985,
+        "structured_extraction": 4.4196
+      },
+      "source_response_file": "reports/eval_packs/groq_qwen3_32b_responses.json",
+      "source_score_file": "reports/eval_packs/groq_qwen3_32b_scores.json",
+      "tier": "mid_model",
+      "total_tokens": 120643
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Free hosted open",
+      "completion_tokens": 16197,
+      "cost_basis": "free_tier_observed",
+      "cost_index": 0.2,
+      "display_name": "Llama 4 Scout 17B",
+      "estimated_cost_usd": 0.0,
+      "experience_burden_index": 1.08,
+      "failed_items": 0,
+      "model_id": "groq/meta-llama/llama-4-scout-17b-16e-instruct",
+      "notes": "Efficient hosted baseline, but below the paid OpenAI frontier.",
+      "overall_average": 5.3578,
+      "packs_passing": 0,
+      "pareto_frontier": false,
+      "prompt_tokens": 48164,
+      "provider": "groq",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 3.8068,
+        "constraint_checking": 5.6443,
+        "low_risk_summarization": 6.7423,
+        "operational_triage": 5.4034,
+        "portfolio_tradeoff": 6.0091,
+        "pricing_promotion": 3.3091,
+        "routine_planning_recommendation": 4.9758,
+        "structured_extraction": 5.9133
+      },
+      "source_response_file": "reports/eval_packs/groq_scout_responses.json",
+      "source_score_file": "reports/eval_packs/groq_scout_scores.json",
+      "tier": "mid_model",
+      "total_tokens": 64361
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Small paid model",
+      "completion_tokens": 16010,
+      "cost_basis": "metered_openai_api",
+      "cost_index": 3.47,
+      "display_name": "GPT-4.1 Nano",
+      "estimated_cost_usd": 0.011201,
+      "experience_burden_index": 1.07,
+      "failed_items": 0,
+      "model_id": "openai/gpt-4.1-nano",
+      "notes": "Small direct-OpenAI baseline for low-cost comparisons.",
+      "overall_average": 5.1859,
+      "packs_passing": 0,
+      "pareto_frontier": true,
+      "prompt_tokens": 47965,
+      "provider": "openai",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 5.4356,
+        "constraint_checking": 5.5216,
+        "low_risk_summarization": 6.1035,
+        "operational_triage": 5.1841,
+        "portfolio_tradeoff": 6.4636,
+        "pricing_promotion": 2.5091,
+        "routine_planning_recommendation": 3.7894,
+        "structured_extraction": 5.6997
+      },
+      "source_response_file": "reports/eval_packs/openai_gpt_41_nano_responses.json",
+      "source_score_file": "reports/eval_packs/openai_gpt_41_nano_scores.json",
+      "tier": "small_model",
+      "total_tokens": 63975
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Free hosted open",
+      "completion_tokens": 14089,
+      "cost_basis": "free_tier_observed",
+      "cost_index": 0.2,
+      "display_name": "Llama 3.3 70B",
+      "estimated_cost_usd": 0.0,
+      "experience_burden_index": 0.94,
+      "failed_items": 0,
+      "model_id": "groq/llama-3.3-70b-versatile",
+      "notes": "Large open hosted comparator with solid but not leading quality.",
+      "overall_average": 4.835,
+      "packs_passing": 0,
+      "pareto_frontier": false,
+      "prompt_tokens": 50261,
+      "provider": "groq",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 2.0273,
+        "constraint_checking": 3.9057,
+        "low_risk_summarization": 6.5354,
+        "operational_triage": 5.3125,
+        "portfolio_tradeoff": 5.8927,
+        "pricing_promotion": 3.0943,
+        "routine_planning_recommendation": 3.5682,
+        "structured_extraction": 6.5056
+      },
+      "source_response_file": "reports/eval_packs/groq_llama_33_70b_versatile_responses.json",
+      "source_score_file": "reports/eval_packs/groq_llama_33_70b_versatile_scores.json",
+      "tier": "frontier_model",
+      "total_tokens": 64350
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Local model",
+      "completion_tokens": 80724,
+      "cost_basis": "local_hardware",
+      "cost_index": 0.2,
+      "display_name": "Gemma local",
+      "estimated_cost_usd": 0.0,
+      "experience_burden_index": 5.4,
+      "failed_items": 0,
+      "model_id": "ollama/gemma4:e2b",
+      "notes": "Best local score, but many rows returned empty or parse-invalid content; use only for tightly bounded local experiments.",
+      "overall_average": 3.4145,
+      "packs_passing": 0,
+      "pareto_frontier": true,
+      "prompt_tokens": 57363,
+      "provider": "ollama",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 3.3545,
+        "constraint_checking": 2.1402,
+        "low_risk_summarization": 3.7362,
+        "operational_triage": 3.5648,
+        "portfolio_tradeoff": 3.6309,
+        "pricing_promotion": 1.8917,
+        "routine_planning_recommendation": 2.9591,
+        "structured_extraction": 4.9989
+      },
+      "source_response_file": "reports/eval_packs/ollama_universe_responses.json",
+      "source_score_file": "reports/eval_packs/ollama_universe_scores.json",
+      "tier": "local_model",
+      "total_tokens": 138087
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Local small model",
+      "completion_tokens": 8048,
+      "cost_basis": "local_hardware",
+      "cost_index": 0.2,
+      "display_name": "Llama 3.2 local",
+      "estimated_cost_usd": 0.0,
+      "experience_burden_index": 0.54,
+      "failed_items": 0,
+      "model_id": "ollama/llama3.2:3b",
+      "notes": "Reliable output producer, but materially weaker judgment.",
+      "overall_average": 3.2148,
+      "packs_passing": 0,
+      "pareto_frontier": false,
+      "prompt_tokens": 49261,
+      "provider": "ollama",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 2.4636,
+        "constraint_checking": 3.542,
+        "low_risk_summarization": 3.7838,
+        "operational_triage": 3.7318,
+        "portfolio_tradeoff": 2.5673,
+        "pricing_promotion": 1.7705,
+        "routine_planning_recommendation": 1.9841,
+        "structured_extraction": 4.7354
+      },
+      "source_response_file": "reports/eval_packs/ollama_universe_responses.json",
+      "source_score_file": "reports/eval_packs/ollama_universe_scores.json",
+      "tier": "small_model",
+      "total_tokens": 57309
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "cluster": "Local small model",
+      "completion_tokens": 110202,
+      "cost_basis": "local_hardware",
+      "cost_index": 0.2,
+      "display_name": "LFM local 1.2B",
+      "estimated_cost_usd": 0.0,
+      "experience_burden_index": 7.37,
+      "failed_items": 0,
+      "model_id": "ollama/lfm2.5-thinking:1.2b",
+      "notes": "Tiny local comparator with frequent empty or parse-invalid responses; not attractive for this eval shape.",
+      "overall_average": 2.3328,
+      "packs_passing": 0,
+      "pareto_frontier": false,
+      "prompt_tokens": 54123,
+      "provider": "ollama",
+      "reasoning_tokens": 0,
+      "segment_scores": {
+        "ambiguous_planning_judgment": 2.0091,
+        "constraint_checking": 1.6864,
+        "low_risk_summarization": 2.9962,
+        "operational_triage": 2.2943,
+        "portfolio_tradeoff": 2.3218,
+        "pricing_promotion": 1.7102,
+        "routine_planning_recommendation": 2.3273,
+        "structured_extraction": 2.7353
+      },
+      "source_response_file": "reports/eval_packs/ollama_universe_responses.json",
+      "source_score_file": "reports/eval_packs/ollama_universe_scores.json",
+      "tier": "small_model",
+      "total_tokens": 164325
+    }
+  ],
+  "openai_ladder_cost_usd": 2.4095,
+  "publication_metrics": {
+    "models": [
+      {
+        "clears_proxy_quality_floor": true,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 1.337085,
+        "estimated_cost_per_1000_workflow_calls_usd": 13.3709,
+        "model_id": "openai/gpt-5.5",
+        "overall_average": 7.4614,
+        "pareto_frontier": true,
+        "quality_gap_to_current_leader": 0.0,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 7.3718,
+        "score_per_artifact_dollar": 5.5803,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": true,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.172469,
+        "estimated_cost_per_1000_workflow_calls_usd": 1.7247,
+        "model_id": "openai/gpt-5.4-mini",
+        "overall_average": 7.3693,
+        "pareto_frontier": true,
+        "quality_gap_to_current_leader": 0.0921,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 7.2283,
+        "score_per_artifact_dollar": 42.7283,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": true,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.741982,
+        "estimated_cost_per_1000_workflow_calls_usd": 7.4198,
+        "model_id": "openai/gpt-5.4",
+        "overall_average": 7.3907,
+        "pareto_frontier": true,
+        "quality_gap_to_current_leader": 0.0707,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 7.1874,
+        "score_per_artifact_dollar": 9.9608,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": false,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.0,
+        "estimated_cost_per_1000_workflow_calls_usd": null,
+        "model_id": "cerebras/zai-glm-4.7",
+        "overall_average": 6.8471,
+        "pareto_frontier": true,
+        "quality_gap_to_current_leader": 0.6143,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 6.6584,
+        "score_per_artifact_dollar": null,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": true,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.143918,
+        "estimated_cost_per_1000_workflow_calls_usd": 1.4392,
+        "model_id": "openai/gpt-5-mini",
+        "overall_average": 7.0175,
+        "pareto_frontier": true,
+        "quality_gap_to_current_leader": 0.4439,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 6.6453,
+        "score_per_artifact_dollar": 48.7604,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": false,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.0,
+        "estimated_cost_per_1000_workflow_calls_usd": null,
+        "model_id": "cerebras/gpt-oss-120b",
+        "overall_average": 5.978,
+        "pareto_frontier": false,
+        "quality_gap_to_current_leader": 1.4834,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 5.8128,
+        "score_per_artifact_dollar": null,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": false,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.0,
+        "estimated_cost_per_1000_workflow_calls_usd": null,
+        "model_id": "groq/qwen/qwen3-32b",
+        "overall_average": 5.6355,
+        "pareto_frontier": false,
+        "quality_gap_to_current_leader": 1.8259,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 5.5091,
+        "score_per_artifact_dollar": null,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": false,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.014049,
+        "estimated_cost_per_1000_workflow_calls_usd": 0.1405,
+        "model_id": "openai/gpt-5-nano",
+        "overall_average": 5.7188,
+        "pareto_frontier": true,
+        "quality_gap_to_current_leader": 1.7426,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 5.4273,
+        "score_per_artifact_dollar": 407.061,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": false,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.0,
+        "estimated_cost_per_1000_workflow_calls_usd": null,
+        "model_id": "groq/meta-llama/llama-4-scout-17b-16e-instruct",
+        "overall_average": 5.3578,
+        "pareto_frontier": false,
+        "quality_gap_to_current_leader": 2.1036,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 5.0503,
+        "score_per_artifact_dollar": null,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": false,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.011201,
+        "estimated_cost_per_1000_workflow_calls_usd": 0.112,
+        "model_id": "openai/gpt-4.1-nano",
+        "overall_average": 5.1859,
+        "pareto_frontier": true,
+        "quality_gap_to_current_leader": 2.2755,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 5.0006,
+        "score_per_artifact_dollar": 462.9854,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": false,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.0,
+        "estimated_cost_per_1000_workflow_calls_usd": null,
+        "model_id": "groq/llama-3.3-70b-versatile",
+        "overall_average": 4.835,
+        "pareto_frontier": false,
+        "quality_gap_to_current_leader": 2.6264,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 4.4095,
+        "score_per_artifact_dollar": null,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": false,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.0,
+        "estimated_cost_per_1000_workflow_calls_usd": null,
+        "model_id": "ollama/gemma4:e2b",
+        "overall_average": 3.4145,
+        "pareto_frontier": true,
+        "quality_gap_to_current_leader": 4.0469,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 3.1942,
+        "score_per_artifact_dollar": null,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": false,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.0,
+        "estimated_cost_per_1000_workflow_calls_usd": null,
+        "model_id": "ollama/llama3.2:3b",
+        "overall_average": 3.2148,
+        "pareto_frontier": false,
+        "quality_gap_to_current_leader": 4.2466,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 2.8997,
+        "score_per_artifact_dollar": null,
+        "stored_response_runs": 1
+      },
+      {
+        "clears_proxy_quality_floor": false,
+        "coverage": "100/100",
+        "estimated_artifact_cost_usd": 0.0,
+        "estimated_cost_per_1000_workflow_calls_usd": null,
+        "model_id": "ollama/lfm2.5-thinking:1.2b",
+        "overall_average": 2.3328,
+        "pareto_frontier": false,
+        "quality_gap_to_current_leader": 5.1286,
+        "repeated_run_status": "single_run_only",
+        "risk_weighted_average": 2.1933,
+        "score_per_artifact_dollar": null,
+        "stored_response_runs": 1
+      }
+    ],
+    "quality_floor": 7.0,
+    "segment_weights": {
+      "ambiguous_planning_judgment": 1.6,
+      "constraint_checking": 1.1,
+      "low_risk_summarization": 0.8,
+      "operational_triage": 1.5,
+      "portfolio_tradeoff": 1.8,
+      "pricing_promotion": 1.7,
+      "routine_planning_recommendation": 1.2,
+      "structured_extraction": 0.9
+    },
+    "status": "Offline metrics from stored artifacts. Repeated-run variance is planned but not yet measured.",
+    "version": "0.1"
+  },
+  "sanity_baselines": [
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "model_id": "baseline/source_echo",
+      "overall_average": 3.353,
+      "packs_passing": 0,
+      "source_file": "reports/eval_packs/baseline_scores.json"
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "model_id": "baseline/keyword_guardrail",
+      "overall_average": 4.328,
+      "packs_passing": 0,
+      "source_file": "reports/eval_packs/baseline_scores.json"
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "model_id": "baseline/generic_consultant",
+      "overall_average": 3.3424,
+      "packs_passing": 0,
+      "source_file": "reports/eval_packs/baseline_scores.json"
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "model_id": "baseline/always_escalate",
+      "overall_average": 4.0504,
+      "packs_passing": 0,
+      "source_file": "reports/eval_packs/baseline_scores.json"
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "model_id": "baseline/always_buy_chase",
+      "overall_average": 3.5574,
+      "packs_passing": 0,
+      "source_file": "reports/eval_packs/baseline_scores.json"
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "model_id": "baseline/always_conservative",
+      "overall_average": 3.1884,
+      "packs_passing": 0,
+      "source_file": "reports/eval_packs/baseline_scores.json"
+    },
+    {
+      "attempted_items": 100,
+      "available_items": 100,
+      "model_id": "baseline/arithmetic_only",
+      "overall_average": 3.7469,
+      "packs_passing": 0,
+      "source_file": "reports/eval_packs/baseline_scores.json"
+    }
+  ],
+  "schema_version": "1.0",
+  "segment_summaries": [
+    {
+      "controls": "Source citation, numeric preservation, no-recommendation boundary check.",
+      "default_route": "GPT-5 Mini for paid production; GPT-OSS 120B when free hosted quota is available.",
+      "economic_pick": {
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini",
+        "score": 8.0696
+      },
+      "human_review": "No, unless the summary becomes a decision recommendation or contains conflicting financial figures.",
+      "label": "Summarization",
+      "quality_leader": {
+        "cost_basis": "metered_openai_api",
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini",
+        "score": 8.0696
+      },
+      "segment_id": "low_risk_summarization",
+      "top_models": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 8.0696
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 7.5713
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 7.5419
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 7.3941
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Qwen3 32B",
+          "estimated_cost_usd": 0.0,
+          "model_id": "groq/qwen/qwen3-32b",
+          "score": 7.1773
+        }
+      ],
+      "why": "GPT-5 Mini leads the full-suite readout at 8.0696/10 and remains inexpensive in the paid ladder."
+    },
+    {
+      "controls": "Schema validation, required-field checks, range checks, conflict detection.",
+      "default_route": "Rules/schema first, GPT-5 Mini fallback for messy source text.",
+      "economic_pick": {
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini",
+        "score": 8.57
+      },
+      "human_review": "Only for material missing values or field conflicts.",
+      "label": "Extraction",
+      "quality_leader": {
+        "cost_basis": "metered_openai_api",
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini",
+        "score": 8.57
+      },
+      "segment_id": "structured_extraction",
+      "top_models": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 8.57
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 8.4314
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 8.3748
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 8.0848
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 7.7122
+        }
+      ],
+      "why": "GPT-5 Mini leads at 8.5700/10; structured extraction still needs deterministic validation."
+    },
+    {
+      "controls": "OTB, MOQ, pack multiple, margin floor, capacity, and compliance gates.",
+      "default_route": "Deterministic checks first; GPT-5.4 for high-severity explanation, GPT-5 Mini for cheaper routine triage.",
+      "economic_pick": {
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini",
+        "score": 7.7792
+      },
+      "human_review": "Required when a violated constraint is overridden.",
+      "label": "Constraint checks",
+      "quality_leader": {
+        "cost_basis": "metered_openai_api",
+        "display_name": "GPT-5.4",
+        "estimated_cost_usd": 0.741982,
+        "model_id": "openai/gpt-5.4",
+        "score": 8.2879
+      },
+      "segment_id": "constraint_checking",
+      "top_models": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 8.2879
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 7.8349
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 7.7792
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 7.114
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 7.1076
+        }
+      ],
+      "why": "GPT-5.4 leads at 8.2879/10, while GPT-5 Mini remains the lower-cost paid option at 7.7792/10."
+    },
+    {
+      "controls": "Inventory cover, margin, pack, timing, and stockout-censoring checks.",
+      "default_route": "GPT-5.4 Mini with deterministic guardrails; escalate low-confidence recommendations.",
+      "economic_pick": {
+        "display_name": "GPT-5.4 Mini",
+        "estimated_cost_usd": 0.172469,
+        "model_id": "openai/gpt-5.4-mini",
+        "score": 6.7273
+      },
+      "human_review": "Only for high inventory value, low confidence, or irreversible actions.",
+      "label": "Routine planning",
+      "quality_leader": {
+        "cost_basis": "metered_openai_api",
+        "display_name": "GPT-5.4",
+        "estimated_cost_usd": 0.741982,
+        "model_id": "openai/gpt-5.4",
+        "score": 6.9939
+      },
+      "segment_id": "routine_planning_recommendation",
+      "top_models": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 6.9939
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 6.9939
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 6.7273
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 6.1939
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Qwen3 32B",
+          "estimated_cost_usd": 0.0,
+          "model_id": "groq/qwen/qwen3-32b",
+          "score": 6.0985
+        }
+      ],
+      "why": "GPT-5.5 and GPT-5.4 tie for the lead at 6.9939/10, which is below the proxy autonomy floor; GPT-5.4 Mini is the cheaper near-frontier option."
+    },
+    {
+      "controls": "Margin floor, vendor funding, inventory cover, pull-forward, and competitor response checks.",
+      "default_route": "GPT-5.5 or GPT-5.4 with margin and vendor-funding controls; human review for material decisions.",
+      "economic_pick": {
+        "display_name": "GPT-5.4",
+        "estimated_cost_usd": 0.741982,
+        "model_id": "openai/gpt-5.4",
+        "score": 6.4629
+      },
+      "human_review": "Yes for material price moves, below-floor margin, or high competitive-response uncertainty.",
+      "label": "Pricing & promo",
+      "quality_leader": {
+        "cost_basis": "metered_openai_api",
+        "display_name": "GPT-5.5",
+        "estimated_cost_usd": 1.337085,
+        "model_id": "openai/gpt-5.5",
+        "score": 6.778
+      },
+      "segment_id": "pricing_promotion",
+      "top_models": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 6.778
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 6.4629
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 6.3379
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 5.6587
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 5.0314
+        }
+      ],
+      "why": "GPT-5.5 leads pricing/promotion at 6.7780/10, but no model clears the 7.0 proxy autonomy floor."
+    },
+    {
+      "controls": "Evidence contamination, OTB, lead time, margin, opportunity cost, and confidence gates.",
+      "default_route": "GPT-5.4 for ambiguous judgment; GPT-5.4 Mini when the decision is reversible and well-guardrailed.",
+      "economic_pick": {
+        "display_name": "GPT-5.4 Mini",
+        "estimated_cost_usd": 0.172469,
+        "model_id": "openai/gpt-5.4-mini",
+        "score": 7.3076
+      },
+      "human_review": "Recommended for vendor commitments, high markdown risk, or executive-pressure cases.",
+      "label": "Ambiguous judgment",
+      "quality_leader": {
+        "cost_basis": "metered_openai_api",
+        "display_name": "GPT-5.4",
+        "estimated_cost_usd": 0.741982,
+        "model_id": "openai/gpt-5.4",
+        "score": 8.5311
+      },
+      "segment_id": "ambiguous_planning_judgment",
+      "top_models": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 8.5311
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 7.7152
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 7.4038
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 7.3076
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "GPT-OSS 120B",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/gpt-oss-120b",
+          "score": 6.5197
+        }
+      ],
+      "why": "GPT-5.4 leads at 8.5311/10; GPT-5.5 is second at 7.7152/10 and Z.ai GLM 4.7 is the strongest free hosted comparator at 7.4038/10."
+    },
+    {
+      "controls": "Portfolio OTB, opportunity cost, receiving capacity, leadership override, and customer-trust gates.",
+      "default_route": "GPT-5 Mini or GPT-5.4 Mini plus human review.",
+      "economic_pick": {
+        "display_name": "GPT-5.4 Mini",
+        "estimated_cost_usd": 0.172469,
+        "model_id": "openai/gpt-5.4-mini",
+        "score": 8.0008
+      },
+      "human_review": "Yes. This should not be fully autonomous in the current evidence base.",
+      "label": "Portfolio tradeoff",
+      "quality_leader": {
+        "cost_basis": "metered_openai_api",
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini",
+        "score": 8.0774
+      },
+      "segment_id": "portfolio_tradeoff",
+      "top_models": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 8.0774
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 8.0008
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 7.5106
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Nano",
+          "estimated_cost_usd": 0.014049,
+          "model_id": "openai/gpt-5-nano",
+          "score": 7.1717
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 7.097
+        }
+      ],
+      "why": "GPT-5 Mini narrowly leads at 8.0774/10, with GPT-5.4 Mini close at 8.0008/10; cross-category OTB decisions remain high-downside."
+    },
+    {
+      "controls": "Safety, labor capacity, service-level, compliance, and owner-routing checks.",
+      "default_route": "GPT-5.4 Mini for normal exceptions; GPT-5.5 or human review for safety/customer-trust risk.",
+      "economic_pick": {
+        "display_name": "GPT-5.4 Mini",
+        "estimated_cost_usd": 0.172469,
+        "model_id": "openai/gpt-5.4-mini",
+        "score": 6.8261
+      },
+      "human_review": "Yes when safety, legal, public commitment, or customer-trust exposure appears.",
+      "label": "Ops triage",
+      "quality_leader": {
+        "cost_basis": "metered_openai_api",
+        "display_name": "GPT-5.5",
+        "estimated_cost_usd": 1.337085,
+        "model_id": "openai/gpt-5.5",
+        "score": 7.5235
+      },
+      "segment_id": "operational_triage",
+      "top_models": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 7.5235
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 7.2776
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 6.8261
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 5.9011
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Qwen3 32B",
+          "estimated_cost_usd": 0.0,
+          "model_id": "groq/qwen/qwen3-32b",
+          "score": 5.6182
+        }
+      ],
+      "why": "GPT-5.5 leads at 7.5235/10; GPT-5.4 remains close at 7.2776/10, and GPT-5.4 Mini is the cheaper near-frontier option at 6.8261/10."
+    }
+  ],
+  "status": "Evidence package: 100 segment eval items, stored model panel covers 100/100 items, automated scorer with human-calibration caveats.",
+  "subtitle": "A real-results guide for choosing economically sufficient model tiers across retail planning workflows.",
+  "title": "MerchBench Retail AI Model Routing Atlas"
+}

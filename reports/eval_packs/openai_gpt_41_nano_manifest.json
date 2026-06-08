@@ -1,0 +1,17 @@
+{
+  "provider": "openai",
+  "started_at_utc": "2026-06-07T05:22:35.241623+00:00",
+  "completed_at_utc": "2026-06-07T16:34:35.939011+00:00",
+  "stop_reason": null,
+  "total": 100,
+  "ok": 100,
+  "failed": 0,
+  "by_model": {
+    "openai/gpt-4.1-nano": {
+      "provider_model_id": "gpt-4.1-nano",
+      "total": 100,
+      "ok": 100,
+      "failed": 0
+    }
+  }
+}

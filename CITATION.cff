@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use Retail MerchBench, please cite this repository."
+title: "Retail MerchBench: A Retail AI Model-Routing Benchmark for Merchandise Planning"
+authors:
+  - family-names: "Parekh"
+    given-names: "Nirav"
+repository-code: "https://github.com/Novice-ninja/retail-merchbench"
+abstract: "Retail MerchBench evaluates language-model judgment and economic model-routing choices for retail merchandise-planning workflows under ambiguity, operational constraints, causal uncertainty, and business risk."
+keywords:
+  - "benchmark"
+  - "language models"
+  - "retail"
+  - "merchandise planning"
+  - "model routing"
+  - "evaluation"
+license: "MIT AND CC-BY-4.0"

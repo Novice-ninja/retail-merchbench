@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Retail MerchBench Atlas</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      --ink: #18221e;
+      --muted: #64706b;
+      --paper: #f5f1e8;
+      --panel: #fffdf8;
+      --line: #d9d4c8;
+      --teal: #1f776f;
+      --blue: #2e5575;
+      --gold: #c08b2c;
+      --clay: #b95f45;
+      --green: #769b7d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+    header {
+      min-height: 92vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr);
+      gap: clamp(24px, 5vw, 70px);
+      align-items: center;
+      padding: clamp(28px, 6vw, 76px);
+      background:
+        linear-gradient(120deg, rgba(255,253,248,.96), rgba(255,253,248,.72)),
+        radial-gradient(circle at 15% 20%, rgba(31,119,111,.16), transparent 34%),
+        linear-gradient(135deg, #f8f2e4, #e8eadf);
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      color: var(--teal);
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 13px;
+    }
+    h1 {
+      margin: 18px 0 18px;
+      max-width: 920px;
+      font-size: clamp(48px, 7vw, 96px);
+      line-height: .95;
+      letter-spacing: 0;
+    }
+    .lede {
+      max-width: 760px;
+      color: var(--muted);
+      font-size: clamp(18px, 2vw, 25px);
+      margin: 0 0 28px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 760px;
+    }
+    .stat, .panel, .model-card {
+      background: rgba(255,253,248,.94);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 18px 60px rgba(54,45,31,.08);
+    }
+    .stat { padding: 15px; }
+    .stat span, .kicker, th {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .stat strong { display: block; margin-top: 8px; font-size: 25px; }
+    .hero-panel { padding: 20px; }
+    .hero-panel h2 { margin: 0 0 14px; font-size: 27px; letter-spacing: 0; }
+    .decision-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .decision-list li {
+      display: flex;
+      gap: 10px;
+      align-items: start;
+      color: var(--muted);
+    }
+    .decision-list li::before {
+      content: "";
+      flex: 0 0 8px;
+      width: 8px;
+      height: 8px;
+      margin-top: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+    main { padding: 36px clamp(18px, 5vw, 72px) 78px; }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin: 42px 0 18px;
+    }
+    .section-head h2 { margin: 0; font-size: clamp(30px, 4vw, 52px); letter-spacing: 0; }
+    .section-head p { max-width: 720px; margin: 0; color: var(--muted); }
+    .visual-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .visual {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+    .panel { padding: 20px; }
+    .findings { margin: 0; padding-left: 21px; }
+    .findings li { margin-bottom: 12px; }
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 13px;
+    }
+    .model-card { padding: 17px; }
+    .model-card h3 { margin: 10px 0 8px; font-size: 23px; letter-spacing: 0; }
+    .score { font-size: 42px; font-weight: 850; color: var(--teal); }
+    .score span { font-size: 18px; color: var(--muted); }
+    .model-card p { color: var(--muted); min-height: 68px; }
+    dl { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin: 14px 0 0; }
+    dt { color: var(--muted); font-size: 12px; }
+    dd { margin: 0; font-weight: 700; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td { padding: 13px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #efe7d6; }
+    td span { color: var(--muted); font-size: 12px; }
+    .table-scroll { overflow-x: auto; border-radius: 8px; }
+    .table-scroll table { min-width: 980px; }
+    .callout {
+      border-left: 5px solid var(--gold);
+      background: rgba(192,139,44,.13);
+      padding: 18px 20px;
+      border-radius: 8px;
+      color: #5e4b24;
+    }
+    @media (max-width: 1080px) {
+      header, .visual-grid { grid-template-columns: 1fr; }
+      .model-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 680px) {
+      header { min-height: auto; padding: 20px; gap: 18px; }
+      .hero-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .stat { padding: 10px; }
+      .stat strong { font-size: 20px; }
+      .hero-panel { padding: 14px; }
+      .decision-list li { font-size: 15px; line-height: 1.35; }
+      .model-grid { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      dl { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="eyebrow">Retail MerchBench · Retail AI Model Routing Atlas</div>
+      <h1>The model choice is an economic decision.</h1>
+      <p class="lede">A visual and written routing guide for choosing the cheapest safe model tier across retail planning workflows.</p>
+      <div class="hero-grid" aria-label="Retail MerchBench evidence summary">
+        <div class="stat"><span>Corpus</span><strong>100 items</strong></div>
+        <div class="stat"><span>Ranked panel</span><strong>14 models</strong></div>
+        <div class="stat"><span>Coverage</span><strong>100/100</strong></div>
+      </div>
+    </div>
+    <aside class="panel hero-panel">
+      <h2>Retail MerchBench answer</h2>
+      <ul class="decision-list">
+        <li><strong>GPT-5.4 Mini</strong>: broad default, 7.3693/10, $0.1725 artifact cost.</li>
+        <li><strong>GPT-5.5</strong>: premium quality anchor, 7.4614/10.</li>
+        <li><strong>GPT-5 Mini</strong>: cheap paid specialist for clerical fidelity and portfolio triage.</li>
+        <li><strong>Human review</strong>: keep for pricing, portfolio, and high-risk operations.</li>
+      </ul>
+    </aside>
+  </header>
+
+  <main>
+    <section>
+      <div class="section-head">
+        <h2>Frontier Map</h2>
+        <p>Quality, cost, and response burden separate model clusters more usefully than a one-dimensional leaderboard.</p>
+      </div>
+      <div class="visual-grid">
+        <img class="visual" src="model_frontier.svg" alt="Quality-cost frontier scatter plot">
+        <div class="panel">
+          <ol class="findings"><li>Retail MerchBench contains 100 segment eval items, and the curated provider panel has 100/100 scored coverage for 14 real models plus deterministic baselines.</li>
+<li>GPT-5.5 is the overall leader at 7.4614/10, followed by GPT-5.4 at 7.3907/10 and GPT-5.4 Mini at 7.3693/10.</li>
+<li>GPT-5.4 Mini is the economic frontier result: it lands within 0.0921 points of GPT-5.5 at about 13 percent of the observed artifact cost.</li>
+<li>GPT-5 Mini is the best cheap paid specialist for summarization, structured extraction, and portfolio tradeoff.</li>
+<li>Z.ai GLM 4.7 is the strongest free hosted result at 6.8471/10, clearly ahead of GPT-OSS 120B, Groq-hosted open models, and local Ollama models in this run.</li>
+<li>The anti-echo scorer rejects shallow deterministic baselines: source echo scores 3.3530 and keyword guardrail stuffing scores 4.3280 on the 100-item corpus.</li>
+<li>Pricing/promotion and routine planning remain below the 7.0 proxy autonomy floor even for the strongest models; these workflows need deterministic controls and human review.</li></ol>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Segment 2x2 Grid</h2>
+        <p>Each retail workflow has its own routing geometry. Black rings identify economic picks; star markers identify quality leaders.</p>
+      </div>
+      <img class="visual" src="segment_quadrants.svg" alt="Grid of segment-level cost versus quality quadrants">
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Routing Ladder</h2>
+        <p>This translates model scores into the operating model: rules, small models, mini models, efficient frontier, premium escalation, and human review.</p>
+      </div>
+      <img class="visual" src="routing_ladder.svg" alt="Model-tier routing ladder by retail segment">
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Economic Regret</h2>
+        <p>The regret chart shows how much quality is given up when the economic pick is cheaper than the quality leader.</p>
+      </div>
+      <img class="visual" src="economic_regret.svg" alt="Economic regret bar chart by retail segment">
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Leaders And Defaults</h2>
+        <p>The premium winner is not always the right economic choice. Retail MerchBench separates quality anchors from routing defaults.</p>
+      </div>
+      <div class="model-grid">
+            <article class="model-card">
+              <div class="kicker">Premium frontier</div>
+              <h3>GPT-5.5</h3>
+              <div class="score">7.4614<span>/10</span></div>
+              <p>Overall quality leader in the 100-item run; best reserved for high-downside exceptions.</p>
+              <dl>
+                <dt>Risk weighted</dt><dd>7.3718/10</dd>
+                <dt>Artifact cost</dt><dd>$1.3371</dd>
+                <dt>Coverage</dt><dd>100/100</dd>
+              </dl>
+            </article>
+
+
+            <article class="model-card">
+              <div class="kicker">Frontier proprietary</div>
+              <h3>GPT-5.4</h3>
+              <div class="score">7.3907<span>/10</span></div>
+              <p>Near-top overall quality and the strongest ambiguous-judgment/constraint-checking profile.</p>
+              <dl>
+                <dt>Risk weighted</dt><dd>7.1874/10</dd>
+                <dt>Artifact cost</dt><dd>$0.7420</dd>
+                <dt>Coverage</dt><dd>100/100</dd>
+              </dl>
+            </article>
+
+
+            <article class="model-card">
+              <div class="kicker">Efficient frontier</div>
+              <h3>GPT-5.4 Mini</h3>
+              <div class="score">7.3693<span>/10</span></div>
+              <p>Near-frontier quality at materially lower observed artifact cost than the premium models.</p>
+              <dl>
+                <dt>Risk weighted</dt><dd>7.2283/10</dd>
+                <dt>Artifact cost</dt><dd>$0.1725</dd>
+                <dt>Coverage</dt><dd>100/100</dd>
+              </dl>
+            </article>
+
+
+            <article class="model-card">
+              <div class="kicker">Efficient mid-tier</div>
+              <h3>GPT-5 Mini</h3>
+              <div class="score">7.0175<span>/10</span></div>
+              <p>Best cheap paid default for summarization, extraction, and portfolio triage in this run.</p>
+              <dl>
+                <dt>Risk weighted</dt><dd>6.6453/10</dd>
+                <dt>Artifact cost</dt><dd>$0.1439</dd>
+                <dt>Coverage</dt><dd>100/100</dd>
+              </dl>
+            </article>
+
+
+            <article class="model-card">
+              <div class="kicker">Free hosted frontier</div>
+              <h3>Z.ai GLM 4.7</h3>
+              <div class="score">6.8471<span>/10</span></div>
+              <p>Strongest free hosted result; competitive with paid small models on several segments.</p>
+              <dl>
+                <dt>Risk weighted</dt><dd>6.6584/10</dd>
+                <dt>Artifact cost</dt><dd>$0</dd>
+                <dt>Coverage</dt><dd>100/100</dd>
+              </dl>
+            </article>
+
+
+            <article class="model-card">
+              <div class="kicker">Free hosted frontier</div>
+              <h3>GPT-OSS 120B</h3>
+              <div class="score">5.978<span>/10</span></div>
+              <p>Strong open model and a good free-capacity comparator.</p>
+              <dl>
+                <dt>Risk weighted</dt><dd>5.8128/10</dd>
+                <dt>Artifact cost</dt><dd>$0</dd>
+                <dt>Coverage</dt><dd>100/100</dd>
+              </dl>
+            </article>
+            </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Segment Heatmap</h2>
+        <p>Retail task class changes the answer. The same model is not optimal for extraction, pricing, portfolio tradeoff, and operational triage.</p>
+      </div>
+      <img class="visual" src="segment_heatmap.svg" alt="OpenAI model performance heatmap by retail segment">
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Routing Matrix</h2>
+        <p>Recommended quality leader, economic pick, and human-review boundary by segment.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Segment</th>
+              <th>Quality Leader</th>
+              <th>Economic Pick</th>
+              <th>Default Route</th>
+              <th>Human Review</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Summarization</strong></td>
+              <td>GPT-5 Mini<br><span>8.0696/10</span></td>
+              <td>GPT-5 Mini<br><span>8.0696/10</span></td>
+              <td>GPT-5 Mini for paid production; GPT-OSS 120B when free hosted quota is available.</td>
+              <td>No, unless the summary becomes a decision recommendation or contains conflicting financial figures.</td>
+            </tr>
+
+
+            <tr>
+              <td><strong>Extraction</strong></td>
+              <td>GPT-5 Mini<br><span>8.57/10</span></td>
+              <td>GPT-5 Mini<br><span>8.57/10</span></td>
+              <td>Rules/schema first, GPT-5 Mini fallback for messy source text.</td>
+              <td>Only for material missing values or field conflicts.</td>
+            </tr>
+
+
+            <tr>
+              <td><strong>Constraint checks</strong></td>
+              <td>GPT-5.4<br><span>8.2879/10</span></td>
+              <td>GPT-5 Mini<br><span>7.7792/10</span></td>
+              <td>Deterministic checks first; GPT-5.4 for high-severity explanation, GPT-5 Mini for cheaper routine triage.</td>
+              <td>Required when a violated constraint is overridden.</td>
+            </tr>
+
+
+            <tr>
+              <td><strong>Routine planning</strong></td>
+              <td>GPT-5.4<br><span>6.9939/10</span></td>
+              <td>GPT-5.4 Mini<br><span>6.7273/10</span></td>
+              <td>GPT-5.4 Mini with deterministic guardrails; escalate low-confidence recommendations.</td>
+              <td>Only for high inventory value, low confidence, or irreversible actions.</td>
+            </tr>
+
+
+            <tr>
+              <td><strong>Pricing &amp; promo</strong></td>
+              <td>GPT-5.5<br><span>6.778/10</span></td>
+              <td>GPT-5.4<br><span>6.4629/10</span></td>
+              <td>GPT-5.5 or GPT-5.4 with margin and vendor-funding controls; human review for material decisions.</td>
+              <td>Yes for material price moves, below-floor margin, or high competitive-response uncertainty.</td>
+            </tr>
+
+
+            <tr>
+              <td><strong>Ambiguous judgment</strong></td>
+              <td>GPT-5.4<br><span>8.5311/10</span></td>
+              <td>GPT-5.4 Mini<br><span>7.3076/10</span></td>
+              <td>GPT-5.4 for ambiguous judgment; GPT-5.4 Mini when the decision is reversible and well-guardrailed.</td>
+              <td>Recommended for vendor commitments, high markdown risk, or executive-pressure cases.</td>
+            </tr>
+
+
+            <tr>
+              <td><strong>Portfolio tradeoff</strong></td>
+              <td>GPT-5 Mini<br><span>8.0774/10</span></td>
+              <td>GPT-5.4 Mini<br><span>8.0008/10</span></td>
+              <td>GPT-5 Mini or GPT-5.4 Mini plus human review.</td>
+              <td>Yes. This should not be fully autonomous in the current evidence base.</td>
+            </tr>
+
+
+            <tr>
+              <td><strong>Ops triage</strong></td>
+              <td>GPT-5.5<br><span>7.5235/10</span></td>
+              <td>GPT-5.4 Mini<br><span>6.8261/10</span></td>
+              <td>GPT-5.4 Mini for normal exceptions; GPT-5.5 or human review for safety/customer-trust risk.</td>
+              <td>Yes when safety, legal, public commitment, or customer-trust exposure appears.</td>
+            </tr>
+            </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Validity Boundary</h2>
+        <p>Retail MerchBench is a routing-prior artifact, not a final human-validated benchmark ranking.</p>
+      </div>
+      <div class="callout">
+        Scores are automated routing diagnostics. Human-rater calibration, repeated-run variance, production latency, retry behavior, caching, and provider price-plan normalization remain open before external benchmark claims should be treated as final.
+      </div>
+    </section>
+  </main>
+</body>
+</html>

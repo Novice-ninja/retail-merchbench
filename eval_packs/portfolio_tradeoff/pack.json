@@ -1,0 +1,929 @@
+{
+  "id": "portfolio_tradeoff_v0",
+  "version": "0.1",
+  "task_segment": "portfolio_tradeoff",
+  "purpose": "Evaluate frontier plus human-review workflows for cross-category retail allocation decisions where opportunity cost, executive pressure, irreversible commitments, and downside asymmetry make a single-model autonomous answer inappropriate.",
+  "recommended_strategy_under_test": "frontier_plus_human_review",
+  "quality_floor": {
+    "minimum_average_score": 9,
+    "minimum_item_score": 8,
+    "must_pass_items": 3,
+    "dimension_floor": {
+      "portfolio_reasoning": 0.9,
+      "opportunity_cost": 0.85,
+      "human_review_boundary": 0.9
+    }
+  },
+  "design_principles": [
+    "Require explicit opportunity-cost reasoning across categories.",
+    "Treat human review as part of the correct workflow, not model weakness.",
+    "Include executive pressure and conflicting source values.",
+    "Reward quantified allocation bands rather than single-point false precision.",
+    "Penalize recommendations that spend scarce OTB twice."
+  ],
+  "coverage": {
+    "retail_functions": [
+      "portfolio_otb",
+      "assortment_planning",
+      "vendor_supply",
+      "external_shock_response"
+    ],
+    "categories": [
+      "multi_category",
+      "beauty",
+      "apparel",
+      "grocery",
+      "electronics"
+    ],
+    "ambiguity_sources": [
+      "conflicting OTB figures",
+      "executive override pressure",
+      "multi-category demand timing",
+      "vendor funding with hidden exclusions",
+      "customer trust versus margin tradeoff"
+    ],
+    "externalities": [
+      "flu wave",
+      "viral toy trend",
+      "cold-weather forecast",
+      "competitor promo"
+    ],
+    "escalation_patterns": [
+      "irreversible commitment",
+      "500k plus allocation",
+      "leadership override",
+      "multi-category opportunity cost"
+    ]
+  },
+  "output_contract": {
+    "response_format": "json",
+    "required_fields": [
+      "decision_frame",
+      "recommended_allocation",
+      "opportunity_costs",
+      "constraints",
+      "human_review_required",
+      "review_questions"
+    ],
+    "forbidden_behaviors": [
+      "allocate more OTB than available",
+      "ignore conflicting source values",
+      "satisfy executive preference without tradeoff analysis",
+      "omit human review for irreversible high-value commitments"
+    ]
+  },
+  "scoring": {
+    "total_points_per_item": 10,
+    "dimensions": {
+      "portfolio_reasoning": {
+        "points": 3,
+        "criteria": [
+          "Frames the decision across categories, not as isolated wins.",
+          "Uses timing, margin, and demand differences across options.",
+          "Identifies dominated or unsafe allocations."
+        ]
+      },
+      "opportunity_cost": {
+        "points": 2,
+        "criteria": [
+          "Quantifies or clearly explains what each allocation displaces.",
+          "Preserves scarce OTB, capacity, or labor constraints."
+        ]
+      },
+      "recommendation_quality": {
+        "points": 2,
+        "criteria": [
+          "Provides a defensible allocation band or staged decision.",
+          "Avoids false precision and overcommitment."
+        ]
+      },
+      "human_review_boundary": {
+        "points": 2,
+        "criteria": [
+          "Requires human review for material or irreversible commitments.",
+          "Names the questions humans must resolve."
+        ]
+      },
+      "evidence_quality": {
+        "points": 1,
+        "criteria": [
+          "Flags conflicting or contaminated evidence."
+        ]
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "por_001",
+      "title": "Holiday OTB Three-Way Allocation",
+      "difficulty": "hard",
+      "retail_function": "portfolio_otb",
+      "category": "multi_category",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "facts": "Remaining holiday OTB is either $2.4M per finance or $2.1M per VP comment. Beauty asks $650k for gift sets with vendor support, toys asks $900k for viral plush, and outerwear needs $500k by next Friday to avoid cold-store stockouts. Leadership wants all three approved."
+      },
+      "question": "Frame the portfolio decision and recommend a review-ready allocation posture.",
+      "expected_output": {
+        "decision_frame": "resolve OTB source conflict before final approval",
+        "recommended_allocation": "protect outerwear need, condition beauty on vendor funding, cap or stage toy viral buy",
+        "human_review_required": true,
+        "review_questions": [
+          "confirm $2.4M versus $2.1M OTB",
+          "validate toy conversion",
+          "confirm beauty funding terms"
+        ]
+      },
+      "must_include": [
+        "$2.4M versus $2.1M conflict",
+        "$650k beauty",
+        "$900k toys",
+        "$500k outerwear",
+        "human review required"
+      ],
+      "must_not_include": [
+        "approve all three without resolving OTB",
+        "ignore outerwear timing",
+        "treat viral plush as guaranteed demand"
+      ],
+      "deterministic_checks": [
+        "OTB conflict check",
+        "allocation sum check",
+        "timing criticality check"
+      ],
+      "escalation_triggers": [
+        "conflicting OTB values",
+        "500k plus allocation",
+        "leadership override pressure"
+      ],
+      "scoring_focus": [
+        "portfolio frame",
+        "opportunity cost",
+        "human review boundary"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "OTB conflict check",
+        "allocation sum check",
+        "timing criticality check"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    },
+    {
+      "id": "por_002",
+      "title": "Flu Wave Humidifier Versus Beauty Funding",
+      "difficulty": "hard",
+      "retail_function": "external_shock_response",
+      "category": "health_home",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "facts": "Regional flu cases rose 32 percent. Humidifiers need $700k to pull forward receipts with low margin but customer trust impact. Beauty holiday sets ask $800k with high margin and vendor marketing support. OTB available is $1.1M. DC receiving can handle only one accelerated inbound this week."
+      },
+      "question": "Recommend an allocation posture and escalation plan.",
+      "expected_output": {
+        "decision_frame": "customer trust and receiving capacity make this a portfolio tradeoff",
+        "recommended_allocation": "fund humidifier pull-forward first or reserve majority for it; condition beauty on delayed or partial funding",
+        "human_review_required": true,
+        "opportunity_costs": [
+          "beauty margin displaced by health-demand service risk",
+          "DC receiving capacity blocks simultaneous acceleration"
+        ]
+      },
+      "must_include": [
+        "32 percent flu rise",
+        "$700k humidifier need",
+        "$800k beauty ask",
+        "$1.1M OTB",
+        "one accelerated inbound"
+      ],
+      "must_not_include": [
+        "approve both full asks",
+        "ignore DC receiving capacity",
+        "optimize only for margin"
+      ],
+      "deterministic_checks": [
+        "OTB sum check",
+        "receiving capacity check",
+        "service risk flag"
+      ],
+      "escalation_triggers": [
+        "health-related customer trust risk",
+        "receiving capacity bottleneck"
+      ],
+      "scoring_focus": [
+        "trust versus margin",
+        "capacity constraint",
+        "review posture"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "OTB sum check",
+        "receiving capacity check",
+        "service risk flag"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    },
+    {
+      "id": "por_003",
+      "title": "Vendor Funding Across Coffee and Snacks",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "grocery",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "facts": "Coffee vendor offers $600k funding but only for 24-count bags. Snack vendor offers $350k funding across total salty snacks but requires front-page circular. Coffee has supply for 4 weeks; snacks have 9 weeks cover but front-page circular would displace seasonal produce ad. Total circular feature slots are capped at one."
+      },
+      "question": "Frame the portfolio promotion tradeoff.",
+      "expected_output": {
+        "decision_frame": "vendor funding is constrained by SKU eligibility and feature slot scarcity",
+        "recommended_allocation": "do not choose solely by funding dollars; compare coffee funded SKU supply against snack cover and produce displacement",
+        "human_review_required": true,
+        "review_questions": [
+          "coffee 24-count supply by region",
+          "produce ad opportunity cost",
+          "snack incrementality"
+        ]
+      },
+      "must_include": [
+        "$600k coffee funding",
+        "$350k snack funding",
+        "24-count eligibility",
+        "one circular slot",
+        "produce ad displacement"
+      ],
+      "must_not_include": [
+        "pick coffee solely because funding is higher",
+        "ignore feature slot cap",
+        "apply coffee funding to all coffee SKUs"
+      ],
+      "deterministic_checks": [
+        "funding eligibility check",
+        "feature slot capacity check",
+        "cover comparison"
+      ],
+      "escalation_triggers": [
+        "front-page circular displacement",
+        "cross-category vendor tradeoff"
+      ],
+      "scoring_focus": [
+        "vendor term interpretation",
+        "feature scarcity",
+        "opportunity cost"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "funding eligibility check",
+        "feature slot capacity check",
+        "cover comparison"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    },
+    {
+      "id": "por_004",
+      "title": "Executive Electronics Exception Versus Core Replenishment",
+      "difficulty": "hard",
+      "retail_function": "portfolio_otb",
+      "category": "electronics",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "severe",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "facts": "CEO asks to fund $1.2M incremental smart speaker buy after a competitor launch. Core laptop chargers need $550k to recover in-stock, and compliance review for the smart speaker voice feature is incomplete. Remaining OTB is $1.4M. Smart speaker vendor offer expires today."
+      },
+      "question": "Recommend a review-ready decision frame.",
+      "expected_output": {
+        "decision_frame": "do not auto-approve executive exception while compliance is incomplete",
+        "recommended_allocation": "protect charger recovery and hold or condition smart speaker funding on compliance review",
+        "human_review_required": true,
+        "review_questions": [
+          "compliance status",
+          "competitive response evidence",
+          "charger lost-sales risk"
+        ]
+      },
+      "must_include": [
+        "$1.2M smart speaker ask",
+        "$550k charger need",
+        "$1.4M OTB",
+        "compliance incomplete",
+        "vendor offer expires today"
+      ],
+      "must_not_include": [
+        "approve CEO request automatically",
+        "ignore compliance",
+        "spend OTB without charger opportunity cost"
+      ],
+      "deterministic_checks": [
+        "OTB capacity check",
+        "compliance gate check",
+        "core replenishment protection check"
+      ],
+      "escalation_triggers": [
+        "executive override",
+        "severe compliance downside",
+        "same-day vendor expiration"
+      ],
+      "scoring_focus": [
+        "executive pressure resistance",
+        "core replenishment opportunity cost",
+        "human review"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "OTB capacity check",
+        "compliance gate check",
+        "core replenishment protection check"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    },
+    {
+      "id": "por_005",
+      "title": "Berry Weather Spike With DC Capacity",
+      "difficulty": "hard",
+      "retail_function": "replenishment_and_allocation",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "Heatwave forecast adds 18 percent berry demand in the Southwest for 6 days. The DC has 92 percent cold-chain capacity already committed, inbound raspberries are 2 days late, and last year's comp was stockout-censored in 38 percent of stores.",
+        "retail_context": {
+          "category": "grocery",
+          "retail_function": "replenishment_and_allocation",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "case_key": "grocery_weather"
+      },
+      "question": "Frame the portfolio tradeoff, recommend allocation posture, and name human-review questions.",
+      "expected_output": {
+        "decision_frame": "compare local upside against portfolio OTB, capacity, and customer-trust opportunity cost",
+        "recommended_allocation": "allocate only to the controlled subset and protect capital for higher-certainty obligations",
+        "opportunity_costs": [
+          "capital tied up",
+          "capacity consumed",
+          "missed seasonal alternative"
+        ],
+        "constraints": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "human_review_required": true,
+        "review_questions": [
+          "Which commitment is irreversible?",
+          "Which control fails first?",
+          "What demand evidence is contaminated?"
+        ]
+      },
+      "must_include": [
+        "18 percent berry demand",
+        "92 percent cold-chain capacity",
+        "2 days late",
+        "38 percent stockout-censored"
+      ],
+      "must_not_include": [
+        "treat last year's comp as clean demand",
+        "ignore cold-chain capacity",
+        "blanket chase all stores"
+      ],
+      "deterministic_checks": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "escalation_triggers": [
+        "cold-chain capacity exceeds safe receiving limit",
+        "late inbound creates service risk"
+      ],
+      "scoring_focus": [
+        "decision_frame",
+        "recommended_allocation",
+        "opportunity_costs"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    },
+    {
+      "id": "por_006",
+      "title": "Beauty Trend Spike With Vendor Funding Window",
+      "difficulty": "medium",
+      "retail_function": "assortment_and_promotion",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A serum shade is trending on social channels with a 41 percent search spike. Vendor co-op funding expires in 9 days, the promo margin floor is 44 percent, and two top stores report tester theft and low attachment to the regimen kit.",
+        "retail_context": {
+          "category": "beauty",
+          "retail_function": "assortment_and_promotion",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "case_key": "beauty_trend"
+      },
+      "question": "Frame the portfolio tradeoff, recommend allocation posture, and name human-review questions.",
+      "expected_output": {
+        "decision_frame": "compare local upside against portfolio OTB, capacity, and customer-trust opportunity cost",
+        "recommended_allocation": "allocate only to the controlled subset and protect capital for higher-certainty obligations",
+        "opportunity_costs": [
+          "capital tied up",
+          "capacity consumed",
+          "missed seasonal alternative"
+        ],
+        "constraints": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "human_review_required": true,
+        "review_questions": [
+          "Which commitment is irreversible?",
+          "Which control fails first?",
+          "What demand evidence is contaminated?"
+        ]
+      },
+      "must_include": [
+        "41 percent search spike",
+        "9 days",
+        "44 percent margin floor",
+        "low attachment"
+      ],
+      "must_not_include": [
+        "assume the social trend proves sell-through",
+        "ignore tester theft",
+        "promote below margin floor"
+      ],
+      "deterministic_checks": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "escalation_triggers": [
+        "funding expires before execution",
+        "promotion breaks margin floor"
+      ],
+      "scoring_focus": [
+        "decision_frame",
+        "recommended_allocation",
+        "opportunity_costs"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    },
+    {
+      "id": "por_007",
+      "title": "Tool Set Chase With Vendor Reliability Drop",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "hard_goods",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A 120-piece tool set is up 26 percent in DIY channels after a competitor recall. The vendor fill rate fell from 94 percent to 71 percent over 4 weeks, MOQ is 480 units, and the item has a 13 percent bulky-item return rate.",
+        "retail_context": {
+          "category": "hard_goods",
+          "retail_function": "vendor_supply",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "case_key": "hardgoods_vendor"
+      },
+      "question": "Frame the portfolio tradeoff, recommend allocation posture, and name human-review questions.",
+      "expected_output": {
+        "decision_frame": "compare local upside against portfolio OTB, capacity, and customer-trust opportunity cost",
+        "recommended_allocation": "allocate only to the controlled subset and protect capital for higher-certainty obligations",
+        "opportunity_costs": [
+          "capital tied up",
+          "capacity consumed",
+          "missed seasonal alternative"
+        ],
+        "constraints": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "human_review_required": true,
+        "review_questions": [
+          "Which commitment is irreversible?",
+          "Which control fails first?",
+          "What demand evidence is contaminated?"
+        ]
+      },
+      "must_include": [
+        "26 percent",
+        "71 percent fill rate",
+        "MOQ 480",
+        "13 percent return rate"
+      ],
+      "must_not_include": [
+        "chase full demand without vendor risk",
+        "ignore MOQ",
+        "ignore bulky-item returns"
+      ],
+      "deterministic_checks": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "fill rate stays below 80 percent",
+        "bulky returns exceed plan"
+      ],
+      "scoring_focus": [
+        "decision_frame",
+        "recommended_allocation",
+        "opportunity_costs"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    },
+    {
+      "id": "por_008",
+      "title": "Headphone Price Match With MAP Risk",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A marketplace seller lists the premium headphone at $149.99 while our price is $179.99. Vendor MAP is $169.99, unit cost is $118.00, attachment on warranty is 22 percent, and 31 percent of recent returns cite counterfeit concern in competitor reviews.",
+        "retail_context": {
+          "category": "electronics",
+          "retail_function": "pricing_promotion",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "case_key": "electronics_map"
+      },
+      "question": "Frame the portfolio tradeoff, recommend allocation posture, and name human-review questions.",
+      "expected_output": {
+        "decision_frame": "compare local upside against portfolio OTB, capacity, and customer-trust opportunity cost",
+        "recommended_allocation": "allocate only to the controlled subset and protect capital for higher-certainty obligations",
+        "opportunity_costs": [
+          "capital tied up",
+          "capacity consumed",
+          "missed seasonal alternative"
+        ],
+        "constraints": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "human_review_required": true,
+        "review_questions": [
+          "Which commitment is irreversible?",
+          "Which control fails first?",
+          "What demand evidence is contaminated?"
+        ]
+      },
+      "must_include": [
+        "$149.99",
+        "$169.99 MAP",
+        "$118.00 unit cost",
+        "31 percent"
+      ],
+      "must_not_include": [
+        "match below MAP",
+        "treat marketplace seller as clean competitor",
+        "ignore warranty attachment"
+      ],
+      "deterministic_checks": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "escalation_triggers": [
+        "MAP breach requested",
+        "counterfeit or price-image risk is unresolved"
+      ],
+      "scoring_focus": [
+        "decision_frame",
+        "recommended_allocation",
+        "opportunity_costs"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    },
+    {
+      "id": "por_009",
+      "title": "Patio Set Buy With Return And DC Constraint",
+      "difficulty": "hard",
+      "retail_function": "initial_buy",
+      "category": "home",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A patio dining set has a 33 percent pre-season intent lift, but the DC furniture floor is capped at 84 trailers. The vendor lead time slipped from 28 to 43 days, assembly complaints are 18 percent above benchmark, and holding the buy protects $420k OTB for late-spring umbrellas.",
+        "retail_context": {
+          "category": "home",
+          "retail_function": "initial_buy",
+          "decision_value_band": "500k_plus"
+        },
+        "known_controls": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "case_key": "home_capacity"
+      },
+      "question": "Frame the portfolio tradeoff, recommend allocation posture, and name human-review questions.",
+      "expected_output": {
+        "decision_frame": "compare local upside against portfolio OTB, capacity, and customer-trust opportunity cost",
+        "recommended_allocation": "allocate only to the controlled subset and protect capital for higher-certainty obligations",
+        "opportunity_costs": [
+          "capital tied up",
+          "capacity consumed",
+          "missed seasonal alternative"
+        ],
+        "constraints": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "human_review_required": true,
+        "review_questions": [
+          "Which commitment is irreversible?",
+          "Which control fails first?",
+          "What demand evidence is contaminated?"
+        ]
+      },
+      "must_include": [
+        "33 percent intent lift",
+        "84 trailers",
+        "43 days",
+        "$420k OTB"
+      ],
+      "must_not_include": [
+        "ignore umbrella opportunity cost",
+        "ignore DC capacity",
+        "assume intent lift equals demand"
+      ],
+      "deterministic_checks": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "escalation_triggers": [
+        "DC floor capacity is exceeded",
+        "lead time misses seasonal selling window"
+      ],
+      "scoring_focus": [
+        "decision_frame",
+        "recommended_allocation",
+        "opportunity_costs"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    },
+    {
+      "id": "por_010",
+      "title": "Trail Shoe Allocation With Size-Curve Noise",
+      "difficulty": "medium",
+      "retail_function": "allocation_size_fit",
+      "category": "footwear",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "minutes",
+      "call_volume_band": "high",
+      "input": {
+        "source_note": "Trail shoe conversion is up 19 percent in mountain stores after rain, but sizes 10-12 stocked out for 5 days. E-commerce returns are 16 percent for fit, store labor can process only 320 transfer pairs this week, and the next vendor cut is 6 weeks away.",
+        "retail_context": {
+          "category": "footwear",
+          "retail_function": "allocation_size_fit",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "case_key": "footwear_size"
+      },
+      "question": "Frame the portfolio tradeoff, recommend allocation posture, and name human-review questions.",
+      "expected_output": {
+        "decision_frame": "compare local upside against portfolio OTB, capacity, and customer-trust opportunity cost",
+        "recommended_allocation": "allocate only to the controlled subset and protect capital for higher-certainty obligations",
+        "opportunity_costs": [
+          "capital tied up",
+          "capacity consumed",
+          "missed seasonal alternative"
+        ],
+        "constraints": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "human_review_required": true,
+        "review_questions": [
+          "Which commitment is irreversible?",
+          "Which control fails first?",
+          "What demand evidence is contaminated?"
+        ]
+      },
+      "must_include": [
+        "19 percent",
+        "sizes 10-12",
+        "320 transfer pairs",
+        "6 weeks"
+      ],
+      "must_not_include": [
+        "read total conversion as clean",
+        "ignore transfer labor",
+        "over-allocate fit-risk sizes"
+      ],
+      "deterministic_checks": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "labor cap blocks transfer plan",
+        "size-level read remains censored"
+      ],
+      "scoring_focus": [
+        "decision_frame",
+        "recommended_allocation",
+        "opportunity_costs"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    },
+    {
+      "id": "por_011",
+      "title": "Holiday Marketplace Seller With Customer Trust Risk",
+      "difficulty": "hard",
+      "retail_function": "marketplace_and_seasonal",
+      "category": "marketplace",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A third-party seller offers 8,000 units of a holiday decor item with 37 percent lower cost. The seller has 91 percent on-time delivery, packaging defect claims are 4.8 percent, and the item is used in a public holiday promise landing page that launches in 72 hours.",
+        "retail_context": {
+          "category": "marketplace",
+          "retail_function": "marketplace_and_seasonal",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "case_key": "seasonal_marketplace"
+      },
+      "question": "Frame the portfolio tradeoff, recommend allocation posture, and name human-review questions.",
+      "expected_output": {
+        "decision_frame": "compare local upside against portfolio OTB, capacity, and customer-trust opportunity cost",
+        "recommended_allocation": "allocate only to the controlled subset and protect capital for higher-certainty obligations",
+        "opportunity_costs": [
+          "capital tied up",
+          "capacity consumed",
+          "missed seasonal alternative"
+        ],
+        "constraints": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "human_review_required": true,
+        "review_questions": [
+          "Which commitment is irreversible?",
+          "Which control fails first?",
+          "What demand evidence is contaminated?"
+        ]
+      },
+      "must_include": [
+        "8,000 units",
+        "37 percent lower cost",
+        "91 percent on-time delivery",
+        "72 hours"
+      ],
+      "must_not_include": [
+        "approve solely because cost is lower",
+        "ignore packaging defects",
+        "ignore public promise risk"
+      ],
+      "deterministic_checks": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "escalation_triggers": [
+        "public promise is at risk",
+        "seller reliability below launch threshold"
+      ],
+      "scoring_focus": [
+        "decision_frame",
+        "recommended_allocation",
+        "opportunity_costs"
+      ],
+      "ambiguity_type": "cross-category opportunity-cost ambiguity",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "expected_failure_mode": "The answer maximizes one category while ignoring OTB opportunity cost and cross-functional constraints.",
+      "scoring_rationale": "Score should reward opportunity-cost reasoning, portfolio constraints, human review, and downside-aware allocation."
+    }
+  ]
+}

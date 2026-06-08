@@ -1,0 +1,17 @@
+{
+  "provider": "openai",
+  "started_at_utc": "2026-06-07T06:16:41.596072+00:00",
+  "completed_at_utc": "2026-06-07T17:11:39.430373+00:00",
+  "stop_reason": null,
+  "total": 100,
+  "ok": 100,
+  "failed": 0,
+  "by_model": {
+    "openai/gpt-5.5": {
+      "provider_model_id": "gpt-5.5",
+      "total": 100,
+      "ok": 100,
+      "failed": 0
+    }
+  }
+}

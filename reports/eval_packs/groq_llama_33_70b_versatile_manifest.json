@@ -1,0 +1,17 @@
+{
+  "provider": "groq",
+  "started_at_utc": "2026-06-07T03:24:11.450186+00:00",
+  "completed_at_utc": "2026-06-07T16:32:00.253034+00:00",
+  "stop_reason": null,
+  "total": 100,
+  "ok": 100,
+  "failed": 0,
+  "by_model": {
+    "groq/llama-3.3-70b-versatile": {
+      "provider_model_id": "llama-3.3-70b-versatile",
+      "total": 100,
+      "ok": 100,
+      "failed": 0
+    }
+  }
+}

@@ -1,0 +1,941 @@
+{
+  "id": "constraint_checking_v0",
+  "version": "0.1",
+  "task_segment": "constraint_checking",
+  "purpose": "Evaluate whether a rules-first workflow or low-cost model fallback can identify hard retail planning constraints before a recommendation is made. These tasks test arithmetic discipline, feasibility checks, and escalation boundaries for OTB, MOQ, pack multiple, margin, capacity, compliance, and timing constraints.",
+  "recommended_strategy_under_test": "rules_only",
+  "quality_floor": {
+    "minimum_average_score": 9,
+    "minimum_item_score": 8,
+    "must_pass_items": 4,
+    "dimension_floor": {
+      "constraint_accuracy": 0.9,
+      "arithmetic_fidelity": 0.9,
+      "escalation_flagging": 0.85
+    }
+  },
+  "design_principles": [
+    "Treat hard constraints as gates rather than soft preferences.",
+    "Separate feasibility checking from business recommendation.",
+    "Require exact arithmetic and explicit pass or fail status.",
+    "Reward escalation when an exception request would override a policy, margin, safety, or capacity limit.",
+    "Make rules-only baselines competitive when the task is truly deterministic."
+  ],
+  "coverage": {
+    "retail_functions": [
+      "portfolio_otb",
+      "vendor_supply",
+      "store_operations_constraints",
+      "pricing_promotion"
+    ],
+    "categories": [
+      "beauty",
+      "home",
+      "grocery",
+      "electronics"
+    ],
+    "ambiguity_sources": [
+      "exception request conflicts with hard constraint",
+      "unit and cost arithmetic buried in prose",
+      "pack multiple creates non-obvious infeasibility",
+      "capacity limit conflicts with demand signal",
+      "margin floor breached by vendor or promo request"
+    ],
+    "externalities": [
+      "supplier deadline",
+      "storm demand",
+      "competitor promotion",
+      "compliance certificate delay"
+    ],
+    "escalation_patterns": [
+      "constraint violation",
+      "exception requested",
+      "human-readable explanation needed",
+      "safety or compliance gate hit"
+    ]
+  },
+  "output_contract": {
+    "response_format": "json",
+    "required_fields": [
+      "constraint_status",
+      "checks",
+      "blocking_constraints",
+      "non_blocking_warnings",
+      "escalation_needed",
+      "escalation_reason"
+    ],
+    "forbidden_behaviors": [
+      "recommend an action before reporting pass or fail",
+      "treat a hard constraint as a soft preference",
+      "ignore pack, MOQ, margin, capacity, or compliance checks",
+      "invent missing override approval"
+    ]
+  },
+  "scoring": {
+    "total_points_per_item": 10,
+    "dimensions": {
+      "constraint_accuracy": {
+        "points": 4,
+        "criteria": [
+          "Identifies every hard constraint that passes or fails.",
+          "Correctly labels blocking versus non-blocking conditions.",
+          "Does not waive a constraint without source-supported approval.",
+          "Uses the exact constraint threshold from the prompt."
+        ]
+      },
+      "arithmetic_fidelity": {
+        "points": 2,
+        "criteria": [
+          "Computes totals, deltas, or capacity usage correctly.",
+          "Preserves units and avoids rounding that changes feasibility."
+        ]
+      },
+      "evidence_boundary": {
+        "points": 1,
+        "criteria": [
+          "Separates the provided evidence from assumptions or desired outcomes."
+        ]
+      },
+      "escalation_flagging": {
+        "points": 2,
+        "criteria": [
+          "Flags escalation when a blocker, compliance issue, or exception request exists.",
+          "Explains why the case cannot auto-pass."
+        ]
+      },
+      "format": {
+        "points": 1,
+        "criteria": [
+          "Returns parseable JSON with concise check-level results."
+        ]
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "con_001",
+      "title": "Beauty OTB and MOQ Feasibility Gate",
+      "difficulty": "hard",
+      "retail_function": "portfolio_otb",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "proposal": "Launch three serum textures at 900 units each.",
+        "constraints": {
+          "available_otb_after_core_replenishment": 11800,
+          "unit_cost": 11,
+          "moq_units_per_sku": 600,
+          "pack_multiple": 12,
+          "open_serum_facings": 4,
+          "minimum_facings_per_sku": 2
+        }
+      },
+      "question": "Check whether the proposed launch is feasible. Return only constraint status and blockers, not a launch recommendation.",
+      "expected_output": {
+        "constraint_status": "fail",
+        "blocking_constraints": [
+          "OTB: 2700 units x $11 = $29,700 exceeds $11,800",
+          "Fixture: three SKUs need 6 facings but only 4 are open"
+        ],
+        "non_blocking_warnings": [
+          "Each SKU clears 600 MOQ and pack multiple 12"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "$29,700 proposed cost",
+        "$11,800 available OTB",
+        "three SKUs require 6 facings",
+        "only 4 open facings"
+      ],
+      "must_not_include": [
+        "mark feasible",
+        "ignore fixture capacity",
+        "recommend alternate SKU architecture"
+      ],
+      "deterministic_checks": [
+        "OTB arithmetic check",
+        "MOQ check",
+        "pack multiple check",
+        "fixture facing check"
+      ],
+      "escalation_triggers": [
+        "OTB violation",
+        "fixture capacity violation"
+      ],
+      "scoring_focus": [
+        "hard gate detection",
+        "arithmetic accuracy",
+        "recommendation boundary"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "OTB arithmetic check",
+        "MOQ check",
+        "pack multiple check",
+        "fixture facing check"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    },
+    {
+      "id": "con_002",
+      "title": "Storage Bin Pack Multiple and Labor Check",
+      "difficulty": "hard",
+      "retail_function": "store_operations_constraints",
+      "category": "home",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "proposal": "Allocate 1,150 bins across 23 stores for a weekend reset.",
+        "constraints": {
+          "case_pack": 8,
+          "max_receiving_cases_per_store": 6,
+          "stores": 23,
+          "labor_hours_available": 92,
+          "minutes_to_receive_each_case": 14
+        }
+      },
+      "question": "Check feasibility against pack multiple, store case capacity, and labor. Do not decide a revised allocation.",
+      "expected_output": {
+        "constraint_status": "fail",
+        "blocking_constraints": [
+          "1,150 units is not divisible by case pack 8",
+          "Maximum store capacity is 23 x 6 x 8 = 1,104 units",
+          "138 cases x 14 minutes = 32.2 labor hours if capped at capacity; proposal units would need 143.75 cases and is invalid"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "1,150 not divisible by 8",
+        "1,104 maximum unit capacity",
+        "23 stores",
+        "6 cases per store"
+      ],
+      "must_not_include": [
+        "round silently to 1,152",
+        "state proposal fits capacity",
+        "omit store receiving cap"
+      ],
+      "deterministic_checks": [
+        "case-pack divisibility check",
+        "store capacity multiplication check",
+        "labor conversion check"
+      ],
+      "escalation_triggers": [
+        "non-divisible case pack",
+        "store capacity exceeded"
+      ],
+      "scoring_focus": [
+        "pack multiple detection",
+        "capacity arithmetic",
+        "no silent rounding"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "case-pack divisibility check",
+        "store capacity multiplication check",
+        "labor conversion check"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    },
+    {
+      "id": "con_003",
+      "title": "Coffee Promo Margin Floor Check",
+      "difficulty": "medium",
+      "retail_function": "pricing_promotion",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "medium",
+      "latency_sla": "seconds",
+      "call_volume_band": "high",
+      "input": {
+        "proposal": "Match competitor at $7.99 for 12-count coffee.",
+        "constraints": {
+          "unit_cost": 5.75,
+          "regular_retail": 9.49,
+          "proposed_retail": 7.99,
+          "minimum_margin_rate": 0.32,
+          "inventory_cover_weeks": 1.4,
+          "next_replenishment_days": 12
+        }
+      },
+      "question": "Check whether the proposed price match clears margin and inventory guardrails. Do not recommend a price.",
+      "expected_output": {
+        "constraint_status": "fail",
+        "blocking_constraints": [
+          "Gross margin at $7.99 is 28.0 percent, below 32 percent floor"
+        ],
+        "non_blocking_warnings": [
+          "Inventory cover is only 1.4 weeks and replenishment is 12 days away"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "28.0 percent margin",
+        "32 percent margin floor",
+        "1.4 weeks cover",
+        "12 days to replenishment"
+      ],
+      "must_not_include": [
+        "approve price match",
+        "use regular retail margin as promo margin",
+        "ignore inventory cover"
+      ],
+      "deterministic_checks": [
+        "margin rate calculation",
+        "margin floor comparison",
+        "inventory cover warning check"
+      ],
+      "escalation_triggers": [
+        "margin below floor",
+        "supply cover risk"
+      ],
+      "scoring_focus": [
+        "margin arithmetic",
+        "guardrail classification",
+        "supply warning"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "margin rate calculation",
+        "margin floor comparison",
+        "inventory cover warning check"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    },
+    {
+      "id": "con_004",
+      "title": "Electronics Substitute Compliance Gate",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "seconds",
+      "call_volume_band": "medium",
+      "input": {
+        "proposal": "Use substitute charger C-188B to fill 2,400 ecommerce backorders.",
+        "constraints": {
+          "available_units": 4800,
+          "ul_certificate": "pending",
+          "fcc_certificate": "received",
+          "barcode_matches_original": false,
+          "minimum_margin_rate": 0.55,
+          "unit_cost": 6.4,
+          "retail": 19.99
+        }
+      },
+      "question": "Check whether this substitute can pass automated release gates. Do not recommend launch or cancellation.",
+      "expected_output": {
+        "constraint_status": "fail",
+        "blocking_constraints": [
+          "UL certificate is pending",
+          "Barcode does not match original SKU"
+        ],
+        "non_blocking_warnings": [
+          "Available units cover 2,400 backorders",
+          "Margin clears floor at about 68.0 percent"
+        ],
+        "escalation_needed": true
+      },
+      "must_include": [
+        "UL pending",
+        "barcode mismatch",
+        "4,800 available units cover 2,400 backorders",
+        "margin about 68 percent"
+      ],
+      "must_not_include": [
+        "release substitute",
+        "treat FCC received as sufficient for UL",
+        "ignore barcode mismatch"
+      ],
+      "deterministic_checks": [
+        "compliance certificate check",
+        "barcode match check",
+        "backorder coverage check",
+        "margin calculation"
+      ],
+      "escalation_triggers": [
+        "pending UL certificate",
+        "barcode mismatch",
+        "severe compliance downside"
+      ],
+      "scoring_focus": [
+        "compliance blocker",
+        "non-blocking commercial checks",
+        "release boundary"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "compliance certificate check",
+        "barcode match check",
+        "backorder coverage check",
+        "margin calculation"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    },
+    {
+      "id": "con_005",
+      "title": "Berry Weather Spike With DC Capacity",
+      "difficulty": "hard",
+      "retail_function": "replenishment_and_allocation",
+      "category": "grocery",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "Heatwave forecast adds 18 percent berry demand in the Southwest for 6 days. The DC has 92 percent cold-chain capacity already committed, inbound raspberries are 2 days late, and last year's comp was stockout-censored in 38 percent of stores.",
+        "retail_context": {
+          "category": "grocery",
+          "retail_function": "replenishment_and_allocation",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "cold-chain capacity check",
+          "late inbound check",
+          "stockout-censored comp check"
+        ],
+        "case_key": "grocery_weather"
+      },
+      "question": "Check whether the requested action is feasible. Separate blocking constraints from warnings.",
+      "expected_output": {
+        "constraint_status": "blocked_or_conditional",
+        "checks": {
+          "cold-chain capacity check": "must pass before action",
+          "late inbound check": "must pass before action",
+          "stockout-censored comp check": "must pass before action"
+        },
+        "blocking_constraints": [
+          "cold-chain capacity check",
+          "late inbound check"
+        ],
+        "non_blocking_warnings": [
+          "stockout-censored comp check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "At least one deterministic control gates the requested action."
+      },
+      "must_include": [
+        "18 percent berry demand",
+        "92 percent cold-chain capacity",
+        "2 days late",
+        "38 percent stockout-censored"
+      ],
+      "must_not_include": [
+        "treat last year's comp as clean demand",
+        "ignore cold-chain capacity",
+        "blanket chase all stores"
+      ],
+      "deterministic_checks": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "escalation_triggers": [
+        "cold-chain capacity exceeds safe receiving limit",
+        "late inbound creates service risk"
+      ],
+      "scoring_focus": [
+        "constraint_status",
+        "checks",
+        "blocking_constraints"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "cold-chain capacity check",
+        "late inbound check",
+        "stockout-censored comp check"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    },
+    {
+      "id": "con_006",
+      "title": "Beauty Trend Spike With Vendor Funding Window",
+      "difficulty": "medium",
+      "retail_function": "assortment_and_promotion",
+      "category": "beauty",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "hours",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A serum shade is trending on social channels with a 41 percent search spike. Vendor co-op funding expires in 9 days, the promo margin floor is 44 percent, and two top stores report tester theft and low attachment to the regimen kit.",
+        "retail_context": {
+          "category": "beauty",
+          "retail_function": "assortment_and_promotion",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "vendor funding window check",
+          "margin floor check",
+          "attachment and shrink check"
+        ],
+        "case_key": "beauty_trend"
+      },
+      "question": "Check whether the requested action is feasible. Separate blocking constraints from warnings.",
+      "expected_output": {
+        "constraint_status": "blocked_or_conditional",
+        "checks": {
+          "vendor funding window check": "must pass before action",
+          "margin floor check": "must pass before action",
+          "attachment and shrink check": "must pass before action"
+        },
+        "blocking_constraints": [
+          "vendor funding window check",
+          "margin floor check"
+        ],
+        "non_blocking_warnings": [
+          "attachment and shrink check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "At least one deterministic control gates the requested action."
+      },
+      "must_include": [
+        "41 percent search spike",
+        "9 days",
+        "44 percent margin floor",
+        "low attachment"
+      ],
+      "must_not_include": [
+        "assume the social trend proves sell-through",
+        "ignore tester theft",
+        "promote below margin floor"
+      ],
+      "deterministic_checks": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "escalation_triggers": [
+        "funding expires before execution",
+        "promotion breaks margin floor"
+      ],
+      "scoring_focus": [
+        "constraint_status",
+        "checks",
+        "blocking_constraints"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "vendor funding window check",
+        "margin floor check",
+        "attachment and shrink check"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    },
+    {
+      "id": "con_007",
+      "title": "Tool Set Chase With Vendor Reliability Drop",
+      "difficulty": "hard",
+      "retail_function": "vendor_supply",
+      "category": "hard_goods",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A 120-piece tool set is up 26 percent in DIY channels after a competitor recall. The vendor fill rate fell from 94 percent to 71 percent over 4 weeks, MOQ is 480 units, and the item has a 13 percent bulky-item return rate.",
+        "retail_context": {
+          "category": "hard_goods",
+          "retail_function": "vendor_supply",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "vendor fill-rate check",
+          "MOQ check",
+          "return-rate check"
+        ],
+        "case_key": "hardgoods_vendor"
+      },
+      "question": "Check whether the requested action is feasible. Separate blocking constraints from warnings.",
+      "expected_output": {
+        "constraint_status": "blocked_or_conditional",
+        "checks": {
+          "vendor fill-rate check": "must pass before action",
+          "MOQ check": "must pass before action",
+          "return-rate check": "must pass before action"
+        },
+        "blocking_constraints": [
+          "vendor fill-rate check",
+          "MOQ check"
+        ],
+        "non_blocking_warnings": [
+          "return-rate check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "At least one deterministic control gates the requested action."
+      },
+      "must_include": [
+        "26 percent",
+        "71 percent fill rate",
+        "MOQ 480",
+        "13 percent return rate"
+      ],
+      "must_not_include": [
+        "chase full demand without vendor risk",
+        "ignore MOQ",
+        "ignore bulky-item returns"
+      ],
+      "deterministic_checks": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "fill rate stays below 80 percent",
+        "bulky returns exceed plan"
+      ],
+      "scoring_focus": [
+        "constraint_status",
+        "checks",
+        "blocking_constraints"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "vendor fill-rate check",
+        "MOQ check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    },
+    {
+      "id": "con_008",
+      "title": "Headphone Price Match With MAP Risk",
+      "difficulty": "hard",
+      "retail_function": "pricing_promotion",
+      "category": "electronics",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A marketplace seller lists the premium headphone at $149.99 while our price is $179.99. Vendor MAP is $169.99, unit cost is $118.00, attachment on warranty is 22 percent, and 31 percent of recent returns cite counterfeit concern in competitor reviews.",
+        "retail_context": {
+          "category": "electronics",
+          "retail_function": "pricing_promotion",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "MAP floor check",
+          "unit-margin check",
+          "competitor authenticity check"
+        ],
+        "case_key": "electronics_map"
+      },
+      "question": "Check whether the requested action is feasible. Separate blocking constraints from warnings.",
+      "expected_output": {
+        "constraint_status": "blocked_or_conditional",
+        "checks": {
+          "MAP floor check": "must pass before action",
+          "unit-margin check": "must pass before action",
+          "competitor authenticity check": "must pass before action"
+        },
+        "blocking_constraints": [
+          "MAP floor check",
+          "unit-margin check"
+        ],
+        "non_blocking_warnings": [
+          "competitor authenticity check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "At least one deterministic control gates the requested action."
+      },
+      "must_include": [
+        "$149.99",
+        "$169.99 MAP",
+        "$118.00 unit cost",
+        "31 percent"
+      ],
+      "must_not_include": [
+        "match below MAP",
+        "treat marketplace seller as clean competitor",
+        "ignore warranty attachment"
+      ],
+      "deterministic_checks": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "escalation_triggers": [
+        "MAP breach requested",
+        "counterfeit or price-image risk is unresolved"
+      ],
+      "scoring_focus": [
+        "constraint_status",
+        "checks",
+        "blocking_constraints"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "MAP floor check",
+        "unit-margin check",
+        "competitor authenticity check"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    },
+    {
+      "id": "con_009",
+      "title": "Patio Set Buy With Return And DC Constraint",
+      "difficulty": "hard",
+      "retail_function": "initial_buy",
+      "category": "home",
+      "decision_value_band": "500k_plus",
+      "error_downside_band": "high",
+      "latency_sla": "hours",
+      "call_volume_band": "low",
+      "input": {
+        "source_note": "A patio dining set has a 33 percent pre-season intent lift, but the DC furniture floor is capped at 84 trailers. The vendor lead time slipped from 28 to 43 days, assembly complaints are 18 percent above benchmark, and holding the buy protects $420k OTB for late-spring umbrellas.",
+        "retail_context": {
+          "category": "home",
+          "retail_function": "initial_buy",
+          "decision_value_band": "500k_plus"
+        },
+        "known_controls": [
+          "DC trailer capacity check",
+          "lead-time slippage check",
+          "OTB opportunity-cost check"
+        ],
+        "case_key": "home_capacity"
+      },
+      "question": "Check whether the requested action is feasible. Separate blocking constraints from warnings.",
+      "expected_output": {
+        "constraint_status": "blocked_or_conditional",
+        "checks": {
+          "DC trailer capacity check": "must pass before action",
+          "lead-time slippage check": "must pass before action",
+          "OTB opportunity-cost check": "must pass before action"
+        },
+        "blocking_constraints": [
+          "DC trailer capacity check",
+          "lead-time slippage check"
+        ],
+        "non_blocking_warnings": [
+          "OTB opportunity-cost check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "At least one deterministic control gates the requested action."
+      },
+      "must_include": [
+        "33 percent intent lift",
+        "84 trailers",
+        "43 days",
+        "$420k OTB"
+      ],
+      "must_not_include": [
+        "ignore umbrella opportunity cost",
+        "ignore DC capacity",
+        "assume intent lift equals demand"
+      ],
+      "deterministic_checks": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "escalation_triggers": [
+        "DC floor capacity is exceeded",
+        "lead time misses seasonal selling window"
+      ],
+      "scoring_focus": [
+        "constraint_status",
+        "checks",
+        "blocking_constraints"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "high",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "DC trailer capacity check",
+        "lead-time slippage check",
+        "OTB opportunity-cost check"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    },
+    {
+      "id": "con_010",
+      "title": "Trail Shoe Allocation With Size-Curve Noise",
+      "difficulty": "medium",
+      "retail_function": "allocation_size_fit",
+      "category": "footwear",
+      "decision_value_band": "25k_100k",
+      "error_downside_band": "medium",
+      "latency_sla": "minutes",
+      "call_volume_band": "high",
+      "input": {
+        "source_note": "Trail shoe conversion is up 19 percent in mountain stores after rain, but sizes 10-12 stocked out for 5 days. E-commerce returns are 16 percent for fit, store labor can process only 320 transfer pairs this week, and the next vendor cut is 6 weeks away.",
+        "retail_context": {
+          "category": "footwear",
+          "retail_function": "allocation_size_fit",
+          "decision_value_band": "25k_100k"
+        },
+        "known_controls": [
+          "size-level stockout check",
+          "store labor transfer cap check",
+          "return-rate check"
+        ],
+        "case_key": "footwear_size"
+      },
+      "question": "Check whether the requested action is feasible. Separate blocking constraints from warnings.",
+      "expected_output": {
+        "constraint_status": "blocked_or_conditional",
+        "checks": {
+          "size-level stockout check": "must pass before action",
+          "store labor transfer cap check": "must pass before action",
+          "return-rate check": "must pass before action"
+        },
+        "blocking_constraints": [
+          "size-level stockout check",
+          "store labor transfer cap check"
+        ],
+        "non_blocking_warnings": [
+          "return-rate check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "At least one deterministic control gates the requested action."
+      },
+      "must_include": [
+        "19 percent",
+        "sizes 10-12",
+        "320 transfer pairs",
+        "6 weeks"
+      ],
+      "must_not_include": [
+        "read total conversion as clean",
+        "ignore transfer labor",
+        "over-allocate fit-risk sizes"
+      ],
+      "deterministic_checks": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "escalation_triggers": [
+        "labor cap blocks transfer plan",
+        "size-level read remains censored"
+      ],
+      "scoring_focus": [
+        "constraint_status",
+        "checks",
+        "blocking_constraints"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "medium",
+      "reversibility": "medium",
+      "deterministic_controls": [
+        "size-level stockout check",
+        "store labor transfer cap check",
+        "return-rate check"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    },
+    {
+      "id": "con_011",
+      "title": "Holiday Marketplace Seller With Customer Trust Risk",
+      "difficulty": "hard",
+      "retail_function": "marketplace_and_seasonal",
+      "category": "marketplace",
+      "decision_value_band": "100k_500k",
+      "error_downside_band": "severe",
+      "latency_sla": "minutes",
+      "call_volume_band": "medium",
+      "input": {
+        "source_note": "A third-party seller offers 8,000 units of a holiday decor item with 37 percent lower cost. The seller has 91 percent on-time delivery, packaging defect claims are 4.8 percent, and the item is used in a public holiday promise landing page that launches in 72 hours.",
+        "retail_context": {
+          "category": "marketplace",
+          "retail_function": "marketplace_and_seasonal",
+          "decision_value_band": "100k_500k"
+        },
+        "known_controls": [
+          "seller on-time delivery check",
+          "defect-rate check",
+          "customer-promise risk check"
+        ],
+        "case_key": "seasonal_marketplace"
+      },
+      "question": "Check whether the requested action is feasible. Separate blocking constraints from warnings.",
+      "expected_output": {
+        "constraint_status": "blocked_or_conditional",
+        "checks": {
+          "seller on-time delivery check": "must pass before action",
+          "defect-rate check": "must pass before action",
+          "customer-promise risk check": "must pass before action"
+        },
+        "blocking_constraints": [
+          "seller on-time delivery check",
+          "defect-rate check"
+        ],
+        "non_blocking_warnings": [
+          "customer-promise risk check"
+        ],
+        "escalation_needed": true,
+        "escalation_reason": "At least one deterministic control gates the requested action."
+      },
+      "must_include": [
+        "8,000 units",
+        "37 percent lower cost",
+        "91 percent on-time delivery",
+        "72 hours"
+      ],
+      "must_not_include": [
+        "approve solely because cost is lower",
+        "ignore packaging defects",
+        "ignore public promise risk"
+      ],
+      "deterministic_checks": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "escalation_triggers": [
+        "public promise is at risk",
+        "seller reliability below launch threshold"
+      ],
+      "scoring_focus": [
+        "constraint_status",
+        "checks",
+        "blocking_constraints"
+      ],
+      "ambiguity_type": "hard-rule feasibility under incomplete exception context",
+      "risk_level": "severe",
+      "reversibility": "low",
+      "deterministic_controls": [
+        "seller on-time delivery check",
+        "defect-rate check",
+        "customer-promise risk check"
+      ],
+      "expected_failure_mode": "The answer approves an infeasible exception by ignoring a hard deterministic rule.",
+      "scoring_rationale": "Score should reward deterministic feasibility checks, blocked/non-blocked separation, and appropriate escalation."
+    }
+  ]
+}

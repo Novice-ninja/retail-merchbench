@@ -1,0 +1,29 @@
+{
+  "provider": "ollama",
+  "started_at_utc": "2026-06-07T00:04:16.397481+00:00",
+  "completed_at_utc": "2026-06-07T15:08:19.642674+00:00",
+  "stop_reason": null,
+  "total": 300,
+  "ok": 179,
+  "failed": 121,
+  "by_model": {
+    "ollama/gemma4:e2b": {
+      "provider_model_id": "gemma4:e2b",
+      "total": 100,
+      "ok": 43,
+      "failed": 57
+    },
+    "ollama/lfm2.5-thinking:1.2b": {
+      "provider_model_id": "lfm2.5-thinking:1.2b",
+      "total": 100,
+      "ok": 36,
+      "failed": 64
+    },
+    "ollama/llama3.2:3b": {
+      "provider_model_id": "llama3.2:3b",
+      "total": 100,
+      "ok": 100,
+      "failed": 0
+    }
+  }
+}

@@ -1,0 +1,371 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://merchbench.org/schema/segment_eval_pack.schema.json",
+  "title": "MerchBench Segment Eval Pack",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "task_segment",
+    "purpose",
+    "recommended_strategy_under_test",
+    "quality_floor",
+    "design_principles",
+    "coverage",
+    "output_contract",
+    "scoring",
+    "items"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+_v[0-9]+$"
+    },
+    "version": {
+      "type": "string"
+    },
+    "task_segment": {
+      "type": "string",
+      "enum": [
+        "low_risk_summarization",
+        "structured_extraction",
+        "constraint_checking",
+        "routine_planning_recommendation",
+        "pricing_promotion",
+        "ambiguous_planning_judgment",
+        "portfolio_tradeoff",
+        "operational_triage"
+      ]
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 80
+    },
+    "recommended_strategy_under_test": {
+      "type": "string",
+      "enum": [
+        "rules_only",
+        "small_model",
+        "mid_model",
+        "frontier_model",
+        "cascade",
+        "frontier_plus_human_review"
+      ]
+    },
+    "quality_floor": {
+      "type": "object",
+      "required": [
+        "minimum_average_score",
+        "minimum_item_score",
+        "must_pass_items",
+        "dimension_floor"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "minimum_average_score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minimum_item_score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "must_pass_items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dimension_floor": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "design_principles": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "string",
+        "minLength": 10
+      },
+      "uniqueItems": true
+    },
+    "coverage": {
+      "type": "object",
+      "required": [
+        "retail_functions",
+        "categories",
+        "ambiguity_sources",
+        "externalities",
+        "escalation_patterns"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "retail_functions": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "categories": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "ambiguity_sources": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "externalities": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "escalation_patterns": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "output_contract": {
+      "type": "object",
+      "required": [
+        "response_format",
+        "required_fields",
+        "forbidden_behaviors"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "response_format": {
+          "type": "string",
+          "enum": ["json", "markdown"]
+        },
+        "required_fields": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "forbidden_behaviors": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "required": [
+        "total_points_per_item",
+        "dimensions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "total_points_per_item": {
+          "type": "number",
+          "minimum": 1
+        },
+        "dimensions": {
+          "type": "object",
+          "minProperties": 3,
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "points",
+              "criteria"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "points": {
+                "type": "number",
+                "minimum": 0
+              },
+              "criteria": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 10
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "difficulty",
+          "retail_function",
+          "category",
+          "decision_value_band",
+          "error_downside_band",
+          "latency_sla",
+          "call_volume_band",
+          "input",
+          "question",
+          "expected_output",
+          "must_include",
+          "must_not_include",
+          "deterministic_checks",
+          "escalation_triggers",
+          "scoring_focus",
+          "ambiguity_type",
+          "risk_level",
+          "reversibility",
+          "deterministic_controls",
+          "expected_failure_mode",
+          "scoring_rationale"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z]{3}_[0-9]{3}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 8
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["easy", "medium", "hard"]
+          },
+          "retail_function": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "decision_value_band": {
+            "type": "string",
+            "enum": ["under_1k", "1k_25k", "25k_100k", "100k_500k", "500k_plus", "unknown"]
+          },
+          "error_downside_band": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "severe"]
+          },
+          "latency_sla": {
+            "type": "string",
+            "enum": ["seconds", "minutes", "hours", "batch"]
+          },
+          "call_volume_band": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "input": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "question": {
+            "type": "string",
+            "minLength": 20
+          },
+          "expected_output": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "must_include": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "must_not_include": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "deterministic_checks": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "escalation_triggers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "scoring_focus": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "ambiguity_type": {
+            "type": "string",
+            "minLength": 8
+          },
+          "risk_level": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "severe"]
+          },
+          "reversibility": {
+            "type": "string",
+            "enum": ["high", "medium", "low"]
+          },
+          "deterministic_controls": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "expected_failure_mode": {
+            "type": "string",
+            "minLength": 20
+          },
+          "scoring_rationale": {
+            "type": "string",
+            "minLength": 40
+          }
+        }
+      }
+    }
+  }
+}

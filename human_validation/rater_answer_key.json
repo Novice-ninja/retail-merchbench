@@ -1,0 +1,725 @@
+{
+  "version": "0.1",
+  "responses": {
+    "resp_f9d75c23fc": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_001"
+    },
+    "resp_9300458f8e": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_001"
+    },
+    "resp_e21eedb0af": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_001"
+    },
+    "resp_0ab6010f81": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_001"
+    },
+    "resp_d9df320a72": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_001"
+    },
+    "resp_a7d5166833": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_002"
+    },
+    "resp_2353baa9ce": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_002"
+    },
+    "resp_34750acd23": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_002"
+    },
+    "resp_e6cd1408e9": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_002"
+    },
+    "resp_f609e9497a": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_002"
+    },
+    "resp_58401d8422": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_003"
+    },
+    "resp_b32c8771b0": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_003"
+    },
+    "resp_776d32ca1d": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_003"
+    },
+    "resp_eca1984725": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_003"
+    },
+    "resp_9692d6dd5f": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "ambiguous_planning_judgment_v0",
+      "task_segment": "ambiguous_planning_judgment",
+      "item_id": "amb_003"
+    },
+    "resp_caa4d46621": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_001"
+    },
+    "resp_a29084600a": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_001"
+    },
+    "resp_cc33b88111": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_001"
+    },
+    "resp_7d0065477d": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_001"
+    },
+    "resp_367c293457": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_001"
+    },
+    "resp_487b74e4cd": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_002"
+    },
+    "resp_39a349f672": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_002"
+    },
+    "resp_41018fb2b4": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_002"
+    },
+    "resp_55b7709160": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_002"
+    },
+    "resp_4b21aad568": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_002"
+    },
+    "resp_0fa26f4b3a": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_003"
+    },
+    "resp_3bdf99950b": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_003"
+    },
+    "resp_5677c80ebe": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_003"
+    },
+    "resp_cae80bcb10": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_003"
+    },
+    "resp_4c78b29110": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "constraint_checking_v0",
+      "task_segment": "constraint_checking",
+      "item_id": "con_003"
+    },
+    "resp_0dca1a18bc": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_001"
+    },
+    "resp_930bc18452": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_001"
+    },
+    "resp_dc24ab62a9": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_001"
+    },
+    "resp_ceeba5039b": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_001"
+    },
+    "resp_5d92b549be": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_001"
+    },
+    "resp_2562006007": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_002"
+    },
+    "resp_b885c8632e": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_002"
+    },
+    "resp_cfd5996788": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_002"
+    },
+    "resp_57cad4598f": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_002"
+    },
+    "resp_6fc4ddb8ad": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_002"
+    },
+    "resp_e7df78ea17": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_003"
+    },
+    "resp_9ddc60b560": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_003"
+    },
+    "resp_164984de47": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_003"
+    },
+    "resp_6a78fdb706": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_003"
+    },
+    "resp_96bd59e022": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "low_risk_summarization_v0",
+      "task_segment": "low_risk_summarization",
+      "item_id": "sum_003"
+    },
+    "resp_1d662150a7": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_001"
+    },
+    "resp_a45490ea26": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_001"
+    },
+    "resp_422149fe08": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_001"
+    },
+    "resp_fa8ecedcf5": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_001"
+    },
+    "resp_6e48a90a4d": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_001"
+    },
+    "resp_8261837a44": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_002"
+    },
+    "resp_720e548d7c": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_002"
+    },
+    "resp_bdf268164f": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_002"
+    },
+    "resp_ebb23c3e1e": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_002"
+    },
+    "resp_cadda963b7": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_002"
+    },
+    "resp_92851caa5c": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_003"
+    },
+    "resp_59f3a45792": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_003"
+    },
+    "resp_64e52d14b4": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_003"
+    },
+    "resp_ef2b2e9e11": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_003"
+    },
+    "resp_5158d9096e": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "operational_triage_v0",
+      "task_segment": "operational_triage",
+      "item_id": "ops_003"
+    },
+    "resp_e044a8999a": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_001"
+    },
+    "resp_a57dd03899": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_001"
+    },
+    "resp_dc266daa7e": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_001"
+    },
+    "resp_005e619853": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_001"
+    },
+    "resp_974e198ca4": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_001"
+    },
+    "resp_77d86c988f": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_002"
+    },
+    "resp_84b0cecb7d": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_002"
+    },
+    "resp_f0410d0903": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_002"
+    },
+    "resp_d3111813bd": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_002"
+    },
+    "resp_5fd50c9221": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_002"
+    },
+    "resp_86ffbd9139": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_003"
+    },
+    "resp_c42f05e2c1": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_003"
+    },
+    "resp_f4de5081e3": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_003"
+    },
+    "resp_ccba945a74": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_003"
+    },
+    "resp_099a9e78de": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "portfolio_tradeoff_v0",
+      "task_segment": "portfolio_tradeoff",
+      "item_id": "por_003"
+    },
+    "resp_3b107d1f20": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_001"
+    },
+    "resp_5b273d8354": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_001"
+    },
+    "resp_969204642a": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_001"
+    },
+    "resp_3bfc0ad32c": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_001"
+    },
+    "resp_ce60b53798": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_001"
+    },
+    "resp_6c63458ebb": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_002"
+    },
+    "resp_40f34c75e2": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_002"
+    },
+    "resp_2d13520f97": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_002"
+    },
+    "resp_6d73cf10fd": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_002"
+    },
+    "resp_c3732e2dfb": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_002"
+    },
+    "resp_5c1dd048d6": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_003"
+    },
+    "resp_dedacf2315": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_003"
+    },
+    "resp_5d933fe924": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_003"
+    },
+    "resp_611d9395c1": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_003"
+    },
+    "resp_44464882ff": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "pricing_promotion_v0",
+      "task_segment": "pricing_promotion",
+      "item_id": "prc_003"
+    },
+    "resp_6849a44282": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_001"
+    },
+    "resp_fc5f42088d": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_001"
+    },
+    "resp_8d3f032b79": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_001"
+    },
+    "resp_da6270def1": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_001"
+    },
+    "resp_d7d51bb66d": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_001"
+    },
+    "resp_05cbb03d2d": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_002"
+    },
+    "resp_1ef24957db": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_002"
+    },
+    "resp_edfab6634e": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_002"
+    },
+    "resp_5f8705e9b2": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_002"
+    },
+    "resp_ae198fcd5e": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_002"
+    },
+    "resp_441cdd91c5": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_003"
+    },
+    "resp_0ff527f511": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_003"
+    },
+    "resp_0d89649f8d": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_003"
+    },
+    "resp_8af40df055": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_003"
+    },
+    "resp_85bf4cd446": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "routine_planning_recommendation_v0",
+      "task_segment": "routine_planning_recommendation",
+      "item_id": "rou_003"
+    },
+    "resp_b05f96494d": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_001"
+    },
+    "resp_d4c890de7c": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_001"
+    },
+    "resp_ad760b7f9b": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_001"
+    },
+    "resp_06b3a7ba8a": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_001"
+    },
+    "resp_5cfce6f2e9": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_001"
+    },
+    "resp_caf24b62b0": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_002"
+    },
+    "resp_78246ab15d": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_002"
+    },
+    "resp_626d24fcf1": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_002"
+    },
+    "resp_474c5bb254": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_002"
+    },
+    "resp_0f8f4e17ad": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_002"
+    },
+    "resp_85e10cf158": {
+      "model_id": "baseline/source_echo",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_003"
+    },
+    "resp_a32ff29afe": {
+      "model_id": "baseline/keyword_guardrail",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_003"
+    },
+    "resp_13f87473bd": {
+      "model_id": "openai/gpt-5-mini",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_003"
+    },
+    "resp_4d5db7592f": {
+      "model_id": "openai/gpt-5.4-mini",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_003"
+    },
+    "resp_0bd7563fd1": {
+      "model_id": "openai/gpt-5.5",
+      "pack_id": "structured_extraction_v0",
+      "task_segment": "structured_extraction",
+      "item_id": "ext_003"
+    }
+  }
+}

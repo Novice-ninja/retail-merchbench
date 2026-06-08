@@ -1,0 +1,561 @@
+{
+  "benchmark_items": 100,
+  "generated_at_utc": "2026-06-08T00:14:20+00:00",
+  "model_panel_items": 100,
+  "recommendations": [
+    {
+      "benchmark_backed": true,
+      "best_quality_model": {
+        "average_score": 8.0696,
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini"
+      },
+      "deterministic_controls": [
+        "Source citation",
+        "numeric preservation",
+        "no-recommendation boundary check."
+      ],
+      "eval_pack_path": "eval_packs/low_risk_summarization/pack.json",
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "human_review_boundary": "No, unless the summary becomes a decision recommendation or contains conflicting financial figures.",
+      "human_review_expected": false,
+      "passing_candidates": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 8.0696
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 7.5713
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 7.5419
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 7.3941
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Qwen3 32B",
+          "estimated_cost_usd": 0.0,
+          "model_id": "groq/qwen/qwen3-32b",
+          "score": 7.1773
+        }
+      ],
+      "recommendation_rationale": "GPT-5 Mini leads the full-suite readout at 8.0696/10 and remains inexpensive in the paid ladder.",
+      "recommended_strategy": "GPT-5 Mini for paid production; GPT-OSS 120B when free hosted quota is available.",
+      "segment_id": "low_risk_summarization",
+      "segment_name": "Summarization",
+      "selected_model": {
+        "average_score": 8.0696,
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini"
+      },
+      "status": "candidate_clears_floor",
+      "unapplied_candidates": []
+    },
+    {
+      "benchmark_backed": true,
+      "best_quality_model": {
+        "average_score": 8.57,
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini"
+      },
+      "deterministic_controls": [
+        "Schema validation",
+        "required-field checks",
+        "range checks",
+        "conflict detection."
+      ],
+      "eval_pack_path": "eval_packs/structured_extraction/pack.json",
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "human_review_boundary": "Only for material missing values or field conflicts.",
+      "human_review_expected": true,
+      "passing_candidates": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 8.57
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 8.4314
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 8.3748
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 8.0848
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 7.7122
+        }
+      ],
+      "recommendation_rationale": "GPT-5 Mini leads at 8.5700/10; structured extraction still needs deterministic validation.",
+      "recommended_strategy": "Rules/schema first, GPT-5 Mini fallback for messy source text.",
+      "segment_id": "structured_extraction",
+      "segment_name": "Extraction",
+      "selected_model": {
+        "average_score": 8.57,
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini"
+      },
+      "status": "candidate_clears_floor",
+      "unapplied_candidates": []
+    },
+    {
+      "benchmark_backed": true,
+      "best_quality_model": {
+        "average_score": 8.2879,
+        "display_name": "GPT-5.4",
+        "estimated_cost_usd": 0.741982,
+        "model_id": "openai/gpt-5.4"
+      },
+      "deterministic_controls": [
+        "OTB",
+        "MOQ",
+        "pack multiple",
+        "margin floor",
+        "capacity",
+        "and compliance gates."
+      ],
+      "eval_pack_path": "eval_packs/constraint_checking/pack.json",
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "human_review_boundary": "Required when a violated constraint is overridden.",
+      "human_review_expected": true,
+      "passing_candidates": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 8.2879
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 7.8349
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 7.7792
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 7.114
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 7.1076
+        }
+      ],
+      "recommendation_rationale": "GPT-5.4 leads at 8.2879/10, while GPT-5 Mini remains the lower-cost paid option at 7.7792/10.",
+      "recommended_strategy": "Deterministic checks first; GPT-5.4 for high-severity explanation, GPT-5 Mini for cheaper routine triage.",
+      "segment_id": "constraint_checking",
+      "segment_name": "Constraint checks",
+      "selected_model": {
+        "average_score": 7.7792,
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini"
+      },
+      "status": "candidate_clears_floor",
+      "unapplied_candidates": []
+    },
+    {
+      "benchmark_backed": true,
+      "best_quality_model": {
+        "average_score": 6.9939,
+        "display_name": "GPT-5.4",
+        "estimated_cost_usd": 0.741982,
+        "model_id": "openai/gpt-5.4"
+      },
+      "deterministic_controls": [
+        "Inventory cover",
+        "margin",
+        "pack",
+        "timing",
+        "and stockout-censoring checks."
+      ],
+      "eval_pack_path": "eval_packs/routine_planning_recommendation/pack.json",
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "human_review_boundary": "Only for high inventory value, low confidence, or irreversible actions.",
+      "human_review_expected": true,
+      "passing_candidates": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 6.9939
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 6.9939
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 6.7273
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 6.1939
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Qwen3 32B",
+          "estimated_cost_usd": 0.0,
+          "model_id": "groq/qwen/qwen3-32b",
+          "score": 6.0985
+        }
+      ],
+      "recommendation_rationale": "GPT-5.5 and GPT-5.4 tie for the lead at 6.9939/10, which is below the proxy autonomy floor; GPT-5.4 Mini is the cheaper near-frontier option.",
+      "recommended_strategy": "GPT-5.4 Mini with deterministic guardrails; escalate low-confidence recommendations.",
+      "segment_id": "routine_planning_recommendation",
+      "segment_name": "Routine planning",
+      "selected_model": {
+        "average_score": 6.7273,
+        "display_name": "GPT-5.4 Mini",
+        "estimated_cost_usd": 0.172469,
+        "model_id": "openai/gpt-5.4-mini"
+      },
+      "status": "candidate_clears_floor",
+      "unapplied_candidates": []
+    },
+    {
+      "benchmark_backed": true,
+      "best_quality_model": {
+        "average_score": 6.778,
+        "display_name": "GPT-5.5",
+        "estimated_cost_usd": 1.337085,
+        "model_id": "openai/gpt-5.5"
+      },
+      "deterministic_controls": [
+        "Margin floor",
+        "vendor funding",
+        "inventory cover",
+        "pull-forward",
+        "and competitor response checks."
+      ],
+      "eval_pack_path": "eval_packs/pricing_promotion/pack.json",
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "human_review_boundary": "Yes for material price moves, below-floor margin, or high competitive-response uncertainty.",
+      "human_review_expected": true,
+      "passing_candidates": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 6.778
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 6.4629
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 6.3379
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 5.6587
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 5.0314
+        }
+      ],
+      "recommendation_rationale": "GPT-5.5 leads pricing/promotion at 6.7780/10, but no model clears the 7.0 proxy autonomy floor.",
+      "recommended_strategy": "GPT-5.5 or GPT-5.4 with margin and vendor-funding controls; human review for material decisions.",
+      "segment_id": "pricing_promotion",
+      "segment_name": "Pricing & promo",
+      "selected_model": {
+        "average_score": 6.4629,
+        "display_name": "GPT-5.4",
+        "estimated_cost_usd": 0.741982,
+        "model_id": "openai/gpt-5.4"
+      },
+      "status": "candidate_clears_floor",
+      "unapplied_candidates": []
+    },
+    {
+      "benchmark_backed": true,
+      "best_quality_model": {
+        "average_score": 8.5311,
+        "display_name": "GPT-5.4",
+        "estimated_cost_usd": 0.741982,
+        "model_id": "openai/gpt-5.4"
+      },
+      "deterministic_controls": [
+        "Evidence contamination",
+        "OTB",
+        "lead time",
+        "margin",
+        "opportunity cost",
+        "and confidence gates."
+      ],
+      "eval_pack_path": "eval_packs/ambiguous_planning_judgment/pack.json",
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "human_review_boundary": "Recommended for vendor commitments, high markdown risk, or executive-pressure cases.",
+      "human_review_expected": true,
+      "passing_candidates": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 8.5311
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 7.7152
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 7.4038
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 7.3076
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "GPT-OSS 120B",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/gpt-oss-120b",
+          "score": 6.5197
+        }
+      ],
+      "recommendation_rationale": "GPT-5.4 leads at 8.5311/10; GPT-5.5 is second at 7.7152/10 and Z.ai GLM 4.7 is the strongest free hosted comparator at 7.4038/10.",
+      "recommended_strategy": "GPT-5.4 for ambiguous judgment; GPT-5.4 Mini when the decision is reversible and well-guardrailed.",
+      "segment_id": "ambiguous_planning_judgment",
+      "segment_name": "Ambiguous judgment",
+      "selected_model": {
+        "average_score": 7.3076,
+        "display_name": "GPT-5.4 Mini",
+        "estimated_cost_usd": 0.172469,
+        "model_id": "openai/gpt-5.4-mini"
+      },
+      "status": "candidate_clears_floor",
+      "unapplied_candidates": []
+    },
+    {
+      "benchmark_backed": true,
+      "best_quality_model": {
+        "average_score": 8.0774,
+        "display_name": "GPT-5 Mini",
+        "estimated_cost_usd": 0.143918,
+        "model_id": "openai/gpt-5-mini"
+      },
+      "deterministic_controls": [
+        "Portfolio OTB",
+        "opportunity cost",
+        "receiving capacity",
+        "leadership override",
+        "and customer-trust gates."
+      ],
+      "eval_pack_path": "eval_packs/portfolio_tradeoff/pack.json",
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "human_review_boundary": "Yes. This should not be fully autonomous in the current evidence base.",
+      "human_review_expected": true,
+      "passing_candidates": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Mini",
+          "estimated_cost_usd": 0.143918,
+          "model_id": "openai/gpt-5-mini",
+          "score": 8.0774
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 8.0008
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 7.5106
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5 Nano",
+          "estimated_cost_usd": 0.014049,
+          "model_id": "openai/gpt-5-nano",
+          "score": 7.1717
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 7.097
+        }
+      ],
+      "recommendation_rationale": "GPT-5 Mini narrowly leads at 8.0774/10, with GPT-5.4 Mini close at 8.0008/10; cross-category OTB decisions remain high-downside.",
+      "recommended_strategy": "GPT-5 Mini or GPT-5.4 Mini plus human review.",
+      "segment_id": "portfolio_tradeoff",
+      "segment_name": "Portfolio tradeoff",
+      "selected_model": {
+        "average_score": 8.0008,
+        "display_name": "GPT-5.4 Mini",
+        "estimated_cost_usd": 0.172469,
+        "model_id": "openai/gpt-5.4-mini"
+      },
+      "status": "candidate_clears_floor",
+      "unapplied_candidates": []
+    },
+    {
+      "benchmark_backed": true,
+      "best_quality_model": {
+        "average_score": 7.5235,
+        "display_name": "GPT-5.5",
+        "estimated_cost_usd": 1.337085,
+        "model_id": "openai/gpt-5.5"
+      },
+      "deterministic_controls": [
+        "Safety",
+        "labor capacity",
+        "service-level",
+        "compliance",
+        "and owner-routing checks."
+      ],
+      "eval_pack_path": "eval_packs/operational_triage/pack.json",
+      "evidence_status": "full_100_item_segment_pack_scored_curated_panel",
+      "human_review_boundary": "Yes when safety, legal, public commitment, or customer-trust exposure appears.",
+      "human_review_expected": true,
+      "passing_candidates": [
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.5",
+          "estimated_cost_usd": 1.337085,
+          "model_id": "openai/gpt-5.5",
+          "score": 7.5235
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4",
+          "estimated_cost_usd": 0.741982,
+          "model_id": "openai/gpt-5.4",
+          "score": 7.2776
+        },
+        {
+          "cost_basis": "metered_openai_api",
+          "display_name": "GPT-5.4 Mini",
+          "estimated_cost_usd": 0.172469,
+          "model_id": "openai/gpt-5.4-mini",
+          "score": 6.8261
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Z.ai GLM 4.7",
+          "estimated_cost_usd": 0.0,
+          "model_id": "cerebras/zai-glm-4.7",
+          "score": 5.9011
+        },
+        {
+          "cost_basis": "free_tier_observed",
+          "display_name": "Qwen3 32B",
+          "estimated_cost_usd": 0.0,
+          "model_id": "groq/qwen/qwen3-32b",
+          "score": 5.6182
+        }
+      ],
+      "recommendation_rationale": "GPT-5.5 leads at 7.5235/10; GPT-5.4 remains close at 7.2776/10, and GPT-5.4 Mini is the cheaper near-frontier option at 6.8261/10.",
+      "recommended_strategy": "GPT-5.4 Mini for normal exceptions; GPT-5.5 or human review for safety/customer-trust risk.",
+      "segment_id": "operational_triage",
+      "segment_name": "Ops triage",
+      "selected_model": {
+        "average_score": 6.8261,
+        "display_name": "GPT-5.4 Mini",
+        "estimated_cost_usd": 0.172469,
+        "model_id": "openai/gpt-5.4-mini"
+      },
+      "status": "candidate_clears_floor",
+      "unapplied_candidates": []
+    }
+  ],
+  "source": "reports/eval_packs/*_scores.json via analysis/generate_atlas.py",
+  "status": "automated_routing_priors_pending_human_calibration",
+  "version": "0.2"
+}
