@@ -5,6 +5,8 @@
 [![Data: CC BY 4.0](https://img.shields.io/badge/data%20%2F%20paper-CC%20BY%204.0-blue.svg)](LICENSE.md)
 [![Benchmark items](https://img.shields.io/badge/eval%20items-100-orange.svg)](eval_packs/)
 [![Model panel](https://img.shields.io/badge/scored%20models-14-purple.svg)](reports/eval_packs/)
+[![HF Dataset](https://img.shields.io/badge/Hugging%20Face-dataset-yellow.svg)](https://huggingface.co/datasets/Novice-ninja/retail-merchbench)
+[![HF Space](https://img.shields.io/badge/Hugging%20Face-Atlas%20Space-blue.svg)](https://huggingface.co/spaces/Novice-ninja/retail-merchbench-atlas)
 
 **An eval framework to identify which model is economically right for each retail decision.**
 
@@ -20,6 +22,9 @@ This repo is built for teams deploying LLMs into retail planning, merchandising,
 - **Paper source:** [paper/retail_merchbench.tex](paper/retail_merchbench.tex)
 - **Visual Atlas:** [reports/atlas/index.html](reports/atlas/index.html)
 - **Written Atlas:** [reports/atlas/report.md](reports/atlas/report.md)
+- **Hugging Face dataset:** [Novice-ninja/retail-merchbench](https://huggingface.co/datasets/Novice-ninja/retail-merchbench)
+- **Interactive Atlas Space:** [Novice-ninja/retail-merchbench-atlas](https://huggingface.co/spaces/Novice-ninja/retail-merchbench-atlas)
+- **Hugging Face collection:** [MerchBench: Retail AI Model Routing](https://huggingface.co/collections/Novice-ninja/merchbench-retail-ai-model-routing)
 - **Launch guide:** [docs/LAUNCH.md](docs/LAUNCH.md)
 - **Methodology:** [docs/METHODOLOGY.md](docs/METHODOLOGY.md)
 - **Reproducibility:** [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)
